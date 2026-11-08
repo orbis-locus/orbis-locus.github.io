@@ -49,7 +49,7 @@
 
 ## 4. 残っていること・確認待ち
 
-- **公開サイトの引っ越し（2026-11-08・ほぼ完了）**：新しい住所は https://orbis-locus.github.io/ （GitHub アカウント orbis-locus、リポジトリ orbis-locus.github.io）。済み：新しいリポジトリへ push・GitHub Pages 公開、前の住所 https://kanno-925.github.io/charasheet/ を引っ越しページに（オーナーが kanno-925/charasheet の main の index.html を move/index.html に差しかえ。表示を確認済み）、Supabase の URL Configuration（オーナーが設定。こちらからは確かめられない）。**残り：Cloudflare の入口（orbis-share）の中身の貼りかえ**（2026-11-08 の時点ではまだ前の住所へ移動していた。前の住所の引っ越しページが共有リンクを新しい住所へ転送するので、動きはする）。
+- **公開サイトの引っ越し（2026-11-08・完了）**：新しい住所は https://orbis-locus.github.io/ （GitHub アカウント orbis-locus、リポジトリ orbis-locus.github.io）。済み：新しいリポジトリへ push・GitHub Pages 公開、前の住所 https://kanno-925.github.io/charasheet/ を引っ越しページに（オーナーが kanno-925/charasheet の main の index.html を move/index.html に差しかえ。表示を確認済み）、Supabase の URL Configuration（オーナーが設定。こちらからは確かめられない）。Cloudflare の入口（orbis-share）も貼りかえ済み（新しい住所へ移動することを確認）。
   - Claude につながる GitHub は orbis-locus に変わったので、**kanno-925/charasheet にはもう書きこめない**。前のリポジトリで何かするときは、オーナーに GitHub のサイトからアップロードしてもらう。
 
 - **メインテーマ「ORBiS」**（31-orbis.js・20-orbis.css）：初めて開いた人のテーマ。販売に向けた「サービスの顔」。オーナーの感想待ち。オープニングは ORBiS 版が標準（魔法陣は小窓で選べる）。
