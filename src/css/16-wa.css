@@ -1,0 +1,344 @@
+/* ===== 和風テーマ（look: wa）：和紙・墨・金、景色の絵と舞い散る桜 =====
+   景色は assets/wa/scene.webp（参考画像から切り出し）。模様（青海波・霞・家紋）は SVG で描いている。 */
+:root[data-look~="wa"] {
+  --wa-gold: #b08d4a; --wa-gold2: #dcc188; --wa-sumi: #2b231f; --wa-sumi2: #3b2f28; --wa-paper: #f7efdd;
+  --tx-wa-scene: url("../assets/wa/scene.webp");
+  --wa-washi: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27300%27 height=%27300%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.8%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 .42  0 0 0 0 .32  0 0 0 0 .18  0 0 0 .3 -.09%27/%3E%3C/filter%3E%3Cfilter id=%27f%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.04 .25%27 numOctaves=%272%27 seed=%274%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 .6  0 0 0 0 .48  0 0 0 0 .3  0 0 0 .8 -.58%27/%3E%3C/filter%3E%3Crect width=%27100%%27 height=%27100%%27 filter=%27url(%23n)%27/%3E%3Crect width=%27100%%27 height=%27100%%27 filter=%27url(%23f)%27/%3E%3C/svg%3E");
+  --wa-sg-dark: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2748%27 height=%2724.0%27 viewBox=%270 0 48 24.0%27%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2724.0%27 fill=%27%232b231f%27 stroke=%27%238a6d3c%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2718.7%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2713.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%278.2%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%273.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2724.0%27 fill=%27%232b231f%27 stroke=%27%238a6d3c%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2718.7%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2713.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%278.2%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%273.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2724.0%27 fill=%27%232b231f%27 stroke=%27%238a6d3c%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2724.0%27 fill=%27%232b231f%27 stroke=%27%238a6d3c%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2724.0%27 fill=%27%232b231f%27 stroke=%27%238a6d3c%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%238a6d3c%27 stroke-width=%270.9%27/%3E%3C/svg%3E"); --wa-sg-gold: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2748%27 height=%2724.0%27 viewBox=%270 0 48 24.0%27%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2724.0%27 fill=%27%23e6d3a6%27 stroke=%27%23b9975a%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2718.7%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2713.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%278.2%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%273.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2724.0%27 fill=%27%23e6d3a6%27 stroke=%27%23b9975a%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2718.7%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%2713.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%278.2%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%270%27 r=%273.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2724.0%27 fill=%27%23e6d3a6%27 stroke=%27%23b9975a%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2724.0%27 cy=%2712.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2724.0%27 fill=%27%23e6d3a6%27 stroke=%27%23b9975a%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2724.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2724.0%27 fill=%27%23e6d3a6%27 stroke=%27%23b9975a%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2718.7%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%2713.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%278.2%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2748%27 cy=%2724.0%27 r=%273.4%27 fill=%27none%27 stroke=%27%23b9975a%27 stroke-width=%270.9%27/%3E%3C/svg%3E"); --wa-sg-side: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2736%27 height=%2718.0%27 viewBox=%270 0 36 18.0%27%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2718.0%27 fill=%27%23241d1a%27 stroke=%27%236e5632%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2714.0%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%2710.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%276.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%270%27 r=%272.5%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%270%27 r=%2718.0%27 fill=%27%23241d1a%27 stroke=%27%236e5632%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2736%27 cy=%270%27 r=%2714.0%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%270%27 r=%2710.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%270%27 r=%276.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%270%27 r=%272.5%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2718.0%27 cy=%279.0%27 r=%2718.0%27 fill=%27%23241d1a%27 stroke=%27%236e5632%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2718.0%27 cy=%279.0%27 r=%2714.0%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2718.0%27 cy=%279.0%27 r=%2710.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2718.0%27 cy=%279.0%27 r=%276.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2718.0%27 cy=%279.0%27 r=%272.5%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2718.0%27 r=%2718.0%27 fill=%27%23241d1a%27 stroke=%27%236e5632%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%270%27 cy=%2718.0%27 r=%2714.0%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2718.0%27 r=%2710.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2718.0%27 r=%276.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%270%27 cy=%2718.0%27 r=%272.5%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%2718.0%27 r=%2718.0%27 fill=%27%23241d1a%27 stroke=%27%236e5632%27 stroke-width=%271.1%27/%3E%3Ccircle cx=%2736%27 cy=%2718.0%27 r=%2714.0%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%2718.0%27 r=%2710.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%2718.0%27 r=%276.1%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3Ccircle cx=%2736%27 cy=%2718.0%27 r=%272.5%27 fill=%27none%27 stroke=%27%236e5632%27 stroke-width=%270.9%27/%3E%3C/svg%3E");
+  --wa-mon: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-50 -50 100 100%27%3E%3Ccircle r=%2746%27 fill=%27%232b231f%27 stroke=%27%23c9a560%27 stroke-width=%273%27/%3E%3Ccircle r=%2740%27 fill=%27none%27 stroke=%27%23c9a560%27 stroke-width=%271%27/%3E%3Cg fill=%27%23c9a560%27%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(0)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(72)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(144)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(216)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(288)%27/%3E%3C/g%3E%3Ccircle r=%274.5%27 fill=%27%232b231f%27 stroke=%27%23c9a560%27 stroke-width=%271.5%27/%3E%3Cg fill=%27%232b231f%27%3E%3Ccircle cx=%274.7%27 cy=%27-6.5%27 r=%271.4%27/%3E%3Ccircle cx=%277.6%27 cy=%272.5%27 r=%271.4%27/%3E%3Ccircle cx=%270.0%27 cy=%278.0%27 r=%271.4%27/%3E%3Ccircle cx=%27-7.6%27 cy=%272.5%27 r=%271.4%27/%3E%3Ccircle cx=%27-4.7%27 cy=%27-6.5%27 r=%271.4%27/%3E%3C/g%3E%3C/svg%3E"); --wa-flower: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-36 -36 72 72%27%3E%3Cg fill=%27%238a5a36%27%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(0)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(72)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(144)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(216)%27/%3E%3Cpath d=%27M0 -4 C 9 -10 12 -26 4 -33 L 0 -29 L -4 -33 C -12 -26 -9 -10 0 -4 Z%27 transform=%27rotate(288)%27/%3E%3C/g%3E%3Ccircle r=%274%27 fill=%27%23f7efdd%27/%3E%3C/svg%3E"); --wa-divider: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%2712%27 viewBox=%270 0 360 12%27%3E%3Cpath d=%27M0 6H168M192 6H360%27 stroke=%27%235a4636%27 stroke-width=%271%27/%3E%3Cpath d=%27M180 0L186 6L180 12L174 6Z%27 fill=%27none%27 stroke=%27%235a4636%27/%3E%3Cpath d=%27M180 3.5L182.5 6L180 8.5L177.5 6Z%27 fill=%27%235a4636%27/%3E%3C/svg%3E");
+  --paper: color-mix(in srgb, var(--wa-paper) 86%, transparent);
+  --line: rgb(120 90 50 / .22); --line-strong: rgb(120 90 50 / .45);
+  --glow-1: transparent; --glow-2: transparent; --dot: transparent;
+  --r: 4px; --r-lg: 8px;
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --shadow: 0 10px 26px -16px rgb(60 40 20 / .55);
+}
+:root[data-look~="wa"] body { background: #ebdfc6 var(--wa-washi); }
+:root[data-look~="wa"] body::before { display: none; }
+
+/* ---- 背景の層（JSが body の先頭に入れる #wa-bg） ---- */
+.wa-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.wa-bg[hidden] { display: none; }
+.wa-sun { position: absolute; left: 14vw; top: 40px; width: min(30vw, 380px); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 40% 38%, rgb(240 222 180 / .75), rgb(222 196 146 / .5) 60%, rgb(214 186 132 / .18) 72%, transparent 73%); filter: blur(.4px); }
+.wa-scene, .wa-branch { position: absolute; right: 0; top: 0; width: min(66vw, 1180px); aspect-ratio: 912 / 640; background: var(--tx-wa-scene) right top / cover no-repeat; }
+.wa-scene { opacity: .96;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 34%), linear-gradient(to bottom, #000 66%, transparent 98%); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, #000 34%), linear-gradient(to bottom, #000 66%, transparent 98%); mask-composite: intersect;
+  animation: wa-breathe 26s ease-in-out infinite; transform-origin: 70% 30%; }
+/* 枝先の桜だけをもう1枚重ねて、風でゆれるように少し回す */
+.wa-branch { inset: 0; width: 100%; right: auto; transform-origin: 96% 0; animation: wa-sway 7.5s ease-in-out infinite;
+  -webkit-mask-image: radial-gradient(ellipse 62% 44% at 62% 8%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse 62% 44% at 62% 8%, #000 55%, transparent 100%); }
+@keyframes wa-sway { 0%, 100% { transform: rotate(0deg) translateX(0); } 35% { transform: rotate(-.55deg) translateX(-3px); } 70% { transform: rotate(.35deg) translateX(2px); } }
+@keyframes wa-breathe { 50% { transform: scale(1.025); } }
+.wa-cloud { position: absolute; background: center / 100% 100% no-repeat; opacity: .9; animation: wa-drift 34s ease-in-out infinite; }
+.wa-cloud.c1 { left: 250px; top: 12px; width: 300px; height: 64px; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27420%27 height=%2790%27 viewBox=%270 0 420 90%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d9bd7f%27/%3E%3Cstop offset=%27.5%27 stop-color=%27%23efdcab%27/%3E%3Cstop offset=%271%27 stop-color=%27%23c09a55%27/%3E%3C/linearGradient%3E%3Cfilter id=%27t%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .35 0%27/%3E%3CfeComposite in2=%27SourceGraphic%27 operator=%27in%27/%3E%3C/filter%3E%3C/defs%3E%3Cg%3E%3Crect x=%2760%27 y=%274%27 width=%27250%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2734%27 width=%27330%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%27120%27 y=%2762%27 width=%27280%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3Cg filter=%27url(%23t)%27%3E%3Crect x=%2760%27 y=%274%27 width=%27250%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2734%27 width=%27330%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%27120%27 y=%2762%27 width=%27280%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3C/svg%3E"); }
+.wa-cloud.c2 { left: 40%; top: 46%; width: 260px; height: 46px; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27360%27 height=%2764%27 viewBox=%270 0 360 64%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d9bd7f%27/%3E%3Cstop offset=%27.5%27 stop-color=%27%23efdcab%27/%3E%3Cstop offset=%271%27 stop-color=%27%23c09a55%27/%3E%3C/linearGradient%3E%3Cfilter id=%27t%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .35 0%27/%3E%3CfeComposite in2=%27SourceGraphic%27 operator=%27in%27/%3E%3C/filter%3E%3C/defs%3E%3Cg%3E%3Crect x=%2740%27 y=%272%27 width=%27220%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2732%27 width=%27300%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3Cg filter=%27url(%23t)%27%3E%3Crect x=%2740%27 y=%272%27 width=%27220%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2732%27 width=%27300%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3C/svg%3E"); animation-duration: 42s; animation-delay: -12s; opacity: .75; }
+.wa-cloud.c3 { right: 6%; bottom: 13%; width: 340px; height: 72px; background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27420%27 height=%2790%27 viewBox=%270 0 420 90%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d9bd7f%27/%3E%3Cstop offset=%27.5%27 stop-color=%27%23efdcab%27/%3E%3Cstop offset=%271%27 stop-color=%27%23c09a55%27/%3E%3C/linearGradient%3E%3Cfilter id=%27t%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.9%27 numOctaves=%272%27/%3E%3CfeColorMatrix values=%270 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .35 0%27/%3E%3CfeComposite in2=%27SourceGraphic%27 operator=%27in%27/%3E%3C/filter%3E%3C/defs%3E%3Cg%3E%3Crect x=%2760%27 y=%274%27 width=%27250%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2734%27 width=%27330%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%27120%27 y=%2762%27 width=%27280%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3Cg filter=%27url(%23t)%27%3E%3Crect x=%2760%27 y=%274%27 width=%27250%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%270%27 y=%2734%27 width=%27330%27 height=%2728%27 rx=%2714.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3Crect x=%27120%27 y=%2762%27 width=%27280%27 height=%2726%27 rx=%2713.0%27 fill=%27url(%23g)%27 stroke=%27%239c7a3e%27 stroke-opacity=%27.45%27 stroke-width=%271%27/%3E%3C/g%3E%3C/svg%3E"); animation-duration: 38s; animation-delay: -20s; opacity: .8; }
+@keyframes wa-drift { 50% { transform: translateX(34px); } }
+.wa-wave { position: absolute; bottom: 0; }
+.wa-wave.wl { left: 0; width: min(34vw, 460px); height: min(26vh, 230px); background: var(--wa-sg-dark) 0 100% / 48px 24px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 100% at 0 100%, #000 70%, transparent 71%); mask-image: radial-gradient(ellipse 100% 100% at 0 100%, #000 70%, transparent 71%); }
+.wa-wave.wr { right: 0; width: min(24vw, 330px); height: min(18vh, 160px); background: var(--wa-sg-dark) 100% 100% / 48px 24px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 100% at 100% 100%, #000 70%, transparent 71%); mask-image: radial-gradient(ellipse 100% 100% at 100% 100%, #000 70%, transparent 71%); }
+.wa-wave.wg { right: 12vw; width: min(40vw, 560px); height: min(16vh, 140px); background: var(--wa-sg-gold) 0 100% / 48px 24px; opacity: .8;
+  -webkit-mask-image: radial-gradient(ellipse 50% 100% at 50% 100%, #000 68%, transparent 70%); mask-image: radial-gradient(ellipse 50% 100% at 50% 100%, #000 68%, transparent 70%); }
+.wa-petals { position: absolute; inset: 0; width: 100%; height: 100%; }
+:root.has-bg .wa-bg > :not(.wa-petals) { display: none; }
+@media (prefers-reduced-motion: reduce) { .wa-scene, .wa-branch, .wa-cloud { animation: none; } }
+
+/* ---- 文字・見出し ---- */
+:root[data-look~="wa"] .brand-mark { display: none; }
+:root[data-look~="wa"] .brand::before { content: ""; width: 44px; height: 44px; flex: none; background: var(--wa-mon) center / contain no-repeat; filter: drop-shadow(0 2px 4px rgb(0 0 0 / .3)); }
+:root[data-look~="wa"] .brand-text small { color: var(--wa-gold); }
+:root[data-look~="wa"] .brand h1 { font-weight: 700; letter-spacing: .12em; }
+:root[data-look~="wa"] .eyebrow { color: var(--wa-gold); }
+:root[data-look~="wa"] .eyebrow::before { background: var(--wa-gold); }
+:root[data-look~="wa"] .hero { grid-template-columns: minmax(0, 1fr); min-height: 300px; padding-block: 26px 30px; }
+:root[data-look~="wa"] .orbit { display: none; }
+:root[data-look~="wa"] .hero-title { font-weight: 600; color: var(--ink); background: none; -webkit-text-fill-color: currentColor; letter-spacing: .08em; text-shadow: 0 1px 0 rgb(255 250 240 / .6); }
+:root[data-look~="wa"] .hero-title::after { content: ""; display: inline-block; width: clamp(50px, 7vw, 110px); height: 1.5px; margin-left: .3em; vertical-align: .3em; background: currentColor; }
+:root[data-look~="wa"] .hero-lead { font-family: var(--f-display); color: color-mix(in srgb, var(--ink) 80%, transparent); letter-spacing: .1em; font-size: 15px; }
+:root[data-look~="wa"] .hero-lead::after { content: ""; display: block; width: min(360px, 100%); height: 12px; margin-top: 18px; background: var(--wa-divider) center / 100% 100% no-repeat; }
+:root[data-look~="wa"] .hero-tags span { border-radius: 2px; border-color: rgb(176 141 74 / .7); color: #6b4f2c; background: rgb(250 243 228 / .7); font-family: "Cinzel", serif; }
+/* 見出し「お知らせ News」風：日本語を大きく、英語を下に小さく、桜の紋と線 */
+:root[data-look~="wa"] .panel-label { position: relative; display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0; padding-left: 40px; margin-bottom: 12px;
+  font-family: "Cinzel", "Times New Roman", serif; font-size: 10.5px; letter-spacing: .18em; color: #7a6040; font-weight: 600; }
+:root[data-look~="wa"] .panel-label::before { content: ""; position: absolute; left: 0; top: 50%; width: 32px; height: 32px; translate: 0 -50%; background: var(--wa-flower) center / contain no-repeat; }
+:root[data-look~="wa"] .panel-label > span { display: flex; align-items: center; gap: 12px; font-family: var(--f-display); font-size: 19px; font-weight: 700; letter-spacing: .12em; color: var(--ink); }
+:root[data-look~="wa"] .panel-label > span::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--ink) 45%, transparent); }
+:root[data-look~="wa"] .panel-label > span > :not(:first-child) { font-size: 11px; }
+
+/* ---- ボタン：和紙に金の細線、主ボタンは墨地に金ふちの六角 ---- */
+:root[data-look~="wa"] .btn { border-radius: 3px; border-color: rgb(176 141 74 / .65); background: rgb(250 244 230 / .88); color: var(--ink); font-family: var(--f-display); letter-spacing: .08em; }
+:root[data-look~="wa"] .btn:hover { border-color: var(--wa-gold); box-shadow: 0 4px 14px -8px rgb(120 80 30 / .6); }
+:root[data-look~="wa"] .btn.primary, :root[data-look~="wa"] .btn.copy-btn, :root[data-look~="wa"] .sel-new { --hx: 14px; position: relative; isolation: isolate; border: 0; color: #f3e6c8; border-radius: 0;
+  background: linear-gradient(100deg, #8c6a30, #e4c98c 45%, #a7813f); box-shadow: none;
+  clip-path: polygon(var(--hx) 0, calc(100% - var(--hx)) 0, 100% 50%, calc(100% - var(--hx)) 100%, var(--hx) 100%, 0 50%); padding-inline: 26px; }
+:root[data-look~="wa"] .btn.primary::before, :root[data-look~="wa"] .btn.copy-btn::before { content: ""; position: absolute; inset: 1.5px; z-index: -1; background: radial-gradient(ellipse at 50% 0, #4a3a30, var(--wa-sumi) 70%);
+  clip-path: polygon(calc(var(--hx) - .6px) 0, calc(100% - var(--hx) + .6px) 0, 100% 50%, calc(100% - var(--hx) + .6px) 100%, calc(var(--hx) - .6px) 100%, 0 50%); }
+:root[data-look~="wa"] .btn.primary:hover, :root[data-look~="wa"] .btn.copy-btn:hover { transform: none; filter: brightness(1.15); }
+:root[data-look~="wa"] .btn.copy-btn { --hx: 22px; letter-spacing: .3em; }
+
+/* ---- 左の探索者一覧：墨色の帯、金の家紋、選んでいる人は金の帯 ---- */
+@media (min-width: 761px) {
+  :root[data-look~="wa"] .shelf { position: relative; overflow: hidden; padding: 112px 0 150px; border-radius: 3px; color: #eadcbf;
+    background: radial-gradient(ellipse at 50% 0, rgb(255 230 180 / .07), transparent 60%), var(--wa-washi), linear-gradient(180deg, var(--wa-sumi2), var(--wa-sumi));
+    box-shadow: 0 18px 40px -20px rgb(0 0 0 / .7), inset 0 0 0 1px rgb(201 165 96 / .35), inset 6px 0 0 -4px rgb(201 165 96 / .5); }
+  :root[data-look~="wa"] .shelf::before { content: ""; position: absolute; left: 50%; top: 20px; width: 74px; height: 74px; translate: -50% 0; background: var(--wa-mon) center / contain no-repeat; filter: drop-shadow(0 3px 6px rgb(0 0 0 / .5)); }
+  :root[data-look~="wa"] .shelf::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 130px; background: var(--wa-sg-side) 0 100% / 36px 18px;
+    -webkit-mask-image: radial-gradient(ellipse 120% 100% at 0 100%, #000 64%, transparent 66%); mask-image: radial-gradient(ellipse 120% 100% at 0 100%, #000 64%, transparent 66%); opacity: .95; }
+  :root[data-look~="wa"] .shelf .panel-label { padding: 0 16px; color: rgb(220 193 136 / .8); }
+  :root[data-look~="wa"] .shelf .panel-label::before { display: none; }
+  :root[data-look~="wa"] .shelf .panel-label > span { color: #f0e2c2; font-size: 16px; }
+  :root[data-look~="wa"] .shelf .panel-label > span::after { background: rgb(220 193 136 / .45); }
+  :root[data-look~="wa"] .shelf .touch-hint { display: none; }
+  :root[data-look~="wa"] .shelf-list { gap: 2px; position: relative; z-index: 1; }
+  :root[data-look~="wa"] .char-item { border-radius: 0; padding: 9px 14px 9px 18px; color: #eadcbf; font-family: var(--f-display); position: relative; }
+  :root[data-look~="wa"] .char-item::before { content: "◇"; position: absolute; left: 4px; top: 50%; translate: 0 -50%; font-size: 9px; color: var(--wa-gold2); }
+  :root[data-look~="wa"] .char-item:hover { background: rgb(220 193 136 / .1); }
+  :root[data-look~="wa"] .char-item .sys { color: rgb(220 193 136 / .7); }
+  :root[data-look~="wa"] .char-item.active { color: var(--wa-sumi); border-color: transparent; box-shadow: none;
+    background: linear-gradient(90deg, #b8914a, #e6cd92 55%, rgb(214 186 120 / .35) 92%, transparent); }
+  :root[data-look~="wa"] .char-item.active::before { content: "●"; color: var(--wa-sumi); }
+  :root[data-look~="wa"] .char-item.active .sys { color: rgb(43 35 31 / .75); }
+}
+@media (max-width: 760px) {
+  :root[data-look~="wa"] .shelf { background: linear-gradient(180deg, var(--wa-sumi2), var(--wa-sumi)); border-radius: 4px; padding: 10px; color: #eadcbf; box-shadow: inset 0 0 0 1px rgb(201 165 96 / .35); }
+  :root[data-look~="wa"] .shelf .panel-label > span { color: #f0e2c2; }
+  :root[data-look~="wa"] .shelf .panel-label::before { background-image: var(--wa-mon); }
+  :root[data-look~="wa"] .char-item { color: #eadcbf; }
+  :root[data-look~="wa"] .char-item .sys { color: rgb(220 193 136 / .7); }
+  :root[data-look~="wa"] .char-item.active { background: linear-gradient(90deg, #b8914a, #e6cd92); color: var(--wa-sumi); }
+  .wa-scene, .wa-branch { width: 118vw; opacity: .55; }
+  .wa-sun { left: 40vw; width: 60vw; }
+  .wa-cloud.c2 { display: none; }
+}
+
+/* ---- パネル：和紙に金の細い二重線 ---- */
+:root[data-look~="wa"] .sheet, :root[data-look~="wa"] .koma, :root[data-look~="wa"] details.out { background: var(--wa-washi), color-mix(in srgb, var(--wa-paper) 84%, transparent); border-color: rgb(176 141 74 / .5);
+  box-shadow: 0 18px 40px -26px rgb(60 40 20 / .7), inset 0 0 0 4px rgb(250 244 230 / .35), inset 0 0 0 5px rgb(176 141 74 / .3); }
+:root[data-look~="wa"] .koma::before { background: linear-gradient(90deg, transparent, var(--wa-gold), transparent) !important; height: 2px; }
+:root[data-look~="wa"] .modal, :root[data-look~="wa"] .sao-win { background: var(--wa-washi), var(--wa-paper); border-color: rgb(176 141 74 / .55);
+  box-shadow: 0 30px 60px -30px rgb(40 25 10 / .8), inset 0 0 0 5px rgb(250 244 230 / .5), inset 0 0 0 6px rgb(176 141 74 / .32); }
+:root[data-look~="wa"] .modal h2, :root[data-look~="wa"] .sec-title h3 { font-family: var(--f-display); letter-spacing: .1em; }
+/* アイコンの丸：虹色の輪を金の輪に */
+:root[data-look~="wa"] .token { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--tc) 50%, #fff), var(--tc) 72%) padding-box, linear-gradient(135deg, #8c6a30, #ecd59e 45%, #a7813f) border-box; }
+/* ハブの丸い項目：和紙の丸に金の輪 */
+:root[data-look~="wa"] .bubble { background: var(--wa-washi), radial-gradient(circle at 40% 30%, #fffaf0, var(--wa-paper) 70%) padding-box !important; border: 1.5px solid rgb(176 141 74 / .7) !important;
+  box-shadow: 0 12px 26px -16px rgb(80 50 20 / .7), inset 0 0 0 4px rgb(250 244 230 / .6), inset 0 0 0 5px color-mix(in srgb, var(--bc) 35%, transparent) !important; font-family: var(--f-display); }
+:root[data-look~="wa"] .hub-core::before { background: radial-gradient(circle, rgb(220 190 120 / .35), transparent 70%); }
+
+/* ---- 探索者をえらぶ画面：背景の景色と桜が見えるように ---- */
+:root[data-look~="wa"]:not(.sel-has-bg) .select { background: linear-gradient(180deg, rgb(235 223 198 / .2), rgb(235 223 198 / .55)); }
+:root[data-look~="wa"] .sel-head h2 { background: none; -webkit-text-fill-color: currentColor; color: var(--ink); letter-spacing: .14em; }
+:root[data-look~="wa"] .sel-tabs, :root[data-look~="wa"] .sel-sort > *, :root[data-look~="wa"] .view-tg { background: rgb(250 244 230 / .85); border-color: rgb(176 141 74 / .5); }
+:root[data-look~="wa"] .sel-tabs button.on, :root[data-look~="wa"] .view-tg button.on { background: linear-gradient(180deg, var(--wa-sumi2), var(--wa-sumi)); color: #f0e2c2; box-shadow: inset 0 0 0 1px rgb(201 165 96 / .6); }
+:root[data-look~="wa"] .sel-new { --hx: 0px; clip-path: none; border-radius: 50%; background: var(--wa-mon) center / 92% no-repeat, radial-gradient(circle, var(--wa-sumi2), var(--wa-sumi)); box-shadow: 0 20px 50px -20px rgb(40 25 10 / .8), 0 0 0 6px rgb(201 165 96 / .25); }
+:root[data-look~="wa"] .sel-new .plus { opacity: 0; }
+:root[data-look~="wa"] .sel-new b, :root[data-look~="wa"] .sel-new small { position: relative; top: 58%; color: var(--ink); text-shadow: 0 0 6px #f7efdd, 0 0 2px #f7efdd; }
+
+/* 景色の上に重なる見出しは和紙の帯で読みやすく */
+:root[data-look~="wa"] .tray > .panel-label, :root[data-look~="wa"] .sheet-col > .panel-label { background: rgb(247 239 221 / .86); padding: 6px 12px 6px 48px; border-radius: 3px; box-shadow: 0 6px 16px -12px rgb(60 40 20 / .6); }
+:root[data-look~="wa"] .tray > .panel-label::before { left: 9px; }
+/* 探索者をえらぶ画面を開いている間は、後ろのシートを隠して景色と桜だけを見せる */
+:root[data-look~="wa"]:not(.sel-has-bg) body:has(#select:not([hidden])) .app { visibility: hidden; }
+
+:root[data-look~="wa"] .sel-head { padding: 12px 48px; border-radius: 40px; background: radial-gradient(ellipse at center, rgb(247 239 221 / .9), rgb(247 239 221 / .7) 55%, transparent 76%); }
+:root[data-look~="wa"] .panel-label > .touch-hint { order: -1; font-family: var(--f-body); font-size: 11px; font-weight: 400; letter-spacing: .05em; color: rgb(220 193 136 / .75); }
+:root[data-look~="wa"] .panel-label > .touch-hint::after { display: none; }
+:root[data-look~="wa"] .char-item.active .sys { color: rgb(43 35 31 / .75); }
+
+/* ================= 和風テーマ：フォント ================= */
+:root[data-look~="wa"] { --f-body: "Zen Old Mincho", "Shippori Mincho B1", "Yu Mincho", serif; --f-brush: "Yuji Syuku", "Shippori Mincho B1", serif; }
+:root[data-look~="wa"] body { font-family: var(--f-body); }
+:root[data-look~="wa"] .hero-title, :root[data-look~="wa"] .brand h1, :root[data-look~="wa"] .sel-head h2, :root[data-look~="wa"] .wa-tate b,
+:root[data-look~="wa"] .wa-head-jp, :root[data-look~="wa"] #panel-title, :root[data-look~="wa"] .modal h2 { font-family: var(--f-brush); font-weight: 400; }
+:root[data-look~="wa"] .panel-label > span:first-child { font-family: var(--f-brush); font-weight: 400; }
+:root[data-look~="wa"] .hero-title { letter-spacing: .1em; }
+
+/* ================= 和風テーマ：キャラシ本体（掛け軸＋目録） ================= */
+.sheet.is-wa { padding: 22px 26px 28px; }
+.wa-tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.wa-sheet { display: grid; grid-template-columns: minmax(200px, 270px) minmax(0, 1fr); gap: 34px; align-items: start; margin-top: 10px; }
+.wa-left { display: flex; gap: 14px; align-items: flex-start; justify-content: center; }
+/* 掛け軸：上下に軸、まわりは金茶の表装、中に立ち絵 */
+.wa-kake { position: relative; flex: none; width: 190px; padding: 18px 14px 26px; border: 0; cursor: pointer; border-radius: 2px;
+  background: radial-gradient(ellipse at 50% 0, rgb(255 240 200 / .25), transparent 60%), repeating-linear-gradient(45deg, rgb(255 255 255 / .05) 0 2px, transparent 2px 6px), linear-gradient(180deg, #6b4b2f, #4a3220);
+  box-shadow: 0 22px 34px -18px rgb(30 15 5 / .8), inset 0 0 0 1px rgb(201 165 96 / .55), inset 0 0 0 5px rgb(60 40 25 / .4), inset 0 0 0 6px rgb(201 165 96 / .35);
+  transform-origin: 50% 0; animation: wa-hang 6s ease-in-out infinite; }
+@keyframes wa-hang { 50% { transform: rotate(.6deg); } }
+.wa-kake:hover { animation-play-state: paused; }
+.wa-kake-in { position: relative; display: grid; place-items: end center; width: 100%; aspect-ratio: 3 / 5; overflow: hidden;
+  background: var(--wa-washi), linear-gradient(180deg, #f6ecd6, #eadbbb); box-shadow: inset 0 0 0 1px rgb(120 90 50 / .4), inset 0 0 26px rgb(120 90 50 / .25); }
+.wa-kake-in img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: sepia(.15) saturate(.95); }
+.wa-kake-token { position: absolute; inset: 0; display: grid; place-items: center; }
+.wa-kake-in img + .wa-kake-token { display: none; }
+.wa-kake-token .token { width: 120px; height: 120px; font-size: 48px; border-width: 4px; }
+.wa-rod { position: absolute; left: -12px; right: -12px; top: -7px; height: 13px; border-radius: 7px; background: linear-gradient(180deg, #8b5e34, #3b2414 70%, #2a180c);
+  box-shadow: 0 3px 6px rgb(0 0 0 / .45); }
+.wa-rod::before, .wa-rod::after { content: ""; position: absolute; top: -2px; width: 14px; height: 17px; border-radius: 4px; background: linear-gradient(180deg, #f0d79a, #a8823c); }
+.wa-rod::before { left: -4px; } .wa-rod::after { right: -4px; }
+.wa-rod.bot { top: auto; bottom: -6px; height: 16px; }
+.wa-cord { position: absolute; left: 50%; top: -40px; width: 70px; height: 36px; translate: -50% 0; border: 2px solid #8a2d2d; border-bottom: 0; border-radius: 50% 50% 0 0; }
+.wa-tate { writing-mode: vertical-rl; display: flex; gap: 10px; padding-top: 6px; min-height: 260px; }
+.wa-tate b { font-size: 34px; letter-spacing: .14em; color: var(--ink); line-height: 1.1; text-shadow: 0 1px 0 rgb(255 250 240 / .7); }
+.wa-tate span { font-size: 14px; letter-spacing: .3em; color: color-mix(in srgb, var(--ink) 65%, transparent); }
+.wa-right { min-width: 0; }
+.wa-sub { margin: 4px 0 14px; font-size: 14px; letter-spacing: .12em; color: color-mix(in srgb, var(--ink) 72%, transparent); border-bottom: 1px solid rgb(120 90 50 / .3); padding-bottom: 10px; }
+/* 体力・魔力・正気：墨の帯 */
+.wa-stats { display: grid; gap: 8px; margin-bottom: 22px; }
+.wa-stat { display: grid; grid-template-columns: 74px minmax(0, 1fr) 70px; gap: 12px; align-items: center; }
+.wa-st-l b { font-size: 16px; letter-spacing: .2em; }
+.wa-st-l small { display: block; font-family: "Cinzel", serif; font-size: 9px; letter-spacing: .22em; color: #8a6d45; }
+.wa-st-tr { height: 12px; border-radius: 1px; background: rgb(120 90 50 / .14); box-shadow: inset 0 0 0 1px rgb(120 90 50 / .25); overflow: hidden; }
+.wa-st-tr i { display: block; height: 100%; transition: width .6s cubic-bezier(.2, .8, .2, 1);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .18) 50%, transparent), var(--wa-c, #8e2c2c); -webkit-mask-image: linear-gradient(90deg, #000 85%, rgb(0 0 0 / .6)); mask-image: linear-gradient(90deg, #000 85%, rgb(0 0 0 / .6)); }
+.wa-stat.hp { --wa-c: linear-gradient(90deg, #6e1c1c, #a33a2c); }
+.wa-stat.mp { --wa-c: linear-gradient(90deg, #1f3557, #3d6290); }
+.wa-stat.san { --wa-c: linear-gradient(90deg, #3a2a54, #6f5794); }
+.wa-st-v { text-align: right; font-size: 17px; letter-spacing: .05em; }
+/* 目録（「お知らせ」の一覧のような行） */
+.wa-head { display: flex; align-items: baseline; gap: 14px; padding-left: 42px; position: relative; margin-bottom: 6px; }
+.wa-head::before { content: ""; position: absolute; left: 0; top: 50%; width: 34px; height: 34px; translate: 0 -50%; background: var(--wa-flower) center / contain no-repeat; }
+.wa-head-jp { font-size: 26px; letter-spacing: .14em; color: var(--ink); }
+.wa-head-en { font-family: "Cinzel", serif; font-size: 11px; letter-spacing: .2em; color: #7a6040; }
+.wa-head::after { content: ""; flex: 1; height: 1px; align-self: center; background: color-mix(in srgb, var(--ink) 45%, transparent); }
+.wa-list { list-style: none; margin: 0; padding: 0; }
+.wa-row { width: 100%; display: grid; grid-template-columns: 3.2em minmax(0, 1.2fr) minmax(0, 1fr) 1.6em; gap: 14px; align-items: center; text-align: left; padding: 12px 10px 12px 6px;
+  border: 0; border-bottom: 1px solid rgb(120 90 50 / .22); background: transparent; color: var(--ink); cursor: pointer; font: inherit; position: relative; transition: background .25s, padding .25s; }
+.wa-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, rgb(201 165 96 / .35), transparent); transition: width .35s cubic-bezier(.2, .8, .2, 1); }
+.wa-row > * { position: relative; }
+.wa-row:hover::before, .wa-row:focus-visible::before { width: 100%; }
+.wa-row:focus-visible { outline: 1.5px solid var(--wa-gold); outline-offset: -2px; }
+.wa-no { font-family: var(--f-brush); font-size: 20px; color: #8a5a36; text-align: center; border-right: 1px solid rgb(120 90 50 / .35); }
+.wa-jp { font-size: 17px; letter-spacing: .12em; display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.wa-jp small { font-family: "Cinzel", serif; font-size: 10px; letter-spacing: .14em; color: #8a6d45; white-space: nowrap; }
+.wa-sum { font-size: 13px; color: color-mix(in srgb, var(--ink) 70%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-go { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--wa-sumi); color: #f0e2c2; font-size: 15px; line-height: 1; transition: transform .3s; }
+.wa-row:hover .wa-go { transform: translateX(4px); }
+@media (hover: none) { .wa-row:hover::before { width: 0; } .wa-row:hover .wa-go { transform: none; } }
+@media (max-width: 760px) {
+  .sheet.is-wa { padding: 16px 14px 20px; }
+  .wa-sheet { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .wa-kake { width: 150px; }
+  .wa-tate { min-height: 0; }
+  .wa-tate b { font-size: 28px; }
+  .wa-row { grid-template-columns: 2.4em minmax(0, 1fr) auto 1.4em; gap: 10px; padding-block: 13px; }
+  .wa-jp small { display: none; }
+  .wa-stat { grid-template-columns: 56px minmax(0, 1fr) 62px; }
+}
+@media (prefers-reduced-motion: reduce) { .wa-kake { animation: none; } }
+
+/* ================= 和風テーマ：項目の窓は巻物、左の項目は短冊 ================= */
+:root[data-look~="wa"] .sao-win { border-radius: 2px; overflow: visible; }
+:root[data-look~="wa"] .sao-win::before, :root[data-look~="wa"] .sao-win::after { content: ""; left: -14px; right: -14px; width: auto; height: 14px; border: 0; border-radius: 7px; opacity: 1; z-index: 3;
+  background: linear-gradient(180deg, #8b5e34, #3b2414 70%, #2a180c); box-shadow: 0 3px 6px rgb(0 0 0 / .45); }
+:root[data-look~="wa"] .sao-win::before { top: -7px; }
+:root[data-look~="wa"] .sao-win::after { bottom: -7px; top: auto; }
+:root[data-look~="wa"] .sao-line { left: -14px; right: -14px; top: 100%; height: 14px; margin-top: -7px; border-radius: 7px; opacity: 0; z-index: 4; transform: none; background: linear-gradient(180deg, #8b5e34, #3b2414 70%, #2a180c); box-shadow: 0 3px 6px rgb(0 0 0 / .45); }
+:root[data-look~="wa"] .sao-head { background: transparent; border-bottom: 1px solid rgb(120 90 50 / .3); padding-top: 22px; }
+:root[data-look~="wa"] .sao-hic { background: var(--wa-flower) center / 80% no-repeat !important; border: 0 !important; color: transparent !important; box-shadow: none !important; }
+:root[data-look~="wa"] .sao-hic > * { visibility: hidden; }
+:root[data-look~="wa"] #panel-title { font-size: 26px; letter-spacing: .16em; }
+:root[data-look~="wa"] .panel-en { font-family: "Cinzel", serif; color: #8a6d45; }
+:root[data-look~="wa"] .sao-close { border-color: rgb(176 141 74 / .6); background: rgb(250 244 230 / .9); color: var(--ink); }
+:root[data-look~="wa"] .sao-item { border-radius: 2px; border: 1px solid rgb(176 141 74 / .45); background: var(--wa-washi), rgb(250 244 230 / .92); color: var(--ink); box-shadow: 0 6px 14px -10px rgb(60 40 20 / .6); }
+:root[data-look~="wa"] .sao-item .sao-ic { border-radius: 2px; background: transparent; border-color: transparent; color: #8a5a36; }
+:root[data-look~="wa"] .sao-item.on { color: #f0e2c2; border-color: var(--wa-gold); background: linear-gradient(90deg, var(--wa-sumi2), var(--wa-sumi)); }
+:root[data-look~="wa"] .sao-item.on .sao-ic { color: var(--wa-gold2); background: transparent; border-color: transparent; }
+:root[data-look~="wa"] .sao-item.on::after { border-left-color: var(--wa-sumi); }
+:root[data-look~="wa"] .panel-overlay { background: rgb(40 28 18 / .45); }
+
+/* ================= 和風テーマ：画面の切りかえ（襖） ================= */
+.wa-doors { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
+.wa-door { position: absolute; top: 0; bottom: 0; width: 50.5%; display: block;
+  background: var(--wa-washi), radial-gradient(ellipse at 50% 40%, #f7efdc, #e7d6b2);
+  box-shadow: inset 0 0 0 10px #3b2a1e, inset 0 0 0 12px #b08d4a, inset 0 0 0 13px #3b2a1e, 0 0 30px rgb(0 0 0 / .4); }
+.wa-door.l { left: 0; transform: translateX(-100%); }
+.wa-door.r { right: 0; transform: translateX(100%); }
+/* 襖の絵：金の霞と青海波、引き手 */
+.wa-door::before { content: ""; position: absolute; left: 13px; right: 13px; bottom: 13px; height: 36%; background: var(--wa-sg-gold) 0 100% / 48px 24px; opacity: .75;
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent); mask-image: linear-gradient(to top, #000 40%, transparent); }
+.wa-door::after { content: ""; position: absolute; top: 50%; width: 22px; height: 46px; translate: 0 -50%; border-radius: 11px; background: radial-gradient(ellipse, #2b231f 45%, #b08d4a 50%, #6b5129 70%); box-shadow: 0 1px 2px rgb(0 0 0 / .5); }
+.wa-door.l::after { right: 34px; } .wa-door.r::after { left: 34px; }
+.wa-door b { position: absolute; left: 13px; right: 13px; top: 13px; height: 22%; background: var(--wa-mon) 50% 60% / 90px 90px no-repeat; opacity: .9; }
+.wa-jp { white-space: nowrap; overflow: hidden; }
+.wa-jp small { overflow: hidden; text-overflow: ellipsis; }
+.wa-row { grid-template-columns: 3.2em minmax(0, 1.5fr) minmax(0, 1fr) 1.6em; }
+@media (max-width: 760px) { .wa-row { grid-template-columns: 2.4em minmax(0, 1fr) auto 1.4em; } }
+:root[data-look~="wa"] .fx { display: none; } /* 近未来のふわっと光る輪は和風では出さない */
+
+/* ===== 和風：「探索者をえらぶ」は掛け軸が右から左へ並ぶ（26-select.js の themeSelHtml） ===== */
+:root[data-look~="wa"] #sel-stage.themev { min-height: 0; height: auto !important; overflow: visible; }
+.ts-wa { position: relative; padding: 26px 0 30px; }
+.ts-wa-rail { position: absolute; left: -2%; right: -2%; top: 10px; height: 12px; border-radius: 2px;
+  background: linear-gradient(180deg, #6b4a2c, #3e2a19 60%, #2a1c10); box-shadow: 0 6px 12px -6px rgb(40 25 10 / .6), inset 0 1px 0 rgb(255 220 170 / .25); }
+.ts-wa-row { display: flex; flex-direction: row-reverse; flex-wrap: wrap; justify-content: center; gap: 26px 22px; padding: 0 8px; }
+.ts-wa-card { position: relative; width: 132px; display: flex; flex-direction: column; align-items: center; border: 0; padding: 18px 0 0; background: none; cursor: pointer; transform-origin: 50% 0;
+  transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); color: var(--wa-sumi); font-family: var(--f-body); }
+.ts-wa-card::before { content: ""; position: absolute; left: 50%; top: -14px; width: 46px; height: 32px; margin-left: -23px; border: 1.5px solid #6b4a2c; border-bottom: 0; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }   /* つるすひも */
+.ts-wa-card .rod { width: 112%; height: 12px; border-radius: 6px; background: linear-gradient(180deg, #8a6440, #4a321d 55%, #2f1f12); box-shadow: 0 3px 6px -3px rgb(30 20 10 / .7); position: relative; z-index: 1; }
+.ts-wa-card .rod::before, .ts-wa-card .rod::after { content: ""; position: absolute; top: -2px; width: 10px; height: 16px; border-radius: 3px; background: linear-gradient(180deg, #e6c98a, #9c7a3c); }
+.ts-wa-card .rod::before { left: -6px; } .ts-wa-card .rod::after { right: -6px; }
+.ts-wa-card .paper { width: 100%; min-height: 300px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 10px 16px; position: relative;
+  background: var(--wa-washi), linear-gradient(180deg, #f6eedb, #efe3c7); border-left: 7px solid #9f8352; border-right: 7px solid #9f8352;
+  box-shadow: inset 0 0 0 2px rgb(176 141 74 / .35), 0 14px 26px -16px rgb(60 40 20 / .6); }
+.ts-wa-card .pic { width: 88px; height: 112px; display: grid; place-items: end center; overflow: hidden; background: radial-gradient(circle at 50% 40%, #fffaf0, #eadbb8); border: 1px solid rgb(176 141 74 / .5); }
+.ts-wa-card .pic img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+.ts-wa-card .pic .token { align-self: center; width: 64px; height: 64px; font-size: 26px; }
+.ts-wa-card .tate { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: .12em; }
+.ts-wa-card b.tate { font-family: var(--f-brush, serif); font-size: 21px; font-weight: 400; line-height: 1.1; max-height: 9.5em; overflow: hidden; }
+.ts-wa-card small.tate { position: absolute; left: 8px; top: 136px; font-size: 10.5px; color: #7a6040; max-height: 13em; overflow: hidden; }
+.ts-wa-card .rod.low { width: 104%; height: 14px; border-radius: 7px; }
+.ts-wa-card:hover { transform: rotate(-1.2deg) translateY(2px); }
+.ts-wa-card:hover .paper { box-shadow: inset 0 0 0 2px rgb(176 141 74 / .6), 0 18px 30px -14px rgb(60 40 20 / .7); }
+.ts-wa-card:active { transform: scale(.97); }
+.ts-wa-card.new .paper { justify-content: center; background: var(--wa-washi), linear-gradient(180deg, #fbf6ea, #f3e9d2); }
+.ts-wa-card.new b.tate { font-size: 24px; color: var(--wa-sumi2); }
+.ts-wa-card .stamp { width: 34px; height: 34px; display: grid; place-items: center; background: #b8392b; color: #fff4e6; font-family: var(--f-brush, serif); font-size: 18px; border-radius: 4px; transform: rotate(-6deg); box-shadow: inset 0 0 0 2px rgb(255 230 210 / .5); }
+/* 見出し：題は筆文字、右にはんこ */
+:root[data-look~="wa"] .sel-head h2 { font-family: var(--f-brush, serif); font-weight: 400; letter-spacing: .3em; position: relative; display: inline-block; }
+:root[data-look~="wa"] .sel-head h2::after { content: "選"; position: absolute; right: -2.1em; top: 50%; translate: 0 -50%; width: 1.5em; height: 1.5em; display: grid; place-items: center; font-size: .6em; letter-spacing: 0;
+  background: #b8392b; color: #fff4e6; border-radius: 3px; transform: rotate(8deg); }
+@media (max-width: 560px) { .ts-wa-card { width: 108px; } .ts-wa-card .paper { min-height: 250px; } .ts-wa-card .pic { width: 72px; height: 92px; } .ts-wa-card small.tate { top: 116px; } .ts-wa-row { gap: 22px 14px; } }
+
+/* ===== 和風：キャラシの画面の見出しは、右に縦書きの題（近未来の「左に文字・右に軌道」とはちがう形） ===== */
+:root[data-look~="wa"] .hero { display: flex; flex-direction: row-reverse; align-items: stretch; justify-content: space-between; gap: 30px; }
+:root[data-look~="wa"] .hero .orbit { display: none; }
+:root[data-look~="wa"] .hero-copy { display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 22px; }
+:root[data-look~="wa"] .hero-title { writing-mode: vertical-rl; font-family: var(--f-brush, serif); font-weight: 400; font-size: 40px; letter-spacing: .18em; line-height: 1.5; margin: 0; max-height: 360px; }
+:root[data-look~="wa"] .hero .eyebrow { writing-mode: vertical-rl; letter-spacing: .3em; margin: 0; }
+:root[data-look~="wa"] .hero-lead { writing-mode: vertical-rl; max-height: 330px; font-size: 13.5px; letter-spacing: .14em; line-height: 2; margin: 0; }
+:root[data-look~="wa"] .hero-tags { display: none; }
+@media (max-width: 760px) { :root[data-look~="wa"] .hero-title { font-size: 24px; max-height: 200px; } :root[data-look~="wa"] .hero-lead { display: none; } :root[data-look~="wa"] .hero-copy { padding: 14px 12px; } :root[data-look~="wa"] .hero .eyebrow { font-size: 9px; max-height: 200px; } }
+:root[data-look~="wa"] .hero-copy { padding: 22px 18px; background: var(--wa-washi), linear-gradient(180deg, rgb(250 244 230 / .94), rgb(242 232 210 / .92)); border: 1px solid rgb(176 141 74 / .55);
+  box-shadow: inset 0 0 0 4px rgb(250 244 230 / .6), inset 0 0 0 5px rgb(176 141 74 / .35), 0 14px 30px -18px rgb(60 40 20 / .6); }
+
+/* ===== 和風：左上のロゴは墨と金（assets/brand/logo-wa.webp） ===== */
+:root[data-look~="wa"] .brand-logo { background-image: url("../assets/brand/logo-wa.webp"); filter: none; }
+
+/* ===== 和風：項目の窓は、上に「短冊」が並ぶ（右から左へ、縦書き、壱〜玖）。開いている短冊だけ赤く長く垂れる ===== */
+@counter-style wa-daiji { system: fixed; symbols: 壱 弐 参 肆 伍 陸 漆 捌 玖; }
+:root[data-look~="wa"] .sao { grid-template-columns: minmax(0, 1fr); gap: 0; width: min(1080px, 100%); align-items: stretch; }
+:root[data-look~="wa"] .sao-menu { position: relative; flex-direction: row-reverse; justify-content: center; align-items: flex-start; gap: 8px; padding: 14px 26px 0; overflow: visible; counter-reset: wa; margin-bottom: 12px; }
+:root[data-look~="wa"] .sao-menu::before { content: ""; position: absolute; left: 4%; right: 4%; top: 6px; height: 2px; background: linear-gradient(90deg, transparent, #8a6440 8%, #8a6440 92%, transparent); }   /* 短冊をつるす紐 */
+:root[data-look~="wa"] .sao-item { counter-increment: wa; flex: none; width: 46px; height: 112px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 6px; transform: none !important; transform-origin: 50% 0;
+  border: 1px solid rgb(176 141 74 / .55); border-radius: 1px; background: var(--wa-washi), linear-gradient(180deg, #fbf5e6, #f1e5c8); color: var(--wa-sumi); box-shadow: 0 6px 12px -8px rgb(60 40 20 / .6); transition: height .35s cubic-bezier(.3, 1.4, .5, 1), background .3s; }
+:root[data-look~="wa"] .sao-item::before { content: counter(wa, wa-daiji); width: 20px; height: 20px; flex: none; display: grid; place-items: center; font-family: var(--f-brush, serif); font-size: 12px; color: #fff4e6; background: #b8392b; border-radius: 2px; }
+:root[data-look~="wa"] .sao-item::after { content: ""; position: absolute; left: 50%; top: -9px; width: 1px; height: 9px; background: #8a6440; border: 0; translate: 0 0; filter: none; }
+:root[data-look~="wa"] .sao-item.on::after { border: 0; }
+:root[data-look~="wa"] .sao-item .sao-ic { display: none; }
+:root[data-look~="wa"] .sao-item .sao-lb { writing-mode: vertical-rl; text-orientation: upright; font-family: var(--f-body); font-size: 13px; font-weight: 700; letter-spacing: .14em; white-space: nowrap; overflow: hidden; max-height: 76px; }
+:root[data-look~="wa"] .sao-item .sao-lb small { display: none; }
+:root[data-look~="wa"] .sao-item:hover { animation: wa-swing .9s ease-in-out; box-shadow: 0 10px 16px -8px rgb(60 40 20 / .7); }
+@keyframes wa-swing { 25% { rotate: 3deg; } 60% { rotate: -2deg; } 85% { rotate: .8deg; } }
+:root[data-look~="wa"] .sao-item.on { height: 132px; background: linear-gradient(180deg, #a8352a, #7e241c); border-color: #d9b46a; color: #f6e7c8; box-shadow: 0 10px 18px -8px rgb(90 20 10 / .7); }
+:root[data-look~="wa"] .sao-item.on::before { background: #f6e7c8; color: #8a2a20; }
+@media (max-width: 760px) {
+  :root[data-look~="wa"] .sao-menu { justify-content: flex-start; overflow-x: auto; padding: 14px 10px 4px; gap: 6px; scrollbar-width: none; }
+  :root[data-look~="wa"] .sao-menu::-webkit-scrollbar { display: none; }
+  :root[data-look~="wa"] .sao-item { width: 40px; height: 96px; display: flex; grid-template-columns: none; padding: 6px 0; }
+  :root[data-look~="wa"] .sao-item.on { height: 110px; }
+  :root[data-look~="wa"] .sao-item .sao-lb { font-size: 12px; max-height: 64px; }
+}

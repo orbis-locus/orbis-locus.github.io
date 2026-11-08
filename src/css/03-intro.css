@@ -1,0 +1,92 @@
+/* ===== intro: dark tabletop welcome (its own single dark world) ===== */
+.intro { --i-bg: #06070c; --i-ink: #ece4d0; --i-mute: #9a937f; --i-gold: #d4ae62; --i-teal: #3fb6c2; --i-violet: #6d4bb3;
+  position: fixed; inset: 0; z-index: 95; overflow: hidden; display: grid; place-items: center; color: var(--i-ink); color-scheme: dark;
+  background: radial-gradient(ellipse at 50% 55%, #121a2a 0%, #0a0d16 45%, var(--i-bg) 80%); }
+.intro-dust { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.intro-fog { position: absolute; inset: -20%; pointer-events: none; }
+.intro-fog span { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(70px); opacity: .35; animation: fog-drift 26s ease-in-out infinite alternate; }
+.intro-fog span:nth-child(1) { left: 5%; top: 30%; background: radial-gradient(circle, rgb(63 182 194 / .55), transparent 65%); }
+.intro-fog span:nth-child(2) { right: 0; top: 10%; background: radial-gradient(circle, rgb(109 75 179 / .55), transparent 65%); animation-duration: 32s; animation-direction: alternate-reverse; }
+.intro-fog span:nth-child(3) { left: 30%; bottom: -10%; background: radial-gradient(circle, rgb(212 174 98 / .28), transparent 65%); animation-duration: 38s; }
+@keyframes fog-drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(8vmax, -6vmax) scale(1.15); } }
+.intro-circle { position: absolute; left: 50%; top: 50%; width: min(118vmin, 860px); aspect-ratio: 1; translate: -50% -50%; pointer-events: none; overflow: visible;
+  filter: drop-shadow(0 0 10px rgb(63 182 194 / .45)); animation: intro-circle-in 2.4s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes intro-circle-in { from { opacity: 0; scale: .8; filter: blur(8px); } to { opacity: 1; scale: 1; } }
+.intro-circle .spin-a { transform-origin: 300px 300px; animation: spin 140s linear infinite; }
+.intro-circle .spin-b { transform-origin: 300px 300px; animation: spin 90s linear infinite reverse; }
+.intro-circle circle, .intro-circle polygon { fill: none; stroke: rgb(63 182 194 / .5); stroke-width: 1; }
+.intro-circle .gold { stroke: rgb(212 174 98 / .55); }
+.intro-circle .dash { stroke-dasharray: 2 7; }
+.intro-circle .ring-text { font-family: "Cinzel", "Times New Roman", serif; font-size: 15px; letter-spacing: 3px; fill: rgb(212 174 98 / .75); }
+.intro-circle .rune { font-family: "Cinzel", serif; font-size: 18px; fill: rgb(236 228 208 / .55); text-anchor: middle; dominant-baseline: central; }
+.intro-body { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding: 24px; max-width: 760px; }
+.intro-eyebrow { margin: 0; font-family: "Cinzel", "Times New Roman", serif; font-size: clamp(11px, 1.6vw, 14px); letter-spacing: .5em; color: var(--i-gold); animation: intro-up 1.2s .3s cubic-bezier(.2, .8, .2, 1) both; }
+.intro-title { margin: 0; font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; font-weight: 800; font-size: clamp(34px, 7.4vw, 76px); line-height: 1.25; letter-spacing: .08em;
+  text-shadow: 0 0 24px rgb(63 182 194 / .45), 0 0 2px rgb(255 255 255 / .4); }
+.intro-title span { display: block; animation: intro-up 1.6s cubic-bezier(.2, .8, .2, 1) both; }
+.intro-title span:nth-child(1) { animation-delay: .6s; }
+.intro-title span:nth-child(2) { animation-delay: 1s; background: linear-gradient(100deg, #f3e7c4, var(--i-gold) 45%, #f3e7c4 70%, var(--i-gold)); -webkit-background-clip: text; background-clip: text; color: transparent; background-size: 220% 100%; animation: intro-up 1.6s 1s cubic-bezier(.2, .8, .2, 1) both, shimmer 6s 2.6s ease-in-out infinite; }
+@keyframes shimmer { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+@keyframes intro-up { from { opacity: 0; transform: translateY(18px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
+.intro-lead { margin: 4px 0 10px; font-family: "Shippori Mincho B1", "Yu Mincho", serif; font-size: clamp(14px, 2vw, 17px); color: var(--i-mute); letter-spacing: .2em; animation: intro-up 1.4s 1.5s cubic-bezier(.2, .8, .2, 1) both; }
+.intro-btn { position: relative; cursor: pointer; padding: 16px 38px; border-radius: 999px; color: var(--i-ink); font-family: "Shippori Mincho B1", "Yu Mincho", serif; font-weight: 800; font-size: clamp(15px, 2.2vw, 18px); letter-spacing: .24em;
+  border: 1px solid transparent; background: linear-gradient(180deg, rgb(20 28 44 / .9), rgb(10 13 22 / .9)) padding-box, linear-gradient(120deg, var(--i-gold), var(--i-teal), var(--i-gold)) border-box;
+  box-shadow: 0 0 24px rgb(63 182 194 / .35), inset 0 0 18px rgb(212 174 98 / .15); animation: intro-up 1.2s 1.9s cubic-bezier(.2, .8, .2, 1) both; transition: box-shadow .3s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.intro-btn::after { content: ""; position: absolute; inset: -6px; border-radius: inherit; border: 1px solid rgb(212 174 98 / .5); animation: btn-pulse 2.4s 3s ease-out infinite; pointer-events: none; }
+@keyframes btn-pulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
+.intro-btn:hover, .intro-btn:focus-visible { box-shadow: 0 0 40px rgb(63 182 194 / .6), inset 0 0 24px rgb(212 174 98 / .3); transform: scale(1.04); outline: none; }
+.intro-btn:active { transform: scale(.97); }
+.intro-foot { margin: 6px 0 0; font-family: "Cinzel", serif; font-size: 11px; letter-spacing: .3em; color: rgb(154 147 127 / .8); animation: intro-up 1.2s 2.3s cubic-bezier(.2, .8, .2, 1) both; }
+.intro-flash { position: absolute; width: 40px; height: 40px; border-radius: 50%; pointer-events: none; z-index: 2; translate: -50% -50%;
+  background: radial-gradient(circle, #ffffff 0%, #f4f8fd 45%, rgb(160 220 235 / .9) 62%, rgb(63 182 194 / 0) 72%); }
+@media (prefers-reduced-motion: reduce) { .intro * { animation: none !important; } }
+
+/* ===== はじめの画面「ORBiS」（星空と光。27-intro.js）。テーマ・背景の小窓で「魔法陣」に切りかえられる ===== */
+.intro.ob-intro { --i-ink: #2b3670; background: #dfe5fb; color: #2b3670; color-scheme: light; }
+.obi-sky { position: absolute; inset: 0;
+  background: radial-gradient(900px 560px at 78% 6%, rgb(255 255 255 / .9), transparent 60%), radial-gradient(700px 600px at 8% 42%, rgb(196 210 255 / .75), transparent 66%),
+    radial-gradient(900px 700px at 92% 100%, rgb(206 196 252 / .85), transparent 62%), linear-gradient(170deg, #c7d4fa 0%, #dfe4fc 40%, #e4e0fb 72%, #d5cff7 100%); }
+.obi-cloud { position: absolute; border-radius: 50%; opacity: .85;
+  background: radial-gradient(closest-side at 30% 60%, rgb(255 255 255 / .95), transparent), radial-gradient(closest-side at 60% 45%, rgb(255 255 255 / .9), transparent), radial-gradient(closest-side at 82% 62%, rgb(250 248 255 / .85), transparent); }
+.obi-cloud.c1 { width: 80vmax; height: 24vmax; left: -22vmax; bottom: -8vmax; animation: obi-cloud 40s ease-in-out infinite alternate; }
+.obi-cloud.c2 { width: 70vmax; height: 20vmax; right: -24vmax; top: -6vmax; opacity: .6; animation: obi-cloud 50s ease-in-out infinite alternate-reverse; }
+@keyframes obi-cloud { to { transform: translateX(6vmax); } }
+.ob-intro .intro-dust { z-index: 1; }
+.obi-orbits { position: absolute; left: 50%; top: 50%; width: min(150vmin, 1100px); height: min(150vmin, 1100px); translate: -50% -50%; overflow: visible; z-index: 1; pointer-events: none; }
+.obi-ring { transform-origin: 300px 300px; }
+.obi-ring.r1 { transform: rotate(-14deg); } .obi-ring.r2 { transform: rotate(10deg); } .obi-ring.r3 { transform: rotate(-36deg); }
+.obi-ring ellipse { fill: none; stroke: #fff; stroke-width: 1.4; stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: obi-draw 2.4s cubic-bezier(.5, 0, .2, 1) forwards; filter: drop-shadow(0 0 4px rgb(170 175 255 / .9)); }
+.obi-ring.r2 ellipse { stroke: rgb(170 155 250 / .9); animation-delay: .25s; } .obi-ring.r3 ellipse { stroke: rgb(255 255 255 / .55); animation-delay: .5s; }
+@keyframes obi-draw { to { stroke-dashoffset: 0; } }
+.obi-sat { fill: #fff; filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #a9b6ff); opacity: 0; animation: intro-up .8s 1.6s both; }
+.obi-sp { fill: #fff; filter: drop-shadow(0 0 4px #fff); transform-box: fill-box; transform-origin: center; animation: obi-tw 3s ease-in-out infinite; }
+.obi-sp:nth-of-type(2n) { animation-delay: -1.2s; } .obi-sp:nth-of-type(3n) { animation-delay: -2s; animation-duration: 2.4s; }
+@keyframes obi-tw { 0%, 100% { opacity: .3; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(25deg); } }
+.obi-body { z-index: 3; gap: 6px; }
+.obi-mark { width: min(44vmin, 250px); height: auto; filter: drop-shadow(0 16px 30px rgb(100 110 230 / .4)); animation: obi-mark 1.6s cubic-bezier(.2, .8, .2, 1) both, obi-float 6s 1.6s ease-in-out infinite; }
+@keyframes obi-mark { from { opacity: 0; transform: scale(.4) rotate(-30deg); filter: drop-shadow(0 0 0 transparent) blur(8px); } }
+@keyframes obi-float { 50% { transform: translateY(-8px); } }
+.obi-logo { width: min(70vmin, 380px); height: auto; margin-top: -6px; animation: obi-wipe 1.2s 1s cubic-bezier(.5, 0, .2, 1) both; }
+@keyframes obi-wipe { from { clip-path: inset(0 100% 0 0); opacity: .3; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
+.obi-tag { margin: -4px 0 0; font-family: "Lexend", system-ui, sans-serif; font-size: clamp(13px, 2.2vmin, 16px); letter-spacing: .3em; color: #6b77a8; animation: obi-tag 1.4s 1.7s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes obi-tag { from { opacity: 0; letter-spacing: .8em; } }
+.obi-title { margin: 10px 0 6px; font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 500; font-size: clamp(15px, 2.6vmin, 19px); letter-spacing: .24em; color: #3a4688; animation: intro-up 1.1s 2.1s cubic-bezier(.2, .8, .2, 1) both; }
+.obi-btn { position: relative; overflow: hidden; margin-top: 8px; padding: 14px 44px; border-radius: 999px; border: 1px solid rgb(255 255 255 / .8); color: #fff; font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; letter-spacing: .16em; font-size: 16px;
+  background: linear-gradient(115deg, #6fa6f6, #7d8ff3 52%, #a993f7); box-shadow: 0 16px 34px -12px rgb(100 110 240 / .9), 0 0 0 8px rgb(255 255 255 / .3), inset 0 1px 0 rgb(255 255 255 / .6);
+  animation: intro-up 1s 2.4s cubic-bezier(.2, .8, .2, 1) both; cursor: pointer; }
+.obi-btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .8) 50%, transparent 65%); transform: translateX(-120%); animation: obi-shine 3.2s 3.4s ease-in-out infinite; }
+@keyframes obi-shine { 0%, 60% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+.obi-btn span { position: relative; }
+.obi-btn:hover { box-shadow: 0 18px 40px -12px rgb(110 115 250 / 1), 0 0 0 10px rgb(255 255 255 / .4), inset 0 1px 0 rgb(255 255 255 / .6); }
+.obi-foot { margin: 12px 0 0; font-family: "Lexend", system-ui, sans-serif; font-size: 10.5px; letter-spacing: .22em; color: #8e98c4; animation: intro-up 1s 2.6s both; }
+.ob-intro .intro-flash { background: radial-gradient(circle, #ffffff 0%, #f6f5ff 45%, rgb(196 188 255 / .9) 62%, rgb(150 140 250 / 0) 72%); }
+@media (prefers-reduced-motion: reduce) { .ob-intro * { animation: none !important; } .obi-ring ellipse { stroke-dashoffset: 0; } }
+/* はじめの画面（ORBiS）の右上：音楽のボタン（まだ流れていないときは「押すと音楽が流れます」とうっすら光る） */
+.obi-music { position: absolute; z-index: 4; right: 18px; top: 18px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / .9); background: rgb(255 255 255 / .55); color: #4d63c9; font-family: "Zen Kaku Gothic New", sans-serif; font-size: 12.5px; font-weight: 600;
+  box-shadow: 0 8px 20px -12px rgb(76 86 190 / .6), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: intro-up .8s 1s both; }
+.obi-music svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.obi-music[aria-pressed="false"]:not(.hint) { color: #8e98c4; }
+.obi-music.hint { animation: intro-up .8s 1s both, obi-hint 2.4s 2s ease-in-out infinite; }
+@keyframes obi-hint { 50% { box-shadow: 0 8px 20px -12px rgb(76 86 190 / .6), 0 0 0 6px rgb(255 255 255 / .45), inset 0 1px 0 #fff; } }
+@media (max-width: 560px) { .obi-music { right: 12px; top: 12px; font-size: 11.5px; } }

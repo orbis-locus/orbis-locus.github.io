@@ -1,0 +1,17 @@
+/* ===== icon editor ===== */
+.token img { transform-origin: 50% 15%; }
+.ico-wrap { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: center; }
+.ico-stage { position: relative; width: 240px; height: 240px; border-radius: 50%; overflow: hidden; cursor: grab; touch-action: none; background: var(--code-bg); border: 3px solid var(--line-strong);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--sky) 14%, transparent), inset 0 0 0 1px rgb(0 0 0 / .05); }
+.ico-stage.drag { cursor: grabbing; }
+.ico-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; pointer-events: none; }
+.ico-none { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; font-size: 12px; color: var(--muted); }
+.ico-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ico-side .row { display: flex; gap: 6px; flex-wrap: wrap; }
+.ico-mini { display: flex; gap: 14px; align-items: center; }
+.ico-mini .token { border-width: 3px; font-size: 14px; }
+.sel-minis i { overflow: hidden; }
+.sel-minis i img { width: 100%; height: 100%; object-fit: cover; }
+.gc-dot.img { padding: 0; overflow: hidden; background: var(--code-bg); }
+.gc-dot.img img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 560px) { .ico-wrap { grid-template-columns: minmax(0, 1fr); justify-items: center; } .ico-stage { width: 220px; height: 220px; } }

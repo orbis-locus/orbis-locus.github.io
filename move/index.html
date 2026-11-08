@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ORBiS は引っ越しました</title>
+<meta name="robots" content="noindex">
+<!--
+  ORBiS の「引っ越しページ」。前の公開URL（https://kanno-925.github.io/charasheet/）に置く。
+  ・このURLに残っているデータ（探索者・設定・BGMのファイル）を、新しいURL（https://orbis-locus.github.io/）の窓へ渡す。
+    新しいURLを ?move=1 で開き、あちらの「受け取れます」の合図を待ってから postMessage で送る（あちらは js/33-move.js）
+  ・データが無い人や、共有リンク（?share=）で来た人は、そのまま新しいURLへ移動する
+  ・うまく渡せないときは、バックアップ（文字）をコピーして、新しいURLの「読み込み」に貼ってもらう
+  このファイルは build.py を通さない（そのまま置く）。
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; color: #2b3670;
+    background: radial-gradient(900px 560px at 78% 6%, rgb(255 255 255 / .9), transparent 60%), radial-gradient(900px 700px at 92% 100%, rgb(206 196 252 / .85), transparent 62%), linear-gradient(170deg, #c7d4fa, #e4e0fb 72%, #d5cff7); }
+  .card { width: min(560px, 100%); padding: 28px 24px; border-radius: 28px; text-align: center; background: linear-gradient(140deg, rgb(255 255 255 / .82), rgb(244 245 255 / .62));
+    border: 1px solid #fff; box-shadow: 0 18px 40px -18px rgb(76 86 190 / .5), inset 0 1px 0 #fff; }
+  .logo { font-family: "Lexend", system-ui, sans-serif; font-size: 34px; letter-spacing: .2em; font-weight: 300; background: linear-gradient(100deg, #4d78e6, #a189f5); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0; }
+  h1 { font-size: 20px; margin: 10px 0 6px; }
+  p { line-height: 1.8; margin: 8px 0; font-size: 14.5px; }
+  .url { display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgb(255 255 255 / .7); border: 1px solid #fff; font-family: ui-monospace, Menlo, monospace; font-size: 13.5px; word-break: break-all; }
+  .btn { display: inline-block; margin: 10px 6px 0; padding: 13px 26px; border-radius: 999px; border: 1px solid rgb(255 255 255 / .8); font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none;
+    color: #fff; background: linear-gradient(115deg, #6fa6f6, #7d8ff3 52%, #a993f7); box-shadow: 0 12px 26px -12px rgb(100 110 240 / .9); }
+  .btn.sub { color: #2b3670; background: rgb(255 255 255 / .75); box-shadow: none; font-weight: 600; font-size: 13.5px; padding: 10px 18px; }
+  .msg { min-height: 1.6em; font-weight: 700; color: #4d63c9; }
+  .msg.err { color: #c0485e; }
+  textarea { width: 100%; height: 120px; margin-top: 10px; border-radius: 12px; border: 1px solid #c9cdf3; padding: 8px; font-size: 12px; display: none; }
+  small { color: #6b77a8; }
+</style>
+</head>
+<body>
+<main class="card">
+  <p class="logo">ORBiS</p>
+  <h1>ORBiS は引っ越しました</h1>
+  <p>新しい住所はこちらです。<br><span class="url" id="new-url">https://orbis-locus.github.io/</span></p>
+  <div id="area"><p>データを確かめています…</p></div>
+  <p class="msg" id="msg" role="status"></p>
+  <textarea id="backup" readonly aria-label="バックアップ"></textarea>
+  <p><small>ブラウザは、データを住所（URL）ごとに分けてしまっておきます。そのため、ログインしていない人の探索者は、新しい住所へ運ぶ必要があります。ログインしている人のデータは、新しい住所でログインすればそのまま出ます。</small></p>
+</main>
+<script>
+(() => {
+  const NEW = 'https://orbis-locus.github.io/', NEW_ORIGIN = 'https://orbis-locus.github.io';
+  const $ = id => document.getElementById(id);
+  const go = () => location.replace(NEW + location.search + location.hash);   // 共有リンクなどは、後ろの部分もそのまま
+  // 共有リンク（?share=）で来た人は、すぐ新しい住所へ
+  if (/[?&]share=/.test(location.search)) { go(); return; }
+
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const openDb = (name, store) => new Promise(res => {
+    try {
+      const r = indexedDB.open(name, 1);
+      r.onupgradeneeded = () => { try { r.result.createObjectStore(store); } catch (e) { /* */ } };
+      r.onsuccess = () => res(r.result); r.onerror = () => res(null); r.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  });
+  const getAll = (db, store) => new Promise(res => {
+    try {
+      const t = db.transaction(store, 'readonly'), st = t.objectStore(store), out = [];
+      const cur = st.openCursor();
+      cur.onsuccess = () => { const c = cur.result; if (c) { out.push([c.key, c.value]); c.continue(); } else res(out); };
+      cur.onerror = () => res(out);
+    } catch (e) { res([]); }
+  });
+  const parse = s => { try { return typeof s === 'string' ? JSON.parse(s) : s; } catch (e) { return null; } };
+
+  async function readAll() {
+    // 探索者と設定（アプリと同じ読み方：IndexedDB の meta と c:id。localStorage の予備と比べて新しいほう）
+    let state = null;
+    const db = await openDb('charasheet-kobo-data', 'kv');
+    if (db) {
+      const kv = new Map(await getAll(db, 'kv'));
+      const meta = parse(kv.get('meta'));
+      if (meta && Array.isArray(meta.ids)) {
+        const chars = meta.ids.map(id => parse(kv.get('c:' + id))).filter(Boolean);
+        delete meta.ids; meta.chars = chars; state = meta;
+      }
+      const legacy = parse(kv.get('state'));
+      if (legacy && Array.isArray(legacy.chars) && (!state || (legacy.savedAt || 0) > (state.savedAt || 0))) state = legacy;
+    }
+    const ls = parse(lsGet('charasheet-kobo.v2'));
+    if (ls && Array.isArray(ls.chars) && (!state || (ls.savedAt || 0) > (state.savedAt || 0))) state = ls;
+    // BGM のファイル
+    let audio = [];
+    const adb = await openDb('charasheet-kobo', 'bgm');
+    if (adb) audio = (await getAll(adb, 'bgm')).filter(([, v]) => v instanceof Blob).map(([id, blob]) => ({ id, blob }));
+    // 端末ごとの小さな設定
+    const small = {};
+    ['charasheet-kobo.look', 'charasheet-kobo.intro', 'charasheet-kobo.vol2', 'charasheet-kobo.titleBgm'].forEach(k => { const v = lsGet(k); if (v != null) small[k] = v; });
+    return { state, audio, ls: small };
+  }
+
+  function showBackup(data) {
+    const s = data.state || { chars: [] };
+    const ta = $('backup');
+    ta.value = JSON.stringify({ app: 'charasheet-kobo', version: 2, chars: s.chars || [], friends: s.friends || [] });
+    ta.style.display = 'block'; ta.select();
+    try { navigator.clipboard.writeText(ta.value).then(() => { $('msg').textContent = 'バックアップをコピーしました。新しい住所の「読み込み」に貼り付けてください。'; }); } catch (e) { /* */ }
+  }
+
+  readAll().then(data => {
+    const real = ((data.state && data.state.chars) || []).filter(c => c && !c.sample);
+    const moved = lsGet('charasheet-kobo.moved');
+    if (!real.length) {
+      $('area').innerHTML = '<p>この住所には、運ぶデータはありませんでした。新しい住所へ移動します…</p><a class="btn" id="go">新しい住所をひらく</a>';
+      $('go').href = NEW; setTimeout(go, 2200); return;
+    }
+    $('area').innerHTML = `<p>この住所に、探索者が <b>${real.length}人</b> 残っています。<br>下のボタンを押すと、新しい住所へ運んでから開きます。</p>
+      ${moved ? '<p><small>（前に一度運んでいます。もう一度送っても、同じ探索者は新しいほうが残ります）</small></p>' : ''}
+      <button class="btn" id="send" type="button">データを持って新しい住所へ</button><br>
+      <button class="btn sub" id="bk" type="button">うまくいかないとき：バックアップをコピー</button>`;
+    $('bk').onclick = () => showBackup(data);
+    $('send').onclick = () => {
+      const w = window.open(NEW + '?move=1', '_blank');
+      if (!w) { $('msg').className = 'msg err'; $('msg').textContent = '新しいタブを開けませんでした。ポップアップを許可するか、下の「バックアップをコピー」を使ってください。'; return; }
+      $('msg').className = 'msg'; $('msg').textContent = '新しい住所に運んでいます…（新しいタブが開きます）';
+      let done = false;
+      const onMsg = e => {
+        if (e.origin !== NEW_ORIGIN || !e.data) return;
+        if (e.data.type === 'orbis-move-ready') { try { w.postMessage({ type: 'orbis-move', state: data.state, audio: data.audio, ls: data.ls }, NEW_ORIGIN); } catch (er) { $('msg').className = 'msg err'; $('msg').textContent = '送れませんでした。「バックアップをコピー」を使ってください。'; } }
+        if (e.data.type === 'orbis-moved') {
+          done = true; removeEventListener('message', onMsg);
+          if (e.data.ok) { try { localStorage.setItem('charasheet-kobo.moved', String(Date.now())); } catch (er) { /* */ } $('msg').textContent = `引っ越しできました（${e.data.n || 0}人）。新しいタブの ORBiS を使ってください。このタブは閉じて大丈夫です。`; }
+          else { $('msg').className = 'msg err'; $('msg').textContent = '新しい住所で受け取れませんでした。「バックアップをコピー」を使ってください。'; }
+        }
+      };
+      addEventListener('message', onMsg);
+      setTimeout(() => { if (!done) { $('msg').className = 'msg err'; $('msg').textContent = '時間内に運べませんでした。新しいタブを閉じてもう一度押すか、「バックアップをコピー」を使ってください。'; } }, 25000);
+    };
+  });
+})();
+</script>
+</body>
+</html>

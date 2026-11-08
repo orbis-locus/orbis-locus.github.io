@@ -1,0 +1,51 @@
+/* ===== charts ===== */
+.chart-fig { margin: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--solid); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.chart-fig figcaption { font-size: 12px; font-weight: 700; color: var(--ink); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.chart-fig figcaption > span { font-weight: 400; color: var(--muted); font-size: 11px; }
+.ab-viz { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.ab-viz .derived { align-content: start; }
+@media (max-width: 900px) { .ab-viz { grid-template-columns: minmax(0, 1fr); } .radar-fig { max-width: 360px; width: 100%; justify-self: center; } }
+.radar-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.radar-svg .rg { fill: none; stroke: var(--line); stroke-width: 1; }
+.radar-svg .rg:last-of-type { stroke: var(--line-strong); }
+.radar-svg .ra { stroke: var(--line); stroke-width: 1; }
+.radar-svg .rarea { fill: color-mix(in srgb, var(--sky) 22%, transparent); stroke: var(--sky); stroke-width: 2; stroke-linejoin: round; }
+.radar-svg .rd { fill: var(--sky); stroke: var(--solid); stroke-width: 2; }
+.radar-svg .rh { fill: transparent; cursor: default; }
+.radar-svg .rh:hover + .rd, .radar-svg .rd:has(+ .rh:hover) { r: 6; }
+.radar-svg .rl-k { font-family: var(--f-latin); font-size: 10px; font-weight: 700; fill: var(--muted); letter-spacing: .06em; }
+.radar-svg .rl-v { font-family: var(--f-mono); font-size: 12px; font-weight: 700; fill: var(--ink); }
+.radar-svg .rshape { transform-box: view-box; transform-origin: var(--cx) var(--cy); }
+.radar-svg.grow .rshape { animation: radar-in .9s cubic-bezier(.2, .9, .3, 1.15) both; }
+@keyframes radar-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.peek-radar { margin: -4px auto -6px; width: 100%; max-width: 230px; }
+.legend { display: inline-flex; gap: 6px; align-items: center; }
+.legend .sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-left: 6px; }
+.sw-init, .seg-i { background: color-mix(in srgb, var(--sky) 30%, var(--solid)); }
+.sw-add, .seg-a { background: var(--sky); }
+.sk-bars { display: flex; flex-direction: column; gap: 5px; }
+.sk-row { display: grid; grid-template-columns: minmax(6em, 11em) minmax(0, 1fr) 2.6em; gap: 10px; align-items: center; font-size: 12px; border-radius: 6px; }
+.sk-row:hover { background: var(--code-bg); }
+.sk-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-tr { display: flex; gap: 2px; height: 12px; align-items: stretch; background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 25% 100%; }
+.sk-tr i { display: block; height: 100%; min-width: 0; }
+.sk-tr .seg-i { border-radius: 0; }
+.sk-tr .seg-a { border-radius: 0 4px 4px 0; }
+.sk-tr .seg-i:only-child, .sk-tr .seg-a[style^="width:0"] { border-radius: 0 4px 4px 0; }
+.sk-v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.sk-axis { position: relative; height: 14px; font-family: var(--f-mono); font-size: 9.5px; color: var(--muted); }
+.sk-axisrow:hover { background: none; }
+.sk-axis span { position: absolute; translate: -50% 0; }
+.sk-bars.grow .sk-tr { animation: bars-in .7s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--k) * 30ms); transform-origin: left center; }
+@keyframes bars-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.chart-tip { position: fixed; z-index: 130; pointer-events: none; background: var(--ink); color: var(--solid); font-size: 12px; padding: 5px 10px; border-radius: 8px; box-shadow: var(--shadow); white-space: nowrap; font-family: var(--f-body); }
+@media (max-width: 560px) { .sk-row { grid-template-columns: minmax(5em, 7.5em) minmax(0, 1fr) 2.2em; gap: 6px; } }
+
+/* 振ったポイントの内訳：職業P・興味P・成長とその他で色を分ける */
+:root { --seg-j: var(--sky); --seg-h: var(--orange, #f08a24); --seg-g: var(--lime, #3fb56b); }
+.sw-j, .sk-tr .seg-j { background: var(--seg-j); }
+.sw-h, .sk-tr .seg-h { background: var(--seg-h); }
+.sw-g, .sk-tr .seg-g { background: var(--seg-g); }
+.sk-tr .seg-a { border-radius: 0; }
+.sk-tr i:last-child { border-radius: 0 4px 4px 0; }
+.legend { flex-wrap: wrap; }

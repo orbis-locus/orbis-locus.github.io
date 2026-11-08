@@ -1,0 +1,621 @@
+/* ================= アカウント・クラウド同期（Supabase） ================= */
+const CLOUD = Object.assign({
+  url: 'https://umrouqvbmnttirdzixvc.supabase.co',
+  key: 'sb_publishable_9GwpXgDVVrzCeWjihR6yzQ_uKQsxbia',
+}, window.CHARASHEET_CLOUD || {});
+const cloudReady = () => /^https:\/\/[\w-]+\.supabase\.co\/?$/.test(CLOUD.url) && CLOUD.key.length > 20 && !!(window.supabase && window.supabase.createClient);
+let sb = null, me = null, online = null, syncTimer = null, syncing = false, syncAgain = false, syncState = 'off', syncMsg = '', acctTab = 'login';
+const lastSynced = new Map();
+
+/* ---- ユーザーのアイコン画像（profiles.avatar に小さな正方形の画像を data URL で入れる） ---- */
+const AVATARS = {};    // ユーザーID → 画像
+let avatarCol = true;  // サーバーに avatar 欄がまだ無い（SQL 07 を実行していない）ときは false にして、名前だけ読む
+const okAvatar = v => typeof v === 'string' && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '';
+const avImg = uid => AVATARS[uid] ? `<img src="${esc(AVATARS[uid])}" alt="" loading="lazy" draggable="false">` : '';
+/* profiles を読む。q は列の名前を受け取ってクエリを返す関数。avatar 欄があればいっしょに読んで覚えておく */
+async function selectProfiles(q) {
+  if (avatarCol) {
+    const r = await q('id,username,avatar');
+    if (!r.error) {
+      [].concat(r.data || []).forEach(p => { if (p && p.id) { if (okAvatar(p.avatar)) AVATARS[p.id] = p.avatar; else delete AVATARS[p.id]; } });
+      return r;
+    }
+    if (!/avatar/i.test(r.error.message || '')) return r;
+    avatarCol = false;
+  }
+  return q('id,username');
+}
+/* 画像ファイル → 真ん中を正方形に切りぬいた 160px の画像（data URL） */
+function avatarFromFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type)) { reject(new Error('画像ファイル（PNG・JPGなど）を選んでください。')); return; }
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('画像を読み込めませんでした。別の画像で試してください。')); };
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const s = Math.min(img.width, img.height), sx = (img.width - s) / 2, sy = (img.height - s) * .3; // 縦長の画像は少し上（顔のあたり）を使う
+      const cv = document.createElement('canvas'); cv.width = cv.height = 160;
+      const g = cv.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, 160, 160);
+      g.drawImage(img, sx, sy, s, s, 0, 0, 160, 160);
+      let out = '';
+      for (const q of [.85, .72, .6, .45]) { out = cv.toDataURL('image/jpeg', q); if (out.length <= 60000) break; }
+      resolve(out);
+    };
+    img.src = url;
+  });
+}
+async function saveAvatar(v) {
+  if (!sbClient() || !me) return;
+  const { error } = await sb.from('profiles').update({ avatar: v || null }).eq('id', me.id);
+  if (error) { toast(/avatar/i.test(error.message || '') ? 'サーバーの準備がまだです。Supabase で supabase/07-avatars.sql を実行してください。' : 'アイコンを保存できませんでした：' + jaErr(error)); return; }
+  avatarCol = true;
+  if (v) AVATARS[me.id] = v; else delete AVATARS[me.id];
+  renderAccount(); renderAccountBtn(); renderOnline(); renderFriends();
+  if (!$('select').hidden) renderSelect();
+  toast(v ? 'アイコンを変えました。フレンドやグループの人にも見えます。' : 'アイコンを外しました。');
+}
+function sbClient() {
+  if (!sb && cloudReady()) sb = window.supabase.createClient(CLOUD.url.replace(/\/$/, ''), CLOUD.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  return sb;
+}
+const jaErr = e => {
+  const m = String((e && (e.message || e.error_description)) || e || '');
+  if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
+  if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
+  if (/already registered|already been registered/i.test(m)) return 'このメールアドレスはすでに登録されています。ログインしてください。';
+  if (/duplicate key|profiles_username_lower|23505/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
+  if (/Database error saving new user/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
+  if (/rate limit|too many/i.test(m)) return '短い時間に何度も送信されました。しばらく待ってからもう一度試してください。';
+  if (/Password should be/i.test(m)) return 'パスワードが短すぎます。8文字以上にしてください。';
+  if (/valid email|invalid email|Unable to validate email/i.test(m)) return 'メールアドレスの形が正しくありません。';
+  if (/relation .* does not exist|Could not find the (table|function)/i.test(m)) return 'サーバーの準備（SQLの実行）がまだ終わっていないようです。管理者に伝えてください。';
+  if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'サーバーにつながりませんでした。ネットの接続を確認してください。';
+  return 'うまくいきませんでした：' + m;
+};
+function setSync(st, msg) {
+  // 保存できなかったときは、右上の小さな点だけだと気づけないので、一度お知らせを出す
+  if (st === 'error' && syncState !== 'error') toast('クラウドに保存できませんでした。ほかの端末には、まだ反映されていません。' + (msg ? '（' + msg + '）' : '') + ' ネットの接続を確かめてください。直ると自動でもう一度送ります。');
+  syncState = st; syncMsg = msg || ''; renderAccountBtn(); if (!$('modal-account').hidden) renderAccount();
+}
+function scheduleSync() { if (!me) return; clearTimeout(syncTimer); syncTimer = setTimeout(flushSync, 1500); if (syncState !== 'pending') setSync('pending'); }
+const myChars = () => state.chars.filter(c => !c.sample && (!c.owner || c.owner === me.id));
+let retryTimer = null;
+/* 秘匿はキャラシ本体（characters.data）には入れず、char_secrets に分けて送る（フレンドや共有リンクに出さないため） */
+let secretsOff = false;   // 12-char-secrets.sql をまだ実行していないとき
+let secretOpenOff = false;   // 13-secret-open.sql（秘匿の公開）をまだ実行していないとき
+const withoutSecret = c => { const { secret, ...rest } = c; return rest; };
+async function pushSecrets(list) {
+  if (secretsOff || !list.length) return;
+  const has = list.filter(c => (c.secret || '').trim()), empty = list.filter(c => !(c.secret || '').trim()).map(c => c.id);
+  try {
+    if (has.length) {
+      const rows = has.map(c => Object.assign({ char_id: c.id, owner: me.id, body: c.secret, updated_at: new Date().toISOString() }, secretOpenOff ? {} : { is_open: !!c.secretOpen }));
+      let { error } = await sb.from('char_secrets').upsert(rows);
+      if (error && /is_open/.test(String(error.message))) {   // 13-secret-open.sql をまだ実行していない：公開の設定なしで送る
+        secretOpenOff = true; rows.forEach(r => { delete r.is_open; }); ({ error } = await sb.from('char_secrets').upsert(rows));
+      }
+      if (error) throw error;
+    }
+    if (empty.length) { const { error } = await sb.from('char_secrets').delete().in('char_id', empty); if (error) throw error; }
+  } catch (e) { if (groupMissing(e) || /char_secrets/.test(String(e && e.message))) secretsOff = true; else throw e; }
+}
+async function pullSecrets(ids) {
+  const m = new Map();
+  if (secretsOff || !ids.length) return m;
+  const { data, error } = await sb.from('char_secrets').select('char_id,body').in('char_id', ids);
+  if (error) { if (/char_secrets|does not exist|Could not find/i.test(String(error.message))) secretsOff = true; return m; }
+  (data || []).forEach(r => m.set(r.char_id, r.body || ''));
+  return m;
+}
+async function flushSync() {
+  if (!sb || !me) return;
+  clearTimeout(syncTimer); syncTimer = null;
+  if (syncing) { syncAgain = true; return; }
+  syncing = true;
+  try {
+    const mine = myChars();
+    const rows = [];
+    mine.forEach(c => { c.owner = me.id; const js = JSON.stringify(c); if (lastSynced.get(c.id) !== js) rows.push([c, js]); });
+    // 立ち絵の入ったキャラは大きいので、だいたい3MBずつに分けて送る（一度に全部送ると失敗しやすい）
+    const batches = [];
+    rows.forEach(r => { const b = batches[batches.length - 1]; if (b && b.size + r[1].length <= 3e6) { b.rows.push(r); b.size += r[1].length; } else batches.push({ rows: [r], size: r[1].length }); });
+    for (const b of batches) {
+      const { error } = await sb.from('characters').upsert(b.rows.map(([c]) => ({ id: c.id, owner: me.id, name: c.profile.name || '', locked: !!c.locked, data: withoutSecret(c), updated_at: new Date(c.updatedAt || Date.now()).toISOString() })));
+      if (error) throw error;
+      await pushSecrets(b.rows.map(([c]) => c));
+      b.rows.forEach(([c, js]) => lastSynced.set(c.id, js));
+      b.rows.forEach(([c]) => { if (shares && shares[c.id]) uploadShareCard(c, shares[c.id]); });   // 共有中なら、リンクのカードの画像も新しく
+    }
+    const live = new Set(mine.map(c => c.id));
+    const gone = [...lastSynced.keys()].filter(id => !live.has(id));
+    if (gone.length) {
+      const { error } = await sb.from('characters').delete().in('id', gone);
+      if (error) throw error;
+      gone.forEach(id => lastSynced.delete(id));
+    }
+    setSync('ok');
+  } catch (e) { setSync('error', jaErr(e)); clearTimeout(retryTimer); retryTimer = setTimeout(() => { if (me && syncState === 'error') flushSync(); }, 30000); }   // 失敗したら30秒後にもう一度
+  finally { syncing = false; if (syncAgain) { syncAgain = false; scheduleSync(); } }
+}
+async function pullAndMerge() {
+  setSync('pending');
+  const { data, error } = await sb.from('characters').select('id,data,locked,updated_at').eq('owner', me.id);
+  if (error) throw error;
+  lastSynced.clear();
+  const secrets = await pullSecrets((data || []).map(r => r.id));
+  (data || []).forEach(r => {
+    const sc = Object.assign({}, r.data, { locked: !!r.locked, owner: me.id });
+    sc.secret = secrets.has(r.id) ? secrets.get(r.id) : (state.chars.find(c => c.id === r.id)?.secret || r.data.secret || '');
+    const i = state.chars.findIndex(c => c.id === r.id);
+    if (i < 0) { state.chars.push(sc); lastSynced.set(sc.id, JSON.stringify(sc)); }
+    else if ((sc.updatedAt || 0) >= (state.chars[i].updatedAt || 0)) { state.chars[i] = sc; lastSynced.set(sc.id, JSON.stringify(sc)); }
+  });
+  const real = state.chars.filter(c => !c.sample);
+  if (real.length && state.chars.some(c => c.sample)) state.chars = real;
+  if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
+  saveNow();
+  renderAll();
+  await flushSync();
+}
+/* ---- ほかの端末での変更を取りこむ（画面にもどったとき・ときどき） ----
+   開きっぱなしのタブ（スマホは特に）は、ほかの端末で書きかえた内容を知らないまま古い内容を見せてしまい、
+   そのまま書きかえると古い内容でサーバーを上書きしてしまう。そこで、画面にもどるたびと、開いているあいだ1分ごとに
+   サーバーの「更新時刻」だけを見て、新しくなったキャラだけ読みなおす（立ち絵が入っていて重いので、全部は読まない） */
+let refreshing = false;
+const editingNow = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('input, textarea, select') && a.closest('#sheet, #panel')); };
+async function refreshFromCloud() {
+  if (!sb || !me || refreshing || document.visibilityState === 'hidden') return false;
+  refreshing = true;
+  try {
+    if (syncTimer || syncing) { clearTimeout(syncTimer); syncTimer = null; await flushSync(); }   // まだ送っていない変更を先に送る
+    const { data, error } = await sb.from('characters').select('id,updated_at').eq('owner', me.id);
+    if (error) throw error;
+    const server = new Map((data || []).map(r => [r.id, Date.parse(r.updated_at) || 0]));
+    const busy = editingNow() ? state.activeId : null;   // 入力中のキャラは、いまは入れかえない（次の確認で）
+    const need = [...server].filter(([id, t]) => { const l = state.chars.find(c => c.id === id); return id !== busy && (!l || t > (l.updatedAt || 0)); }).map(([id]) => id);
+    // ほかの端末で削除されたキャラ（この端末では、前に同期したあと書きかえていないもの）
+    const gone = myChars().filter(c => c.id !== busy && lastSynced.has(c.id) && !server.has(c.id) && lastSynced.get(c.id) === JSON.stringify(c)).map(c => c.id);
+    if (!need.length && !gone.length) return false;
+    let rows = [];
+    for (let i = 0; i < need.length; i += 5) {   // 立ち絵が重いので5人ずつ
+      const r = await sb.from('characters').select('id,data,locked,updated_at').in('id', need.slice(i, i + 5));
+      if (r.error) throw r.error;
+      rows = rows.concat(r.data || []);
+    }
+    const secrets = await pullSecrets(rows.map(r => r.id));
+    rows.forEach(r => {
+      const sc = Object.assign({}, r.data, { locked: !!r.locked, owner: me.id });
+      const i = state.chars.findIndex(c => c.id === r.id);
+      sc.secret = secrets.has(r.id) ? secrets.get(r.id) : (i >= 0 ? state.chars[i].secret || '' : '');
+      if (i < 0) state.chars.push(sc); else state.chars[i] = sc;
+      lastSynced.set(sc.id, JSON.stringify(sc));
+    });
+    if (gone.length) { state.chars = state.chars.filter(c => !gone.includes(c.id)); gone.forEach(id => lastSynced.delete(id)); }
+    const real = state.chars.filter(c => !c.sample);
+    if (real.length && state.chars.some(c => c.sample)) state.chars = real;
+    if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
+    saveNow();
+    const activeChanged = rows.some(r => r.id === state.activeId) || gone.length;
+    renderShelf(); renderOutput();
+    if (activeChanged) { renderSheet(); if (!$('panel-ov').hidden && panelKey) fillPanel(panelKey); }
+    if (!$('select').hidden) renderSelect();
+    setSync('ok');
+    return true;
+  } catch (e) { setSync('error', jaErr(e)); return false; }
+  finally { refreshing = false; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (!me) return;
+  if (document.visibilityState === 'hidden') { if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; flushSync(); } }   // 画面を離れるときは、待たずにすぐ送る
+  else refreshFromCloud();
+});
+addEventListener('pagehide', () => { if (me && syncTimer) { clearTimeout(syncTimer); syncTimer = null; flushSync(); } });
+addEventListener('focus', () => refreshFromCloud());
+addEventListener('online', () => { if (me) { scheduleSync(); refreshFromCloud(); } });
+setInterval(() => refreshFromCloud(), 60000);
+async function loadFriendships() {
+  if (!sb || !me) return;
+  const { data, error } = await sb.from('friendships').select('requester,addressee,status');
+  if (error) throw error;
+  const ids = [...new Set((data || []).flatMap(r => [r.requester, r.addressee]).filter(id => id !== me.id))];
+  let profs = [];
+  if (ids.length) { const r = await selectProfiles(c => sb.from('profiles').select(c).in('id', ids)); if (r.error) throw r.error; profs = r.data || []; }
+  const nm = id => (profs.find(p => p.id === id) || {}).username || '（退会したユーザー）';
+  online = { friends: [], incoming: [], outgoing: [], chars: (online && online.chars) || {}, groups: (online && online.groups) || [] };
+  (data || []).forEach(r => {
+    const other = r.requester === me.id ? r.addressee : r.requester;
+    const u = { id: other, username: nm(other) };
+    if (r.status === 'accepted') online.friends.push(u);
+    else if (r.addressee === me.id) online.incoming.push(u);
+    else online.outgoing.push(u);
+  });
+  const FC = ['#1f6fe0', '#e0457a', '#2f9e57', '#7b52bd', '#e08a1f', '#12a6cf', '#c0392b', '#8e6e1f'];
+  let added = false;
+  online.friends.forEach(u => {
+    const ex = friendsOf().find(f => f.uid === u.id);
+    if (ex) {
+      if (ex.name !== u.username && u.username !== '（退会したユーザー）') { ex.name = u.username; added = true; }
+      if (ex.note === 'キャラシ工房のフレンド') { ex.note = 'ORBiS のフレンド'; added = true; } // 前の名前のメモを新しい名前に
+    }
+    else { friendsOf().push({ id: 'u-' + u.id, uid: u.id, name: u.username, color: FC[friendsOf().length % FC.length], note: 'ORBiS のフレンド' }); added = true; }
+  });
+  if (added) { save(); renderSheet(); }
+  renderAccountBtn(); renderGroupBadge();
+  if (!$('modal-friends').hidden) { renderOnline(); renderFriends(); }
+  if (!$('select').hidden && selTab === 'friends') renderSelect();
+}
+async function handleSession(session) {
+  const uid = session && session.user ? session.user.id : null;
+  if ((me ? me.id : null) === uid) return;
+  if (!uid) { me = null; online = null; shares = null; lastSynced.clear(); setSync('off'); renderAccount(); renderOnline(); ueCheckAdmin(); if (!$('select').hidden && selTab === 'friends') renderSelect(); return; }
+  me = { id: uid, email: session.user.email, username: (session.user.user_metadata || {}).username || '' };
+  renderAccountBtn(); renderAccount();
+  try {
+    const { data: prof } = await selectProfiles(c => sb.from('profiles').select(c).eq('id', uid).maybeSingle());
+    if (prof && prof.username) me.username = prof.username;
+    renderAccountBtn(); renderAccount();
+    ueCheckAdmin();
+    await pullAndMerge();
+    await loadFriendships();
+    await loadFriendChars();
+    await loadGroups();
+    await loadShares().catch(() => {});
+    if (!$('select').hidden && (selTab === 'friends' || selTab === 'groups')) renderSelect();
+  } catch (e) { setSync('error', jaErr(e)); }
+}
+async function initCloud() {
+  renderAccountBtn();
+  if (!sbClient()) return;
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') { acctTab = 'recover'; openAccount(); }
+    setTimeout(() => handleSession(session), 0);
+  });
+  try { const { data } = await sb.auth.getSession(); handleSession(data.session); } catch (e) { /* offline */ }
+}
+async function logout() {
+  if (!sb) return;
+  await flushSync();
+  const uid = me && me.id;
+  await sb.auth.signOut();
+  if (uid) {
+    state.chars = state.chars.filter(c => c.owner !== uid);
+    state.friends = friendsOf().filter(f => !f.uid);
+    state.activeId = state.chars.length ? state.chars[0].id : null;
+  }
+  me = null; online = null; shares = null; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
+  saveNow(); setSync('off'); renderAll(); renderAccount();
+  if (!$('select').hidden) renderSelect();
+  stopBgm();
+  toast('ログアウトしました。この端末からアカウントのキャラシを片付けました（サーバーには残っています）。');
+}
+function renderAccountBtn() {
+  const label = me ? (me.username || 'アカウント') : 'ログイン';
+  const dot = me ? `<i class="sync-dot ${syncState}" title="${syncState === 'ok' ? '同期済み' : syncState === 'pending' ? '同期中' : syncState === 'error' ? '同期エラー' : ''}"></i>` : '';
+  const req = me && online && online.incoming.length ? `<b class="req-badge">${online.incoming.length}</b>` : '';
+  ['btn-account', 'sel-account'].forEach(id => { const b = $(id); if (b) b.innerHTML = `${dot}${esc(label)}${req}`; });
+  $('btn-friends').innerHTML = `フレンド${req}`;
+  $('sel-friends').innerHTML = `フレンド管理${req}`;
+  $('sel-req').innerHTML = req;
+}
+function renderAccount() {
+  const el = $('acct-body'); if (!el) return;
+  if (!cloudReady()) {
+    el.innerHTML = `<p>アカウント機能はまだ準備中です。サーバー（Supabase）の設定が終わると、ここから登録・ログインできるようになります。</p><p class="empty">それまでは、これまでどおりこのブラウザの中にキャラシが保存されます。</p>`;
+    return;
+  }
+  if (me && acctTab !== 'recover') {
+    const st = { ok: '同期済み', pending: '同期中…', error: '同期できませんでした', off: '—' }[syncState];
+    el.innerHTML = `<div class="acct-card">
+        <label class="fav acct-av ${AVATARS[me.id] ? 'has' : ''}" style="--fc:var(--sky)" title="アイコン画像を選ぶ">${avImg(me.id) || esc((me.username || '？').charAt(0))}<input type="file" id="ac-avatar" accept="image/*" hidden><i class="acct-av-cam" aria-hidden="true">✎</i></label>
+        <div><b class="acct-name">${esc(me.username)}</b><span class="acct-mail">${esc(me.email || '')}</span>
+          <span class="acct-av-act"><label class="btn small" for="ac-avatar">アイコン画像を${AVATARS[me.id] ? '変える' : '選ぶ'}</label>${AVATARS[me.id] ? '<button class="btn small ghost" type="button" data-acct="avatar-off">外す</button>' : ''}</span>
+          <small class="acct-av-note">フレンドやグループの人にも見えます。</small></div>
+      </div>
+      <form class="acct-rename" data-form="rename">
+        <label for="ac-newname">ユーザー名（フレンドに見える名前・2〜20文字）</label>
+        <div class="row"><input class="inp" id="ac-newname" maxlength="20" autocomplete="username" value="${esc(me.username)}"><button class="btn" type="submit">変更する</button></div>
+        <p class="err" id="ac-err" role="alert"></p><p class="ok-msg" id="ac-ok" role="status"></p>
+      </form>
+      <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
+      <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>`;
+    return;
+  }
+
+  const f = {
+    login: `<div class="acct-mode"><b>ログイン</b><span>登録済みのアカウントで入ります</span></div>
+      <form class="acct-form" data-form="login">
+        <label>ログインID（メールアドレス）<input class="inp" type="email" id="ac-email" autocomplete="email" required></label>
+        <label>パスワード<input class="inp" type="password" id="ac-pass" autocomplete="current-password" required></label>
+        <button class="btn primary" type="submit">ログイン</button>
+        <p class="err" id="ac-err" role="alert"></p>
+        <button class="linkish" type="button" data-tab="reset">パスワードを忘れたとき</button>
+      </form>
+      <div class="acct-switch">アカウントをお持ちでない方は<button class="btn small" type="button" data-tab="signup">新規アカウント作成へ</button></div>`,
+    signup: `<div class="acct-mode signup"><b>新規アカウント作成</b><span>はじめての方はこちら。ログインではありません</span></div>
+      <form class="acct-form" data-form="signup">
+        <label>ユーザー名（フレンドに見える名前・2〜20文字）<input class="inp" id="ac-user" autocomplete="username" maxlength="20" required></label>
+        <label>ログインID（メールアドレス）<input class="inp" type="email" id="ac-email" autocomplete="email" required></label>
+        <label>パスワード（8文字以上）<input class="inp" type="password" id="ac-pass" autocomplete="new-password" minlength="8" required></label>
+        <label>パスワード（確認のため、もう一度）<input class="inp" type="password" id="ac-pass2" autocomplete="new-password" minlength="8" required></label>
+        <button class="btn primary" type="submit">この内容でアカウントを作る</button>
+        <p class="err" id="ac-err" role="alert"></p>
+        <p class="empty">登録すると、このブラウザにあるキャラシもアカウントに保存されます。</p>
+      </form>
+      <div class="acct-switch">すでにアカウントをお持ちの方は<button class="btn small" type="button" data-tab="login">ログインへ戻る</button></div>`,
+    reset: `<form class="acct-form" data-form="reset">
+        <p>登録したメールアドレスに、パスワードを変えるためのリンクを送ります。</p>
+        <label>ログインID（メールアドレス）<input class="inp" type="email" id="ac-email" autocomplete="email" required></label>
+        <button class="btn primary" type="submit">リンクを送る</button>
+        <button class="linkish" type="button" data-tab="login">ログインに戻る</button>
+      </form>`,
+    recover: `<form class="acct-form" data-form="recover">
+        <p>新しいパスワードを決めてください。</p>
+        <label>新しいパスワード（8文字以上）<input class="inp" type="password" id="ac-pass" autocomplete="new-password" minlength="8" required></label>
+        <button class="btn primary" type="submit">パスワードを変える</button>
+      </form>`,
+  };
+  el.innerHTML = f[acctTab] + (/id="ac-err"/.test(f[acctTab]) ? '' : '<p class="err" id="ac-err" role="alert"></p>') + '<p class="ok-msg" id="ac-ok" role="status"></p>';
+}
+function openAccount() { if (acctTab !== 'recover') acctTab = 'login'; renderAccount(); openModal('modal-account'); }
+$('acct-body').addEventListener('click', async e => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { acctTab = t.dataset.tab; renderAccount(); $('ac-email')?.focus(); return; }
+  const a = e.target.closest('[data-acct]'); if (!a) return;
+  if (a.dataset.acct === 'avatar-off') { if (!arm(a, 'もう一度押すと外す')) return; saveAvatar(''); return; }
+  if (a.dataset.acct === 'sync') { try { await pullAndMerge(); await loadFriendships(); toast('同期しました。'); } catch (er) { setSync('error', jaErr(er)); } }
+  if (a.dataset.acct === 'friends') { closeModals(); openFriends(); }
+  if (a.dataset.acct === 'logout') { if (!arm(a, 'もう一度押すとログアウト')) return; closeModals(); logout(); }
+});
+$('acct-body').addEventListener('change', async e => {
+  if (e.target.id !== 'ac-avatar') return;
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try { await saveAvatar(await avatarFromFile(f)); } catch (er) { toast(er.message || 'アイコンを設定できませんでした。'); }
+});
+$('acct-body').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!sbClient()) return;
+  const form = e.target, kind = form.dataset.form, err = $('ac-err'), ok = $('ac-ok');
+  const btn = form.querySelector('button[type=submit]');
+  if (kind === 'rename') {
+    err.textContent = ''; ok.textContent = '';
+    const name = ($('ac-newname').value || '').trim();
+    if (!me) return;
+    if (!/^[^\s]{2,20}$/.test(name)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
+    if (name === me.username) { err.textContent = '今のユーザー名と同じです。'; return; }
+    btn.disabled = true;
+    try {
+      if (name.toLowerCase() !== (me.username || '').toLowerCase()) {
+        const av = await sb.rpc('username_available', { name });
+        if (av.error) throw av.error;
+        if (av.data === false) { err.textContent = 'そのユーザー名はすでに使われています。別のユーザー名にしてください。'; return; }
+      }
+      const { error } = await sb.from('profiles').update({ username: name }).eq('id', me.id);
+      if (error) throw error;
+      sb.auth.updateUser({ data: { username: name } }).catch(() => {});
+      const old = me.username;
+      me.username = name;
+      renderAccountBtn(); renderAccount();
+      if (!$('modal-friends').hidden) renderOnline();
+      $('ac-ok').textContent = `ユーザー名を「${old}」から「${name}」に変更しました。フレンドにも新しい名前で表示されます。`;
+      fxAt($('ac-newname'), true);
+    } catch (er) { err.textContent = jaErr(er); }
+    finally { btn.disabled = false; }
+    return;
+  }
+  err.textContent = ''; ok.textContent = '';
+  const email = ($('ac-email')?.value || '').trim(), pass = $('ac-pass')?.value || '';
+  btn.disabled = true;
+  try {
+    if (kind === 'login') {
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      closeModals(); toast('ログインしました。');
+    } else if (kind === 'signup') {
+      const username = ($('ac-user').value || '').trim();
+      if (!/^[^\s]{2,20}$/.test(username)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
+      if (pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
+      if (pass !== ($('ac-pass2').value || '')) { err.textContent = '確認用のパスワードが一致しません。同じパスワードを2回入れてください。'; return; }
+      const av = await sb.rpc('username_available', { name: username });
+      if (av.error) throw av.error;
+      if (av.data === false) { err.textContent = 'そのユーザー名はすでに使われています。別のユーザー名にしてください。'; return; }
+      const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { username }, emailRedirectTo: location.origin + location.pathname } });
+      if (error) {
+        if (/already registered|already been registered|already exists/i.test(error.message || '')) {
+          acctTab = 'login'; renderAccount(); $('ac-email').value = email;
+          $('ac-err').textContent = 'このメールアドレスはすでに登録されています。新しいアカウントは作らずに、ログインしてください。';
+          return;
+        }
+        throw error;
+      }
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        acctTab = 'login'; renderAccount(); $('ac-email').value = email;
+        $('ac-err').textContent = 'このメールアドレスはすでに登録されています。新しいアカウントは作らずに、ログインしてください。';
+        return;
+      }
+      if (data && data.session) { acctTab = 'login'; closeModals(); toast(`ようこそ、${username}さん。登録できました。`); }
+      else { acctTab = 'login'; renderAccount(); $('ac-ok').textContent = '確認メールを送りました。メールのリンクを押してから、ここでログインしてください。'; }
+    } else if (kind === 'reset') {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      if (error) throw error;
+      ok.textContent = 'メールを送りました。届いたリンクから新しいパスワードを決めてください。';
+    } else if (kind === 'recover') {
+      if (pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
+      const { error } = await sb.auth.updateUser({ password: pass });
+      if (error) throw error;
+      acctTab = 'login'; closeModals(); toast('パスワードを変更しました。');
+    }
+  } catch (er) { err.textContent = jaErr(er); }
+  finally { btn.disabled = false; }
+});
+$('btn-account').addEventListener('click', openAccount);
+$('sel-account').addEventListener('click', openAccount);
+
+/* ---- オンラインのフレンド ---- */
+function renderOnline() {
+  const el = $('online-friends'); if (!el) return;
+  const head = '<div class="ol-head"><b>オンラインのフレンド</b><span class="hint">お互いのキャラシ（非公開以外）が見られます</span></div>';
+  if (!cloudReady()) { el.innerHTML = `<div class="ol-box">${head}<p class="empty">アカウント機能の準備ができると、ユーザー名でフレンドを追加して、お互いのキャラシを見られるようになります。</p></div>`; return; }
+  if (!me) { el.innerHTML = `<div class="ol-box">${head}<p>ログインすると、相手のユーザー名でフレンド申請を送れます。相手が承認すると、お互いのキャラシ一覧が見られるようになります。</p><button class="btn primary small" type="button" data-ol="login">ログイン・新規登録</button></div>`; return; }
+  const o = online || { friends: [], incoming: [], outgoing: [] };
+  const av = u => `<span class="fav sm" style="--fc:${esc((friendsOf().find(f => f.uid === u.id) || {}).color || 'var(--sky)')}">${avImg(u.id) || esc((u.username || '？').charAt(0))}</span>`;
+  el.innerHTML = `<div class="ol-box">${head}
+    <p class="ol-me">あなたのユーザー名：<b>${esc(me.username)}</b>（これを友達に教えると申請してもらえます）</p>
+    <form class="ol-search" id="ol-search"><input class="inp" id="ol-name" placeholder="相手のユーザー名" autocomplete="off" aria-label="相手のユーザー名"><button class="btn primary" type="submit">フレンド申請</button></form>
+    <p class="err" id="ol-err" role="alert"></p>
+    ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button></div>`).join('')}</div>` : ''}
+    ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button></div>`).join('')}</div>` : ''}
+    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button></div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
+  </div>`;
+}
+const pairFilter = (a, b) => `and(requester.eq.${a},addressee.eq.${b}),and(requester.eq.${b},addressee.eq.${a})`;
+$('online-friends').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = ($('ol-name').value || '').trim(), err = $('ol-err');
+  err.textContent = '';
+  if (!name) return;
+  try {
+    const { data: p, error } = await selectProfiles(c => sb.from('profiles').select(c).ilike('username', name.replace(/[%_\\]/g, '\\$&')).maybeSingle());
+    if (error) throw error;
+    if (!p) { err.textContent = `「${name}」というユーザーは見つかりませんでした。つづりを確かめてください。`; return; }
+    if (p.id === me.id) { err.textContent = '自分自身はフレンドに追加できません。'; return; }
+    const o = online || { friends: [], incoming: [], outgoing: [] };
+    if (o.friends.some(u => u.id === p.id)) { err.textContent = `${p.username}さんはもうフレンドです。`; return; }
+    if (o.outgoing.some(u => u.id === p.id)) { err.textContent = `${p.username}さんには申請済みです。承認を待ってください。`; return; }
+    if (o.incoming.some(u => u.id === p.id)) {
+      const r = await sb.from('friendships').update({ status: 'accepted' }).eq('requester', p.id).eq('addressee', me.id);
+      if (r.error) throw r.error;
+      toast(`${p.username}さんからの申請を承認しました。`);
+    } else {
+      const r = await sb.from('friendships').insert({ requester: me.id, addressee: p.id });
+      if (r.error) throw r.error;
+      toast(`${p.username}さんにフレンド申請を送りました。`);
+    }
+    $('ol-name').value = '';
+    await loadFriendships(); renderOnline(); renderFriends();
+  } catch (er) { err.textContent = jaErr(er); }
+});
+$('online-friends').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ol]'); if (!b) return;
+  const uid = b.dataset.uid;
+  try {
+    if (b.dataset.ol === 'login') { closeModals(); acctTab = 'login'; openAccount(); return; }
+    if (b.dataset.ol === 'view') { viewFriend(uid, b.dataset.name); return; }
+    if (b.dataset.ol === 'accept') {
+      const r = await sb.from('friendships').update({ status: 'accepted' }).eq('requester', uid).eq('addressee', me.id);
+      if (r.error) throw r.error;
+      toast('フレンドになりました。');
+    }
+    if (b.dataset.ol === 'remove' || b.dataset.ol === 'unfriend') {
+      if (b.dataset.ol === 'unfriend' && !arm(b, '本当に解除')) return;
+      const r = await sb.from('friendships').delete().or(pairFilter(me.id, uid));
+      if (r.error) throw r.error;
+      if (b.dataset.ol === 'unfriend') {
+        state.friends = friendsOf().map(f => f.uid === uid ? Object.assign({}, f, { uid: undefined, note: ['キャラシ工房のフレンド', 'ORBiS のフレンド'].includes(f.note) ? '' : f.note }) : f);
+        save();
+      }
+    }
+    await loadFriendships(); renderOnline(); renderFriends();
+  } catch (er) { toast(jaErr(er)); }
+});
+
+/* ---- フレンドのキャラシを見る（読み取り専用） ---- */
+let fviewChars = [], fviewName = '';
+async function viewFriend(uid, name) {
+  fviewName = name || 'フレンド';
+  $('fview-title').textContent = `${fviewName}さんのキャラシ`;
+  $('fview-body').innerHTML = '<p class="empty">読み込み中…</p>';
+  openModal('modal-fview');
+  try {
+    const { data, error } = await sb.from('characters').select('id,data,locked,updated_at').eq('owner', uid);
+    if (error) throw error;
+    fviewChars = (data || []).map(r => r.data).filter(c => c && c.v === 2 && SYS[c.system] && c.profile);
+    renderFviewList();
+  } catch (er) { $('fview-body').innerHTML = `<p class="err">${esc(jaErr(er))}</p>`; }
+}
+function renderFviewList() {
+  $('fview-title').textContent = `${fviewName}さんのキャラシ`;
+  $('fview-body').innerHTML = fviewChars.length
+    ? `<div class="fv-grid">${fviewChars.map((c, i) => `<button class="fv-card" type="button" data-fv="${i}">${tokenHtml(c)}<span class="sel-name">${esc(c.profile.name || '名無し')}</span><span class="sel-sys">${esc(SYS[c.system].short)}${c.profile.occupation ? ' ・ ' + esc(c.profile.occupation) : ''}</span></button>`).join('')}</div>`
+    : '<p class="empty">公開されているキャラシはまだありません。</p>';
+  if (!reduceMotion.matches) $('fview-body').querySelectorAll('.fv-card').forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateY(12px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: i * 50, easing: 'cubic-bezier(.2, .9, .3, 1.2)', fill: 'backwards' }));
+}
+function sheetViewHtml(c, shared) {   // shared：共有リンクから開いたとき（「自分の探索者に取り込む」を出す）
+  const d = compute(c), a = d.a, p = c.profile, S = SYS[c.system], src = portraitSrc(c);
+  const bars = [['HP', d.hp, d.hpMax, 'var(--hp), var(--orange)'], ['MP', d.mp, d.mpMax, 'var(--mp), var(--cyan)'], ['SAN', d.san, d.sanMax, 'var(--san), var(--pink)']];
+  const prof = [['職業', p.occupation], ['年齢', p.age], ['誕生日', p.birthday], ['性別', p.sex], ['身長', p.height], ['体重', p.weight], ['出身', p.origin], ['髪の色', p.hair], ['瞳の色', p.eyes], ['肌の色', p.skin]].filter(([, v]) => v);
+  const list = (arr, f) => arr.filter(x => x.name).map(f).join('');
+  return `<div class="sv">
+    <div class="sv-top">
+      <div class="sv-artcol">
+        <div class="sv-art">${src ? `<img src="${esc(imgSrc(src))}" alt="${esc(p.name || '')}の立ち絵" onerror="this.remove()">` : tokenHtml(c)}</div>
+        ${(c.faces || []).some(f => f && f.src) ? `<div class="sv-faces" aria-label="差分を切りかえる">${[['基本', -1], ...c.faces.map((f, i) => [f.label || `差分${i + 1}`, i])].filter(([, i]) => i < 0 ? basePortrait(c) : c.faces[i].src).map(([l, i]) => `<button class="btn small ${(curFace(c) ? c.face : -1) === i ? 'primary' : ''}" type="button" data-fvface="${i}">${esc(l)}</button>`).join('')}</div>` : ''}
+      </div>
+      <div class="sv-id">
+        <span class="peek-sys">${esc(S.label)}</span>
+        <h3 class="sv-name">${esc(p.name || '名無し')}</h3>
+        ${p.kana ? `<span class="peek-kana">${esc(p.kana)}</span>` : ''}
+        ${prof.length ? `<dl class="sv-prof">${prof.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+        <div class="pbars">${bars.map(([l, v, m, g]) => `<div class="pbar"><b>${l}</b><span class="tr"><i style="width:${m > 0 ? Math.max(0, Math.min(100, v / m * 100)) : 0}%;background:linear-gradient(90deg, ${g})"></i></span><span>${v}/${m}</span></div>`).join('')}</div>
+        <div class="sv-actions"><button class="btn primary small" type="button" data-fvcopy>ココフォリア用にコピー</button>${shared ? '<button class="btn small" type="button" data-fvtake>自分の探索者に取り込む</button>' : ''}<span class="copy-status" id="fv-status" role="status"></span></div>
+      </div>
+    </div>
+    <div class="sv-grid">
+      <figure class="chart-fig"><figcaption>能力値チャート</figcaption>${radarSvg(c, a, 280, true)}</figure>
+      <div class="derived sv-der">
+        <div class="dv"><span class="lbl">アイデア</span><span class="val">${d.idea}</span></div>
+        <div class="dv"><span class="lbl">幸運</span><span class="val">${d.luck}</span></div>
+        <div class="dv"><span class="lbl">知識</span><span class="val">${d.know}</span></div>
+        <div class="dv"><span class="lbl">ダメージ・ボーナス</span><span class="val">${esc(d.db)}</span></div>
+        ${c.system === 'coc7' ? `<div class="dv"><span class="lbl">ビルド</span><span class="val">${d.build}</span></div><div class="dv"><span class="lbl">MOV</span><span class="val">${d.mov}</span></div>` : ''}
+      </div>
+    </div>
+    <figure class="chart-fig"><figcaption>技能グラフ ${SK_LEGEND}</figcaption>${skillBarsHtml(c, a, true)}</figure>
+    ${list(c.weapons || [], w => `<div class="sv-item"><b>${esc(w.name)}</b><span>成功率 ${esc(w.rate || '—')} ・ ダメージ ${esc(w.damage || '—')}${w.range ? ' ・ 射程 ' + esc(w.range) : ''}</span></div>`) ? `<div class="sv-sec"><h4>武器</h4>${list(c.weapons || [], w => `<div class="sv-item"><b>${esc(w.name)}</b><span>成功率 ${esc(w.rate || '—')} ・ ダメージ ${esc(w.damage || '—')}${w.range ? ' ・ 射程 ' + esc(w.range) : ''}</span></div>`)}</div>` : ''}
+    ${list(c.items || [], it => `<span class="sv-chip">${esc(it.name)}${it.count ? ' ×' + esc(it.count) : ''}</span>`) ? `<div class="sv-sec"><h4>所持品</h4><div class="sv-chips">${list(c.items || [], it => `<span class="sv-chip">${esc(it.name)}${it.count ? ' ×' + esc(it.count) : ''}</span>`)}</div></div>` : ''}
+    ${list(c.scenarios || [], sc => `<span class="sv-chip">「${esc(sc.name)}」${sc.date ? ' ' + esc(sc.date) : ''}</span>`) ? `<div class="sv-sec"><h4>通過シナリオ</h4><div class="sv-chips">${list(c.scenarios || [], sc => `<span class="sv-chip">「${esc(sc.name)}」${sc.date ? ' ' + esc(sc.date) : ''}</span>`)}</div></div>` : ''}
+    ${c.backstory ? `<div class="sv-sec"><h4>経歴</h4><p class="sv-text">${esc(c.backstory)}</p></div>` : ''}
+    <div id="sv-secret"></div>
+    ${c.memo ? `<div class="sv-sec"><h4>メモ</h4><p class="sv-text">${esc(c.memo)}</p></div>` : ''}
+  </div>`;
+}
+let fviewCur = null;
+/* グループのKPがメンバーのキャラシを見たとき、秘匿も見せる（読めるかどうかはサーバーが決める） */
+async function loadKpSecret(c) {
+  if (!sb || !me || !c || secretsOff) return;
+  let { data, error } = await sb.from('char_secrets').select('body,is_open').eq('char_id', c.id).maybeSingle();
+  if (error && /is_open/.test(String(error.message))) ({ data, error } = await sb.from('char_secrets').select('body').eq('char_id', c.id).maybeSingle());
+  if (error || !data || !(data.body || '').trim() || fviewCur !== c) return;
+  showSecretBox(data.body, data.is_open ? '持ち主が公開しています' : 'キーパーのあなたにだけ見えています');
+}
+/* 見るだけの画面（フレンド・KP・共有リンク）の秘匿の欄 */
+function showSecretBox(body, note) {
+  const box = $('sv-secret'); if (!box || !(body || '').trim()) return;
+  box.innerHTML = `<div class="sv-sec sv-secret"><h4>秘匿 <small>${esc(note)}</small></h4><p class="sv-text">${esc(body)}</p></div>`;
+}
+$('fview-body').addEventListener('click', e => {
+  const card = e.target.closest('[data-fv]');
+  if (card) {
+    fviewCur = fviewChars[+card.dataset.fv];
+    $('fview-title').innerHTML = `<button class="btn small ghost fv-back" type="button" data-fvback>← 一覧へ</button> ${esc(fviewCur.profile.name || '名無し')}`;
+    $('fview-body').innerHTML = sheetViewHtml(fviewCur);
+    $('fview-body').scrollTop = 0;
+    loadKpSecret(fviewCur);
+    return;
+  }
+  if (e.target.closest('[data-fvcopy]') && fviewCur) {
+    copyText(JSON.stringify(toCcfolia(fviewCur)), $('fv-status'), null).then(ok => { if (ok) fxAt(e.target.closest('[data-fvcopy]'), true); });
+    return;
+  }
+  const fb = e.target.closest('[data-fvface]');
+  if (fb && fviewCur) {   // 差分を切りかえて見る（見ているだけで、元のキャラシは変えない）
+    const i = +fb.dataset.fvface, src = i < 0 ? basePortrait(fviewCur) : (fviewCur.faces[i] || {}).src;
+    const art = $('fview-body').querySelector('.sv-art');
+    if (src && art) art.innerHTML = `<img src="${esc(imgSrc(src))}" alt="" onerror="this.remove()">`;
+    fb.parentNode.querySelectorAll('[data-fvface]').forEach(x => x.classList.toggle('primary', x === fb));
+    return;
+  }
+  if (e.target.closest('[data-fvtake]') && fviewCur) { takeShared(e.target.closest('[data-fvtake]')); return; }
+});
+$('fview-title').addEventListener('click', e => { if (e.target.closest('[data-fvback]')) { fviewCur = null; renderFviewList(); } });

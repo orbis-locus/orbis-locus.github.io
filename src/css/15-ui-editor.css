@@ -1,0 +1,102 @@
+/* ================= 画面の編集モード ================= */
+/* どのテーマでも読みやすいよう、パネルは固定の色にしている */
+.ue-panel { position: fixed; top: 12px; right: 12px; bottom: 12px; width: 300px; z-index: 2147483000; display: flex; flex-direction: column;
+  background: #fbfcfe; color: #10233a; border: 1px solid #c7d3e3; border-radius: 12px; box-shadow: 0 12px 40px rgba(10, 30, 60, .28);
+  font: 13px/1.5 system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; letter-spacing: 0; text-align: left; }
+.ue-panel * { box-sizing: border-box; font: inherit; color: inherit; }
+.ue-head { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #e1e8f1; }
+.ue-head b { flex: 1; font-weight: 700; font-size: 14px; }
+.ue-body { flex: 1; overflow: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.ue-foot { padding: 10px 12px; border-top: 1px solid #e1e8f1; display: flex; flex-direction: column; gap: 8px; }
+.ue-foot summary { cursor: pointer; font-weight: 600; }
+#ue-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow: auto; margin-top: 6px; }
+.ue-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.ue-b { border: 1px solid #c7d3e3; background: #fff; border-radius: 8px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.ue-b:hover:not(:disabled) { border-color: #1f6fe0; color: #1f6fe0; }
+.ue-b.on { background: #1f6fe0; border-color: #1f6fe0; color: #fff; }
+.ue-b.danger { color: #c8372d; }
+.ue-b.wide { width: 100%; }
+.ue-b:disabled, .ue-x:disabled { opacity: .4; cursor: default; }
+.ue-li { text-align: left; border: 0; background: #eef3f9; border-radius: 6px; padding: 4px 8px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ue-li:hover { background: #dbe7f6; }
+.ue-hint { margin: 0; color: #5a6b80; }
+.ue-sel { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 8px; background: #eef3f9; border-radius: 8px; }
+.ue-sel b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+.ue-sel small { color: #5a6b80; }
+.ue-sel .ue-b { margin-left: auto; }
+.ue-f { display: grid; grid-template-columns: 84px 1fr 56px 26px; align-items: center; gap: 6px; }
+.ue-f > span { color: #33465e; }
+.ue-f input[type="number"] { width: 100%; border: 1px solid #c7d3e3; border-radius: 6px; padding: 3px 5px; background: #fff; }
+.ue-f input[type="range"] { width: 100%; accent-color: #1f6fe0; }
+.ue-f input[type="color"] { grid-column: 2 / 4; width: 100%; height: 28px; border: 1px solid #c7d3e3; border-radius: 6px; padding: 1px; background: #fff; }
+.ue-f.ue-pos { grid-template-columns: 84px 1fr 1fr 26px; }
+.ue-f.ue-col { grid-template-columns: 1fr; }
+.ue-f.ue-chk { display: flex; gap: 6px; }
+.ue-f textarea, #ue-io { width: 100%; border: 1px solid #c7d3e3; border-radius: 6px; padding: 5px 7px; background: #fff; resize: vertical; }
+#ue-io { min-height: 80px; font-family: ui-monospace, monospace; font-size: 11px; }
+.ue-x { border: 0; background: none; cursor: pointer; font-size: 15px; color: #5a6b80; padding: 0; }
+.ue-box, .ue-hover { position: fixed; z-index: 2147482999; pointer-events: none; border-radius: 3px; }
+.ue-box { outline: 2px solid #1f6fe0; box-shadow: 0 0 0 4px rgba(31, 111, 224, .2); }
+.ue-hover { outline: 1px dashed #ff8a1f; }
+body.ue-on { cursor: crosshair; }
+body.ue-on .ue-picked { cursor: move; touch-action: none; }
+body.ue-on .ue-panel { cursor: auto; }
+
+.ue-grip { display: none; }
+.ue-nav { margin-left: auto; display: flex; gap: 4px; }
+.ue-sel .ue-nav .ue-b { margin-left: 0; }
+.ue-more > summary { cursor: pointer; font-weight: 600; color: #33465e; }
+.ue-more[open] { display: flex; flex-direction: column; gap: 8px; }
+/* スマホ：下から出るパネル（つまみで 小・中・大） */
+@media (max-width: 720px) {
+  .ue-panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 52vh; border-radius: 16px 16px 0 0; border-bottom: 0;
+    transition: height .2s ease; padding-bottom: env(safe-area-inset-bottom); }
+  .ue-panel[data-sheet="min"] { height: 112px; }
+  .ue-panel[data-sheet="full"] { height: calc(100dvh - 48px); }
+  .ue-panel[data-sheet="min"] .ue-body, .ue-panel[data-sheet="min"] .ue-tabs, .ue-panel[data-sheet="min"] .ue-more { display: none; }
+  .ue-grip { display: flex; justify-content: center; padding: 8px 0 2px; cursor: grab; touch-action: none; }
+  .ue-grip i { width: 44px; height: 5px; border-radius: 3px; background: #c7d3e3; }
+  .ue-head { padding-top: 4px; }
+  .ue-f { grid-template-columns: 78px 1fr 64px 30px; }
+  .ue-f.ue-f2 { grid-template-columns: 78px 1fr 30px; }
+  .ue-panel { height: 60vh; }
+  .ue-head { padding: 2px 12px 6px; }
+  .ue-tabs { padding-top: 0; }
+  .ue-tabs button { padding: 4px 4px 6px; }
+  .ue-body { padding: 8px 12px; }
+  .ue-sel { padding: 6px 8px; }
+  .ue-foot { padding: 6px 12px; gap: 4px; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .ue-pub { padding: 0; background: none; flex: 1 1 auto; }
+  .ue-pub .ue-hint { display: none; }
+  .ue-more { flex: 1 1 100%; font-size: 12px; }
+}
+/* 指で操作する端末：押しやすく、入力欄を押しても画面が拡大されないように */
+@media (pointer: coarse) {
+  .ue-panel input, .ue-panel select, .ue-panel textarea { font-size: 16px; }
+  .ue-b { padding: 8px 12px; }
+  .ue-x { font-size: 20px; }
+  .ue-f input[type="range"] { height: 28px; }
+  #ue-handle { width: 26px; height: 26px; right: -13px; bottom: -13px; border-radius: 50%; }
+}
+.ue-pub { display: flex; flex-direction: column; gap: 6px; padding: 8px; background: #f3f7fc; border-radius: 8px; }
+.ue-dirty { color: #c8372d; font-weight: 600; }
+.ue-search { width: 100%; border: 1px solid #c7d3e3; border-radius: 6px; padding: 5px 8px; background: #fff; }
+.ue-users { display: flex; flex-direction: column; gap: 4px; }
+.ue-user { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #eef3f9; border-radius: 6px; }
+.ue-user span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ue-user small { color: #5a6b80; margin-left: 4px; }
+.ue-user select { border: 1px solid #c7d3e3; border-radius: 6px; padding: 3px 4px; background: #fff; }
+.ue-tabs { display: flex; gap: 4px; padding: 6px 12px 0; border-bottom: 1px solid #e1e8f1; }
+.ue-tabs button { flex: 1; border: 0; background: none; padding: 6px 4px 8px; cursor: pointer; color: #5a6b80; border-bottom: 2px solid transparent; }
+.ue-tabs button.on { color: #1f6fe0; border-bottom-color: #1f6fe0; font-weight: 700; }
+.ue-sec { border: 1px solid #e1e8f1; border-radius: 8px; padding: 0 8px; }
+.ue-sec[open] { padding-bottom: 8px; }
+.ue-sec > summary { cursor: pointer; font-weight: 700; padding: 7px 0; }
+.ue-sec > .ue-f, .ue-sec > .ue-hint, .ue-sec > div { margin-top: 6px; }
+.ue-dot { color: #1f6fe0; font-style: normal; font-size: 10px; }
+.ue-f.ue-f2 { grid-template-columns: 84px 1fr 26px; }
+.ue-f select { width: 100%; border: 1px solid #c7d3e3; border-radius: 6px; padding: 4px; background: #fff; }
+.ue-thumb { height: 64px; border-radius: 6px; border: 1px solid #c7d3e3; background: #eef3f9 center / contain no-repeat; }
+.ue-draft { display: flex; flex-direction: column; gap: 4px; padding: 8px; background: #eef3f9; border-radius: 8px; }
+.ue-draft small, .ue-draft span { color: #5a6b80; }
+#ue-handle { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; background: #fff; border: 2px solid #1f6fe0; border-radius: 3px; pointer-events: auto; cursor: nwse-resize; touch-action: none; }

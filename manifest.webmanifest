@@ -1,0 +1,24 @@
+{
+  "name": "ORBiS",
+  "short_name": "ORBiS",
+  "description": "クトゥルフ神話TRPGのキャラクターシート",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#12133a",
+  "theme_color": "#12133a",
+  "icons": [
+    {
+      "src": "assets/brand/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/brand/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

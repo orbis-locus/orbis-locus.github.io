@@ -1,0 +1,158 @@
+/* ===== 魔導書テーマ（look: book）：本のまわりの画面も魔導書にそろえる =====
+   ・暗いところ（上の帯・探索者の一覧・えらぶ画面・下の帯）は「革と金」
+   ・読み書きするところ（小窓・ココフォリアのコマ・出力・チラ見せ）は「羊皮紙とインク」
+   ・ボタンは角の小さい金の縁、大事なボタンは金の板か赤い封蝋
+   本の中（.bk-pages）は 11-book.css のまま。ここでは本の外だけを決める。 */
+:root[data-look~="book"] {
+  --bk-gold: #c9a04e; --bk-gold-hi: #f0d491; --bk-gold-lo: #8a6226;
+  --bk-leather: #22160d; --bk-leather-hi: #33221a; --bk-wax: #7a1d14; --bk-wax-hi: #a8321f; --bk-cream: #ead7ae;
+  --f-body: "Zen Old Mincho", "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-display: "Shippori Mincho B1", "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+  --f-latin: "Cinzel", "Times New Roman", serif;
+  --line: rgb(201 160 78 / .2); --line-strong: rgb(201 160 78 / .45); --muted: #b8a17a;
+  --glow-1: transparent; --glow-2: transparent;
+  --bk-gild: linear-gradient(180deg, #f8e6b0, #d6ae5c 48%, #9a7330);
+  --bk-plate: linear-gradient(180deg, #33221a, #1d120b);
+  --bk-frame: 0 0 0 1px rgb(20 10 4 / .9), inset 0 1px 0 rgb(255 225 160 / .12), inset 0 0 0 1px rgb(201 160 78 / .14), 0 6px 18px -8px rgb(0 0 0 / .8);
+}
+:root[data-look~="book"] body { font-family: var(--f-body); }
+
+/* ---- 羊皮紙の面：中の文字・入力欄・ボタンの色をインクに切りかえる ---- */
+:root[data-look~="book"] :is(.modal, .koma, details.out, .peek, .dcard) {
+  --solid: #ead6a8; --bg: #d9bf8c; --ink: #2a170a; --sky: #6b2414; --cyan: #7a5322; --amber: #8a5a1c;
+  --hp: #8e1f12; --mp: #263f6a; --san: #4f2a74; --orange: #a4502a; --pink: #8b3560; --lime: #4c6a2a; --yellow: #a07a20;
+  --muted: #6b5236; --line: rgb(70 38 12 / .25); --line-strong: rgb(70 38 12 / .5);
+  --paper: transparent; --code-bg: rgb(80 45 15 / .08); --accent-soft: rgb(107 36 20 / .1); --gloss: transparent; --shadow: none;
+  --sao-ink: var(--ink); --sao-mute: var(--muted);
+  color-scheme: light; color: var(--ink);
+  background: radial-gradient(ellipse 120% 90% at 50% 35%, #ecd9ad, #dcc08a 62%, #c3a066), var(--tx-grain) 0 0 / 220px 220px, #d9bf8c;
+  background-blend-mode: normal, multiply, normal;
+  border: 1px solid #6e4c26; border-radius: 4px;
+  box-shadow: inset 0 0 0 4px rgb(234 214 168 / .6), inset 0 0 0 5px rgb(110 76 38 / .55), inset 0 0 50px rgb(110 60 18 / .4), 0 24px 50px -18px rgb(0 0 0 / .85);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:root[data-look~="book"] :is(.modal, .koma, details.out, .peek) h2,
+:root[data-look~="book"] .koma-name, :root[data-look~="book"] details.out summary { font-family: var(--f-display); color: #3a1808; letter-spacing: .08em; }
+:root[data-look~="book"] .modal h2 { font-weight: 800; padding-bottom: 8px;
+  background: linear-gradient(90deg, transparent, rgb(107 36 20 / .55), transparent) bottom / 100% 1px no-repeat; border: 0; }
+:root[data-look~="book"] .modal h2::before { content: "❦ "; color: var(--bk-wax); font-weight: 400; }
+:root[data-look~="book"] :is(.modal, .koma, details.out, .peek, .dcard) .inp,
+:root[data-look~="book"] :is(.modal, .koma, details.out) select {
+  background: rgb(255 246 222 / .5); border: 1px solid rgb(90 55 20 / .4); border-radius: 3px; color: var(--ink); font-family: var(--f-body); box-shadow: inset 0 1px 3px rgb(80 40 10 / .15); }
+:root[data-look~="book"] :is(.modal, .koma, details.out) .inp:focus { border-color: var(--bk-wax); box-shadow: 0 0 0 3px rgb(122 29 20 / .15); outline: none; }
+:root[data-look~="book"] :is(.modal, .koma, details.out, .peek, .dcard) .btn {
+  border-radius: 3px; border: 1px solid rgb(90 55 20 / .55); background: rgb(110 70 30 / .08); color: var(--ink); font-family: var(--f-body); font-weight: 700; box-shadow: inset 0 1px 0 rgb(255 245 220 / .5); }
+:root[data-look~="book"] :is(.modal, .koma, details.out, .peek, .dcard) .btn:hover { border-color: var(--bk-wax); background: rgb(122 29 20 / .08); box-shadow: inset 0 1px 0 rgb(255 245 220 / .5), 0 0 0 2px rgb(122 29 20 / .12); }
+:root[data-look~="book"] :is(.modal, .koma, details.out) .btn.danger { color: #8e1f12; border-color: rgb(142 31 18 / .6); }
+:root[data-look~="book"] .modal .preset { border-radius: 3px; background: rgb(255 246 222 / .35); border-color: rgb(90 55 20 / .45); }
+:root[data-look~="book"] .modal .preset:hover { border-color: var(--bk-wax); }
+:root[data-look~="book"] .modal .tp { border-radius: 3px; background: rgb(255 246 222 / .35); }
+:root[data-look~="book"] .modal .tp.on { border-color: var(--bk-wax); box-shadow: 0 0 0 3px rgb(122 29 20 / .15); }
+:root[data-look~="book"] .overlay { background: rgb(12 6 2 / .62); }
+:root[data-look~="book"] pre.code { border-radius: 3px; }
+:root[data-look~="book"] .chip { border-radius: 2px; background: rgb(255 246 222 / .35); }
+:root[data-look~="book"] .steps li::before { font-family: "Cinzel", serif; color: var(--bk-wax); border-color: rgb(122 29 20 / .45); background: transparent; }
+/* ココフォリアのコマ：虹色の帯をやめて、金の二重線に */
+:root[data-look~="book"] .koma { padding-top: 22px; }
+:root[data-look~="book"] .koma::before { height: 6px; inset: 8px 12px auto; background: linear-gradient(var(--bk-gold-lo), var(--bk-gold-lo)) top / 100% 1px no-repeat, linear-gradient(var(--bk-gold-lo), var(--bk-gold-lo)) bottom / 100% 1px no-repeat; opacity: .7; }
+:root[data-look~="book"] .koma .ring-g .val { filter: none; stroke: var(--glow); }
+:root[data-look~="book"] .koma .ring-g .halo { opacity: .05; }
+:root[data-look~="book"] .ring-g .rl { font-family: "Cinzel", serif; }
+
+/* ---- 上の帯 ---- */
+:root[data-look~="book"] .brand-mark { display: none; }
+:root[data-look~="book"] .brand::before { content: ""; flex: none; width: 38px; height: 38px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40' fill='none' stroke='%23d6ae5c' stroke-width='1.4'%3E%3Ccircle cx='20' cy='20' r='18.5'/%3E%3Ccircle cx='20' cy='20' r='15.5' stroke-width='.7'/%3E%3Cpath d='M20 5.5 28.5 31.7 6.2 15.5H33.8L11.5 31.7Z' stroke-linejoin='round'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%237a5a8c' stroke-width='.8'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 6px rgb(230 180 90 / .45)); }
+:root[data-look~="book"] .brand h1 { font-family: var(--f-display); font-weight: 800; letter-spacing: .12em;
+  background: var(--bk-gild); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 0 rgb(0 0 0 / .8)); }
+:root[data-look~="book"] .brand-text small, :root[data-look~="book"] .eyebrow, :root[data-look~="book"] .panel-label { font-family: "Cinzel", serif; color: var(--bk-gold); letter-spacing: .22em; }
+:root[data-look~="book"] .eyebrow::before { height: 1px; background: linear-gradient(90deg, transparent, var(--bk-gold)); }
+:root[data-look~="book"] .panel-label span { font-family: var(--f-body); color: var(--bk-cream); letter-spacing: .1em; }
+/* 暗いところのボタン：革の板に金の縁 */
+:root[data-look~="book"] :is(.bar, .hero, .shelf, .select, .bgm, .mbar) .btn {
+  border-radius: 3px; border: 1px solid rgb(201 160 78 / .5); background: var(--bk-plate); color: var(--bk-cream); font-family: var(--f-body); font-weight: 700; letter-spacing: .06em; box-shadow: var(--bk-frame); }
+:root[data-look~="book"] .select .btn { letter-spacing: 0; }
+:root[data-look~="book"] :is(.bar, .hero, .shelf, .select, .bgm, .mbar) .btn:hover { border-color: var(--bk-gold-hi); color: #fff3d0; text-shadow: 0 0 10px rgb(240 200 120 / .6); transform: translateY(-1px); }
+:root[data-look~="book"] :is(.bar, .hero, .shelf, .select) .btn.primary {
+  border-color: #f3dc9e; color: #2a1606; text-shadow: 0 1px 0 rgb(255 240 200 / .55); background: var(--bk-gild); box-shadow: var(--bk-frame), 0 0 18px -4px rgb(230 180 90 / .45); }
+:root[data-look~="book"] :is(.bar, .hero, .shelf, .select) .btn.primary:hover { color: #2a1606; text-shadow: 0 1px 0 rgb(255 240 200 / .55); filter: brightness(1.08); }
+
+/* 大事なボタン：赤い封蝋（コマをコピー・小窓の決定） */
+:root[data-look~="book"] :is(.modal, .koma, details.out) .btn.primary,
+:root[data-look~="book"] .btn.copy-btn, :root[data-look~="book"] .mbar .btn.mbar-copy {
+  border: 1px solid #d6a85c; color: #f8e3b0; text-shadow: 0 1px 0 rgb(40 5 0 / .7); letter-spacing: .08em;
+  background: radial-gradient(ellipse at 50% 0%, rgb(255 190 140 / .25), transparent 60%), linear-gradient(180deg, var(--bk-wax-hi), var(--bk-wax) 60%, #4e0f09);
+  box-shadow: inset 0 0 0 1px rgb(255 210 150 / .2), 0 8px 18px -8px rgb(60 5 0 / .8); }
+:root[data-look~="book"] .btn.copy-btn:hover, :root[data-look~="book"] .mbar .btn.mbar-copy:hover, :root[data-look~="book"] .modal .btn.primary:hover {
+  border-color: var(--bk-gold-hi); background: radial-gradient(ellipse at 50% 0%, rgb(255 200 150 / .35), transparent 60%), linear-gradient(180deg, #b93a24, #84200f 60%, #561109); }
+
+/* ---- はじめの見出し：色とりどりの軌道をやめて、ゆっくり回る金の魔法陣に ---- */
+:root[data-look~="book"] .orbit { display: none; }
+:root[data-look~="book"] .hero { position: relative; grid-template-columns: minmax(0, 1fr); }
+:root[data-look~="book"] .hero::after { content: ""; position: absolute; z-index: -1; right: 1%; top: 50%; width: min(340px, 34vw); aspect-ratio: 1; translate: 0 -50%; pointer-events: none; opacity: .32;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%23d6ae5c'%3E%3Ccircle cx='100' cy='100' r='97' stroke-width='1.2'/%3E%3Ccircle cx='100' cy='100' r='90' stroke-width='.5' stroke-dasharray='2 4'/%3E%3Ccircle cx='100' cy='100' r='77' stroke-width='.9'/%3E%3Cpath d='M100 23 145.3 162.3 26.8 76.2H173.2L54.7 162.3Z' stroke-width='.9' stroke-linejoin='round'/%3E%3Ccircle cx='100' cy='100' r='30' stroke-width='.6'/%3E%3Cg font-family='serif' font-size='9' fill='%23d6ae5c' stroke='none' text-anchor='middle'%3E%3Ctext x='100' y='97' transform='rotate(0 100 100) translate(0 -84)'%3E%E1%9A%A0%3C/text%3E%3Ctext x='100' y='97' transform='rotate(72 100 100) translate(0 -84)'%3E%E1%9A%B1%3C/text%3E%3Ctext x='100' y='97' transform='rotate(144 100 100) translate(0 -84)'%3E%E1%9A%B2%3C/text%3E%3Ctext x='100' y='97' transform='rotate(216 100 100) translate(0 -84)'%3E%E1%9A%B7%3C/text%3E%3Ctext x='100' y='97' transform='rotate(288 100 100) translate(0 -84)'%3E%E1%9A%A6%3C/text%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 10px rgb(230 170 80 / .35)); animation: spin 140s linear infinite; }
+:root[data-look~="book"] .hero-title { font-family: var(--f-display); font-weight: 800; letter-spacing: .08em;
+  background: var(--bk-gild); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 0 rgb(0 0 0 / .7)); }
+:root[data-look~="book"] .hero-lead { color: #d8c49c; letter-spacing: .04em; }
+:root[data-look~="book"] .hero-lead::after { content: "─── ❦ ───"; display: block; margin-top: 12px; color: var(--bk-gold); letter-spacing: .1em; font-size: 13px; opacity: .8; }
+:root[data-look~="book"] .hero-tags span { font-family: "Cinzel", serif; border-radius: 2px; border: 1px solid rgb(201 160 78 / .55); background: rgb(30 18 10 / .6); color: #e2c98f; letter-spacing: .14em; }
+
+/* ---- 探索者の一覧（本の上）：革の札に金の縁、選んでいる人は封蝋の赤 ---- */
+:root[data-look~="book"] .char-item { border-radius: 3px; border: 1px solid rgb(201 160 78 / .28); background: rgb(30 18 10 / .55); color: var(--bk-cream); }
+:root[data-look~="book"] .char-item:hover { background: rgb(60 36 18 / .7); border-color: rgb(201 160 78 / .55); }
+:root[data-look~="book"] .char-item.active { border-color: var(--bk-gold-hi); background: linear-gradient(180deg, rgb(122 29 20 / .75), rgb(70 14 8 / .8)); box-shadow: 0 0 0 1px rgb(20 10 4 / .9), 0 0 16px -2px rgb(230 170 80 / .45); }
+:root[data-look~="book"] .char-item .nm { font-family: var(--f-display); }
+:root[data-look~="book"] .char-item .sys { color: #c2a77a; }
+
+/* ---- コマの丸：金の額縁に入った肖像（本の中の肖像は、インクの丸のまま） ---- */
+:root[data-look~="book"] .token:not(.bk-portrait .token) {
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--tc) 40%, #f4e3c0), color-mix(in srgb, var(--tc) 55%, #24140a) 82%) padding-box,
+              linear-gradient(160deg, #f8e6b0, #b98a3c 45%, #6e4c1c 70%, #d6ae5c) border-box;
+  color: #fff6dc; text-shadow: 0 1px 2px rgb(0 0 0 / .7); font-family: var(--f-display); }
+
+/* ---- 下の帯（スマホ）・BGM・お知らせ ---- */
+:root[data-look~="book"] .mbar { background: linear-gradient(180deg, rgb(40 25 15 / .94), rgb(20 12 6 / .97)); border-top: 1px solid rgb(201 160 78 / .55); box-shadow: 0 -1px 0 rgb(20 10 4), 0 -12px 30px -14px rgb(0 0 0 / .9); }
+:root[data-look~="book"] .mbar .btn.mbar-copy { border-radius: 3px; }
+:root[data-look~="book"] .bgm { border-radius: 4px; background: linear-gradient(180deg, rgb(44 28 17 / .95), rgb(22 13 7 / .96)); border: 1px solid rgb(201 160 78 / .5); box-shadow: var(--bk-frame); }
+:root[data-look~="book"] .bgm-play { background: var(--bk-gild); color: #2a1606; }
+:root[data-look~="book"] .bgm-info small { color: var(--bk-gold); font-family: "Cinzel", serif; }
+:root[data-look~="book"] .toast { border-radius: 3px; background: linear-gradient(180deg, rgb(44 28 17 / .97), rgb(22 13 7 / .97)); border: 1px solid rgb(201 160 78 / .6); color: var(--bk-cream);
+  font-family: var(--f-body); letter-spacing: .04em; box-shadow: var(--bk-frame), 0 14px 30px -10px rgb(0 0 0 / .8); }
+:root[data-look~="book"] .dcard { border-radius: 3px; }
+
+/* ---- 探索者をえらぶ画面：ろうそくに照らされた机、魔法陣、封蝋の「新しい探索者」 ---- */
+:root[data-look~="book"]:not(.sel-has-bg) .select {
+  background: radial-gradient(ellipse 55% 45% at 50% 52%, rgb(255 170 90 / .16), transparent 70%),
+    radial-gradient(ellipse 120% 95% at 50% 50%, rgb(20 10 4 / .25) 35%, rgb(0 0 0 / .86)),
+    var(--tx-desk) center / cover, #140c07; }
+:root[data-look~="book"] .sel-head h2 { font-family: var(--f-display); letter-spacing: .14em; background: var(--bk-gild); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 0 rgb(0 0 0 / .7)); }
+:root[data-look~="book"] .sel-head p { color: #d1bb92; }
+:root[data-look~="book"] :is(.sel-tabs, .view-tg, .sort-by) { border-radius: 3px; background: var(--bk-plate); border: 1px solid rgb(201 160 78 / .45); box-shadow: var(--bk-frame); }
+:root[data-look~="book"] :is(.sel-tabs, .view-tg) button { border-radius: 2px; color: #d9c49a; font-family: var(--f-body); }
+:root[data-look~="book"] :is(.sel-tabs, .view-tg) button.on { background: var(--bk-gild); color: #2a1606; box-shadow: none; text-shadow: 0 1px 0 rgb(255 240 200 / .5); }
+:root[data-look~="book"] .sort-by select { color: var(--bk-cream); font-family: var(--f-body); }
+:root[data-look~="book"] .sort-by select option { color: #2a170a; }
+:root[data-look~="book"] .sort-dir { border-radius: 3px; }
+:root[data-look~="book"] .sel-rings circle, :root[data-look~="book"] .sel-rings ellipse { stroke: rgb(214 174 92 / .4); stroke-dasharray: 1 7; stroke-linecap: round; }
+:root[data-look~="book"] .sel-new {
+  color: #f8e3b0; text-shadow: 0 1px 0 rgb(40 5 0 / .8);
+  background: radial-gradient(circle at 38% 32%, #c4482f, var(--bk-wax) 55%, #3e0a05 100%);
+  box-shadow: 0 0 0 3px #3e0a05, 0 0 0 5px rgb(214 168 92 / .75), 0 0 0 14px rgb(122 29 20 / .18), 0 22px 46px -14px rgb(0 0 0 / .9), inset 0 -12px 22px -10px rgb(0 0 0 / .6), inset 0 8px 16px -10px rgb(255 190 150 / .5); }
+:root[data-look~="book"] .sel-new::before { background: radial-gradient(circle, rgb(230 160 80 / .28), transparent 68%); }
+:root[data-look~="book"] .sel-new b { font-family: var(--f-display); letter-spacing: .1em; }
+:root[data-look~="book"] .sel-new small { font-family: "Cinzel", serif; color: #e8c88a; }
+:root[data-look~="book"] :is(.sel-name, .sl-name) { border-radius: 2px; background: linear-gradient(180deg, rgb(44 28 17 / .95), rgb(22 13 7 / .95)); border: 1px solid rgb(201 160 78 / .55); color: #f0dcae; font-family: var(--f-display); letter-spacing: .08em; box-shadow: var(--bk-frame); }
+:root[data-look~="book"] .sel-sys, :root[data-look~="book"] .sl-sys { color: #c9b083; }
+:root[data-look~="book"] :is(.sel-row, .sel-list-new) { border-radius: 3px; background: linear-gradient(180deg, rgb(44 28 17 / .9), rgb(24 14 8 / .92)); border: 1px solid rgb(201 160 78 / .35); color: var(--bk-cream); box-shadow: var(--bk-frame); }
+:root[data-look~="book"] :is(.sel-row, .sel-list-new):hover { border-color: var(--bk-gold-hi); }
+:root[data-look~="book"] .sr-name b { font-family: var(--f-display); }
+:root[data-look~="book"] .sel-foot .btn { font-size: 13px; }
+
+@media (max-width: 760px) {
+  :root[data-look~="book"] .hero::after { width: 44vw; right: 0; opacity: .16; }
+}
+
+/* 左上のロゴは金箔（assets/brand/logo-book.webp） */
+:root[data-look~="book"] .brand-logo { background-image: url("../assets/brand/logo-book.webp"); filter: drop-shadow(0 0 6px rgb(240 190 100 / .3)); }

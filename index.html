@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="クトゥルフ神話TRPGのキャラクターシートを作って、ココフォリアのコマにそのまま貼り付けられるツール">
+<meta name="theme-color" content="#12133a">
+<meta name="apple-mobile-web-app-title" content="ORBiS">
+<meta name="application-name" content="ORBiS">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/brand/favicon-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ORBiS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Klee+One:wght@400;600&family=Zen+Kurenaido&family=Pinyon+Script&family=Lexend:wght@400;600;700&family=M+PLUS+Rounded+1c:wght@500;800&family=Shippori+Mincho+B1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Yuji+Syuku&family=Zen+Old+Mincho:wght@400;700&family=DotGothic16&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+html { color-scheme: light; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <canvas class="intro-dust" id="intro-dust" aria-hidden="true"></canvas>
+  <div class="intro-fog" aria-hidden="true"><span></span><span></span><span></span></div>
+  <svg class="intro-circle" id="intro-circle" viewBox="0 0 600 600" aria-hidden="true">
+    <defs><path id="ring-path" d="M300,300 m-252,0 a252,252 0 1,1 504,0 a252,252 0 1,1 -504,0"/></defs>
+    <g class="spin-a">
+      <circle cx="300" cy="300" r="286" class="gold"/>
+      <circle cx="300" cy="300" r="274" class="dash"/>
+      <text class="ring-text"><textPath href="#ring-path" textLength="1575" lengthAdjust="spacing">CALL OF CTHULHU ✦ TABLETOP ROLE PLAYING GAME ✦ ROLL THE DICE ✦ ORBiS CHARACTER SHEET ✦</textPath></text>
+      <circle cx="300" cy="300" r="232"/>
+      <polygon id="intro-star" class="gold"/>
+      <g id="intro-runes"></g>
+    </g>
+    <g class="spin-b">
+      <circle cx="300" cy="300" r="150" class="dash"/>
+      <circle cx="300" cy="300" r="122"/>
+      <polygon id="intro-hex"/>
+      <circle cx="300" cy="300" r="56" class="gold"/>
+    </g>
+  </svg>
+  <div class="intro-body">
+    <p class="intro-eyebrow">WELCOME TO THE TABLETOP</p>
+    <h2 class="intro-title" id="intro-title"><span>ようこそ、</span><span>TRPGの世界へ</span></h2>
+    <p class="intro-lead">ダイスを振れ。物語は、そこから始まる。</p>
+    <button class="intro-btn" id="intro-enter" type="button">ORBiS をひらく</button>
+    <p class="intro-foot">ORBiS — for CCFOLIA</p>
+  </div>
+</div>
+
+<div class="select" id="select" aria-label="探索者をえらぶ">
+  <div class="select-in">
+    <div class="sel-head">
+      <p class="eyebrow" id="sel-eyebrow">SELECT YOUR INVESTIGATOR</p>
+      <h2 id="sel-title">探索者をえらぶ</h2>
+      <p id="sel-desc">キャラを押すとシートが開きます。真ん中から新しい探索者をつくれます。</p>
+      <div class="sel-tabs" role="tablist" aria-label="表示の切り替え">
+        <button type="button" role="tab" data-seltab="mine" class="on" aria-selected="true">自分の探索者</button>
+        <button type="button" role="tab" data-seltab="friends" aria-selected="false">フレンド<span id="sel-req"></span></button>
+        <button type="button" role="tab" data-seltab="groups" aria-selected="false">グループ<span id="sel-greq"></span></button>
+      </div>
+      <div class="sel-sort" id="sel-sort">
+        <label class="sort-by"><span>並び順</span>
+          <select id="sort-key" aria-label="並び順">
+            <option value="created">追加した順</option><option value="name">名前（五十音）</option><option value="age">年齢</option>
+            <option value="birthday">誕生日（1月→12月）</option><option value="updated">最近さわった順</option><option value="system">版（6版／7版）</option>
+          </select></label>
+        <button type="button" class="sort-dir" id="sort-dir" aria-label="並びを逆にする"></button>
+        <div class="view-tg" role="group" aria-label="表示の形"><button type="button" data-view="orbit">ふよふよ</button><button type="button" data-view="list">一覧</button><button type="button" data-view="slide">スライド</button></div>
+      </div>
+    </div>
+    <div class="sel-stage" id="sel-stage"></div>
+    <div class="sel-foot">
+      <button class="btn" type="button" id="sel-import">読み込み（いあきゃら など）</button>
+      <button class="btn" type="button" id="sel-friends">フレンド管理</button>
+      <button class="btn" type="button" id="sel-theme">テーマ・背景</button>
+      <button class="btn acct-btn" type="button" id="sel-account">ログイン</button>
+    </div>
+  </div>
+</div>
+
+<div class="bg-layer" id="bg-layer" aria-hidden="true"></div>
+<div class="peek" id="peek" hidden aria-hidden="true"></div>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div class="brand-text"><h1><span class="brand-logo" role="img" aria-label="ORBiS"></span></h1><small>キャラクターシート</small></div>
+    </div>
+    <div class="bar-actions">
+      <button class="btn" id="btn-select" type="button">探索者一覧</button>
+      <button class="btn" id="btn-friends" type="button">フレンド</button>
+      <button class="btn primary" id="btn-new" type="button">＋ 新しい探索者</button>
+      <button class="btn" id="btn-import" type="button">読み込み</button>
+      <button class="btn" id="btn-export" type="button">バックアップ</button>
+      <button class="btn" id="btn-theme" type="button">テーマ・背景</button>
+      <button class="btn acct-btn" id="btn-account" type="button">ログイン</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">CALL OF CTHULHU × CCFOLIA</p>
+      <h2 class="hero-title">探索者を、<br>つぎの世界へ。</h2>
+      <p class="hero-lead">クトゥルフ神話TRPGのキャラクターシートを作って、ワンクリックでココフォリアのコマに転送。データはこのブラウザの中に保存されます。</p>
+      <div class="hero-tags"><span>6TH EDITION</span><span>7TH EDITION</span><span>CHAT PALETTE</span></div>
+    </div>
+    <div class="orbit" aria-hidden="true">
+      <svg viewBox="0 0 260 260">
+        <defs>
+          <linearGradient id="core-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sky)"/><stop offset="1" style="stop-color:var(--cyan)"/></linearGradient>
+        </defs>
+        <circle class="ring dash" cx="130" cy="130" r="120"/>
+        <circle class="ring" cx="130" cy="130" r="92"/>
+        <circle class="ring" cx="130" cy="130" r="62"/>
+        <g class="spin">
+          <circle cx="130" cy="10" r="17" style="fill:var(--hp)"/><text class="node-label" x="130" y="10">HP</text>
+          <circle cx="234" cy="190" r="17" style="fill:var(--san)"/><text class="node-label" x="234" y="190">SAN</text>
+          <circle cx="26" cy="190" r="17" style="fill:var(--mp)"/><text class="node-label" x="26" y="190">MP</text>
+        </g>
+        <g class="spin rev">
+          <circle cx="130" cy="222" r="13" style="fill:var(--lime)"/><text class="node-label" x="130" y="222">DEX</text>
+          <circle cx="210" cy="84" r="13" style="fill:var(--orange)"/><text class="node-label" x="210" y="84">DB</text>
+          <circle cx="50" cy="84" r="7" style="fill:var(--yellow)"/>
+        </g>
+        <circle cx="130" cy="130" r="48" style="fill:var(--solid)"/>
+        <circle cx="130" cy="130" r="42" fill="url(#core-g)"/>
+        <text class="core-text" id="orbit-core" x="130" y="132">久</text>
+      </svg>
+    </div>
+  </section>
+
+  <div class="layout">
+    <nav class="shelf" aria-label="探索者一覧">
+      <p class="panel-label">INVESTIGATORS <span>探索者</span><span class="touch-hint">長押しで詳細</span><b class="pl-aq">キャラクター一覧<small>Character List</small></b></p>
+      <button class="shelf-new" id="shelf-new" type="button">＋ 新規作成</button>
+      <div class="shelf-list" id="shelf"></div>
+    </nav>
+
+    <main class="sheet" id="sheet"></main>
+
+    <aside class="tray" aria-label="ココフォリア出力">
+      <p class="panel-label">TRANSFER <span>ココフォリアのコマ</span></p>
+      <div class="koma">
+        <div id="koma-preview"><div class="koma-top" id="koma-head"></div><div class="rings" id="koma-rings"></div><div class="chips" id="koma-chips"></div></div>
+        <label class="opt"><input type="checkbox" id="opt-all"> 初期値のままの技能もチャットパレットに入れる</label>
+        <button class="btn primary copy-btn" id="btn-copy" type="button">ココフォリア用にコピー</button>
+        <div class="copy-status" id="copy-status" role="status"></div>
+        <ol class="steps">
+          <li>上のボタンでコマデータをコピー</li>
+          <li>ココフォリアのルームを開く</li>
+          <li>盤面をクリックして <kbd>Ctrl</kbd>+<kbd>V</kbd>（Macは <kbd>⌘</kbd>+<kbd>V</kbd>）</li>
+          <li><b>キャラクターコマ</b>が追加され、チャットパレットも入ります</li>
+        </ol>
+      </div>
+      <details class="out">
+        <summary>出力の中身を確認 <span>チャットパレット・JSON</span></summary>
+        <div class="out-sub">チャットパレット <span id="palette-count"></span></div>
+        <pre class="code" id="palette-out"></pre>
+        <div class="out-sub">出力JSON <span>上級者向け</span></div>
+        <pre class="code" id="json-out" tabindex="0"></pre>
+      </details>
+    </aside>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="ink-wear" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="holes"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".06 .5" numOctaves="1" seed="12" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2 2.1" result="gaps"/>
+      <feComposite in="holes" in2="gaps" operator="in" result="mask"/>
+      <feComposite in="SourceGraphic" in2="mask" operator="in" result="worn"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="2" seed="5" result="dens"/>
+      <feColorMatrix in="dens" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .7 .72" result="fade"/>
+      <feComposite in="worn" in2="fade" operator="in" result="faded"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="9" result="w"/>
+      <feDisplacementMap in="faded" in2="w" scale="1.2"/>
+    </filter>
+    <filter id="ink-wear-soft" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.55" result="holes"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".015" numOctaves="2" seed="7" result="dens"/>
+      <feColorMatrix in="dens" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 .78" result="fade"/>
+      <feComposite in="holes" in2="fade" operator="in" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+    </filter>
+    <linearGradient id="g-hp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--orange)"/><stop offset="1" style="stop-color:var(--hp)"/></linearGradient>
+    <linearGradient id="g-mp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--cyan)"/><stop offset="1" style="stop-color:var(--mp)"/></linearGradient>
+    <linearGradient id="g-san" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--pink)"/><stop offset="1" style="stop-color:var(--san)"/></linearGradient>
+    <linearGradient id="g-luck" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--yellow)"/><stop offset="1" style="stop-color:var(--orange)"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="panel-overlay" id="panel-ov" hidden>
+  <div class="sao" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+    <nav class="sao-menu" id="sao-menu" aria-label="項目"></nav>
+    <div class="sao-win" id="sao-win">
+      <span class="sao-line" id="sao-line" aria-hidden="true"></span>
+      <div class="sao-head">
+        <span class="sao-hic" id="sao-hic" aria-hidden="true"></span>
+        <div class="sao-title"><span class="panel-en" id="panel-en"></span><h2 id="panel-title" tabindex="-1"></h2></div>
+        <button class="sao-close" id="sao-close" type="button" data-close-panel aria-label="閉じる"></button>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="stage-ov" id="stage-ov" hidden>
+  <div class="stage" role="dialog" aria-modal="true" aria-label="立ち絵">
+    <div class="stage-rays" aria-hidden="true"></div>
+    <div class="stage-ring r2" aria-hidden="true"></div>
+    <div class="stage-ring r1" aria-hidden="true"></div>
+    <div class="stage-figure" id="stage-figure"></div>
+    <div class="stage-faces" id="stage-faces" aria-label="差分を切りかえる"></div>
+    <div class="stage-plate" id="stage-plate"><small id="stage-kana"></small><b id="stage-name"></b><span id="stage-sub"></span></div>
+    <div class="stage-tools">
+      <label class="btn small" for="stage-file">画像を選ぶ</label><input type="file" id="stage-file" accept="image/*" hidden>
+      <label class="btn small" for="stage-face-file">＋ 差分</label><input type="file" id="stage-face-file" accept="image/*" multiple hidden>
+      <button class="btn small" type="button" id="stage-profile">プロフィールを開く</button>
+      <button class="btn small danger" type="button" id="stage-remove">画像を外す</button>
+      <button class="sao-close" type="button" id="stage-close" aria-label="閉じる"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-theme" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="theme-title">
+    <h2 id="theme-title">テーマ・背景・カラー</h2>
+    <p>背景に好きな画像を敷いたり、RGBのスライダーや数値で画面全体の色を変えたりできます。左の丸を押すと色を選ぶこともできます。変更はすぐ反映され、このブラウザに保存されます。</p>
+    <div class="th-sec"><b>テーマ</b><span>選ぶと全体の色と雰囲気が変わります。下の色で細かく調整もできます。</span></div>
+    <div class="theme-presets" id="theme-presets"></div>
+    <div class="th-sec"><b>効果音</b><span>ボタンを押したときや、画面・窓を切りかえたときの音です。テーマごとに、そのテーマらしい音になります。</span></div>
+    <div class="sfx-row"><button class="btn" type="button" id="sfx-toggle" aria-pressed="true">効果音：オン（押すとオフ）</button></div>
+    <div class="th-sec"><b>音量</b><span>すべての音の大きさです。この端末に覚えます。キャラごとの BGM の音量は、そのキャラの BGM の設定で変えられます。</span></div>
+    <div class="vol-rows" id="vol-rows">
+      <label class="vol-row"><span>全体</span><input type="range" min="0" max="100" data-vol="master" aria-label="全体の音量"><b data-volv="master"></b></label>
+      <label class="vol-row"><span>BGM（キャラの曲）</span><input type="range" min="0" max="100" data-vol="bgm" aria-label="BGMの音量"><b data-volv="bgm"></b></label>
+      <label class="vol-row"><span>効果音</span><input type="range" min="0" max="100" data-vol="sfx" aria-label="効果音の音量"><b data-volv="sfx"></b></label>
+      <label class="vol-row"><span>はじめの画面の曲</span><input type="range" min="0" max="100" data-vol="title" aria-label="はじめの画面の曲の音量"><b data-volv="title"></b></label>
+    </div>
+    <div class="th-sec"><b>はじめの画面</b><span>アプリを開いたときに出る画面です。次に開いたときから変わります。</span></div>
+    <div class="intro-pick" id="intro-pick" role="group" aria-label="はじめの画面"><button type="button" class="btn" data-intro="orbis">ORBiS（星空と光）</button><button type="button" class="btn" data-intro="classic">魔法陣</button></div>
+    <div class="th-sec"><b>背景画像</b><span>どこの背景を変えるか選んでから、画像を選んでください。</span></div>
+    <div class="bg-slots" id="bg-slots" role="group" aria-label="背景を設定する場所">
+      <button type="button" data-bgslot="all" class="on">共通</button>
+      <button type="button" data-bgslot="sel">探索者をえらぶ画面</button>
+      <button type="button" data-bgslot="char">このキャラ（<span id="bgslot-char-name"></span>）</button>
+    </div>
+    <div class="bgset">
+      <div class="bg-thumb" id="bg-thumb"></div>
+      <div class="bg-ctl">
+        <span class="bg-hint" id="bg-slot-hint"></span>
+        <div class="row"><label class="btn small" for="bg-file">画像を選ぶ</label><input type="file" id="bg-file" accept="image/*" hidden><button class="btn small danger" type="button" id="bg-remove">画像を外す</button></div>
+        <label class="bg-slider" for="bg-veil">色を重ねる濃さ<input type="range" id="bg-veil" min="0" max="90"><output id="bg-veil-v"></output></label>
+        <label class="bg-slider" for="bg-blur">ぼかし<input type="range" id="bg-blur" min="0" max="20"><output id="bg-blur-v"></output></label>
+        <label class="bg-slider" for="bg-glass">パネルの透け具合<input type="range" id="bg-glass" min="0" max="100"><output id="bg-glass-v"></output></label>
+      </div>
+    </div>
+    <div class="theme-rows" id="theme-rows"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" id="theme-reset">色をテーマの初期値に戻す</button>
+      <button class="btn ghost" type="button" id="ue-open" title="Ctrl+Shift+E でも開けます" hidden>画面を編集する</button>
+      <button class="btn primary" type="button" data-close>完了</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="bgm" id="bgm" hidden>
+  <div class="yt-wrap" id="yt-wrap" hidden><div id="yt-frame"></div></div>
+  <div class="bgm-row">
+    <button class="bgm-play" id="bgm-play" type="button" aria-label="再生"></button>
+    <div class="bgm-info"><small>BGM <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="bgm-src" id="bgm-src"></span></small><b id="bgm-title"></b></div>
+  </div>
+  <div class="bgm-volrow">
+    <button class="bgm-mute" id="bgm-mute" type="button" aria-label="ミュート"></button>
+    <input type="range" id="bgm-vol" min="0" max="100" aria-label="BGMの音量">
+    <output id="bgm-vol-v"></output>
+  </div>
+</div>
+
+<div class="mbar" id="mbar">
+  <div class="mbar-stats" id="mbar-stats"></div>
+  <button class="btn mbar-copy" id="mbar-copy" type="button">コマをコピー</button>
+</div>
+
+<div class="overlay" id="modal-friends" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="friends-title">
+    <h2 id="friends-title">フレンド</h2>
+    <section id="online-friends"></section>
+    <div class="memo-head"><b>遊んだ仲間メモ</b><p>アカウントを持っていない仲間もここに登録できます。探索者の「通過シナリオ」で一緒に遊んだ人を選ぶと、冒険の記録がたまります。</p></div>
+    <form class="friend-form" id="friend-form">
+      <input type="color" class="fcolor" id="friend-color" value="#1f6fe0" aria-label="フレンドの色">
+      <input class="inp" id="friend-name" placeholder="フレンドの名前" aria-label="フレンドの名前" autocomplete="off">
+      <input class="inp" id="friend-note" placeholder="メモ（Discord・Xなど）" aria-label="メモ" autocomplete="off">
+      <button class="btn primary" type="submit">追加</button>
+    </form>
+    <div class="friend-list" id="friend-list"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-account" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="acct-title">
+    <h2 id="acct-title">アカウント</h2>
+    <div id="acct-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-fview" hidden>
+  <div class="modal modal-xwide" role="dialog" aria-modal="true" aria-labelledby="fview-title">
+    <div class="fview-head"><h2 id="fview-title"></h2><button class="btn ghost" type="button" data-close>閉じる</button></div>
+    <div id="fview-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-share" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
+    <h2 id="share-title">キャラシを共有</h2>
+    <div id="share-body"></div>
+    <div class="copy-status" id="share-status" role="status"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-group" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="grp-title">
+    <h2 id="grp-title">グループ</h2>
+    <p>あなたが代表者になってグループを作り、フレンドを招待します。招待された人は、参加するときにキーパーか探索者かを選びます。</p>
+    <div id="grp-body"></div>
+    <div class="modal-actions">
+      <button class="btn danger" type="button" id="grp-del">このグループを削除</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="grp-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-join" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="join-title">
+    <h2 id="join-title">グループに参加する</h2>
+    <div id="join-body"></div>
+    <div class="modal-actions">
+      <button class="btn danger" type="button" id="join-leave">グループから抜ける</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="join-ok">参加する</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-icon" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ico-title">
+    <h2 id="ico-title">アイコンを調整</h2>
+    <p>画像をドラッグして位置を、スライダー（またはマウスホイール）で大きさを調整できます。ここで決めたアイコンが、一覧やコマなどの丸いアイコンに使われます。</p>
+    <div class="ico-wrap">
+      <div class="ico-stage" id="ico-stage" tabindex="0" aria-label="アイコンの表示範囲。ドラッグか矢印キーで位置を動かせます"></div>
+      <div class="ico-side">
+        <label class="bg-slider" for="ico-zoom">大きさ<input type="range" id="ico-zoom" min="1" max="5" step="0.01"><output id="ico-zoom-v"></output></label>
+        <div class="ico-mini" id="ico-mini" aria-hidden="true"></div>
+        <div class="row"><label class="btn small" for="ico-file">アイコン用の画像を選ぶ</label><input type="file" id="ico-file" accept="image/*" hidden><button class="btn small" type="button" id="ico-own">立ち絵に戻す</button><button class="btn small ghost" type="button" id="ico-reset">位置をリセット</button></div>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>キャンセル</button><button class="btn primary" type="button" id="ico-save">保存する</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-new" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title">
+    <h2 id="new-title">新しい探索者</h2>
+    <p>ルールの版を選んでください。能力値・技能・武器の欄がその版のキャラクターシートどおりに用意されます。</p>
+    <div class="preset-list" id="preset-list"></div>
+    <p class="new-count" id="new-count"></p>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-import" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <h2 id="import-title">読み込み</h2>
+    <p><b>いあきゃらから全部写す（おすすめ）</b>：いあきゃらのキャラクターページで「テキスト出力」を押してダウンロードした <b>.txt ファイル</b>を下の「ファイルを選択」から選ぶか、中身を貼り付けてください。技能の内訳（職業P・興味P・成長）、武器、所持品、財産、経歴、通過シナリオ、メモまで全部入ります。</p>
+    <p>いあきゃらの「ココフォリア駒出力」も読めますが、こちらには能力値・技能の合計・HP/MP/SANしか入っていません。ほかに、ココフォリアのコマ、チャットパレットなどのテキスト、このアプリのバックアップも読み込めます。</p>
+    <textarea class="inp" id="import-text" placeholder="ここに貼り付け（例：{&quot;kind&quot;:&quot;character&quot;,&quot;data&quot;:{…}} や チャットパレットのテキスト）"></textarea>
+    <input type="file" id="import-file" accept=".txt,.json,application/json,text/plain">
+    <div class="err" id="import-err" role="alert"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="import-run">読み込む</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-export" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <h2 id="export-title">バックアップ</h2>
+    <p>全探索者のデータです。コピーしてメモ帳などに保存しておくと、別の端末やブラウザで「読み込み」から復元できます。</p>
+    <textarea class="inp" id="export-text" readonly></textarea>
+    <div class="copy-status" id="export-status" role="status"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>閉じる</button>
+      <button class="btn primary" type="button" id="export-copy">コピー</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
