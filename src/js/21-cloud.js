@@ -573,13 +573,52 @@ function sheetViewHtml(c, shared) {   // shared：共有リンクから開いた
     </div>
     <figure class="chart-fig"><figcaption>技能グラフ ${SK_LEGEND}</figcaption>${skillBarsHtml(c, a, true)}</figure>
     ${list(c.weapons || [], w => `<div class="sv-item"><b>${esc(w.name)}</b><span>成功率 ${esc(w.rate || '—')} ・ ダメージ ${esc(w.damage || '—')}${w.range ? ' ・ 射程 ' + esc(w.range) : ''}</span></div>`) ? `<div class="sv-sec"><h4>武器</h4>${list(c.weapons || [], w => `<div class="sv-item"><b>${esc(w.name)}</b><span>成功率 ${esc(w.rate || '—')} ・ ダメージ ${esc(w.damage || '—')}${w.range ? ' ・ 射程 ' + esc(w.range) : ''}</span></div>`)}</div>` : ''}
-    ${list(c.items || [], it => `<span class="sv-chip">${esc(it.name)}${it.count ? ' ×' + esc(it.count) : ''}</span>`) ? `<div class="sv-sec"><h4>所持品</h4><div class="sv-chips">${list(c.items || [], it => `<span class="sv-chip">${esc(it.name)}${it.count ? ' ×' + esc(it.count) : ''}</span>`)}</div></div>` : ''}
+    ${list(c.items || [], svItemChip) ? `<div class="sv-sec"><h4>所持品${(c.items || []).some(it => it.name && svItemTip(it)) ? ' <small class="sv-tiphint">（<i>i</i> の付いた品は、カーソルを合わせる・長押しで説明が出ます）</small>' : ''}</h4><div class="sv-chips">${list(c.items || [], svItemChip)}</div></div>` : ''}
     ${list(c.scenarios || [], sc => `<span class="sv-chip">「${esc(sc.name)}」${sc.date ? ' ' + esc(sc.date) : ''}</span>`) ? `<div class="sv-sec"><h4>通過シナリオ</h4><div class="sv-chips">${list(c.scenarios || [], sc => `<span class="sv-chip">「${esc(sc.name)}」${sc.date ? ' ' + esc(sc.date) : ''}</span>`)}</div></div>` : ''}
     ${c.backstory ? `<div class="sv-sec"><h4>経歴</h4><p class="sv-text">${esc(c.backstory)}</p></div>` : ''}
     <div id="sv-secret"></div>
     ${c.memo ? `<div class="sv-sec"><h4>メモ</h4><p class="sv-text">${esc(c.memo)}</p></div>` : ''}
   </div>`;
 }
+/* 見るだけの画面の所持品：説明（効果・備考）や価格がある品は、カーソルを合わせている間・押している間に吹き出しで出す */
+function svItemTip(it) {
+  return [String(it.note || '').trim(), String(it.price || '').trim() ? '価格：' + String(it.price).trim() : ''].filter(Boolean).join('\n');
+}
+function svItemChip(it) {
+  const tip = svItemTip(it), label = `${esc(it.name)}${it.count ? ' ×' + esc(it.count) : ''}`;
+  return tip ? `<span class="sv-chip has-tip" tabindex="0" data-itip="${esc(tip)}" data-itipname="${esc(it.name)}">${label}<i class="sv-tipmark" aria-hidden="true">i</i></span>` : `<span class="sv-chip">${label}</span>`;
+}
+const svTip = { el: null, t: 0, on: null };
+function svTipShow(chip) {
+  clearTimeout(svTip.t);
+  let el = svTip.el;
+  if (!el) { el = svTip.el = document.createElement('div'); el.className = 'sv-tip'; el.setAttribute('role', 'tooltip'); document.body.appendChild(el); }
+  el.innerHTML = `<b>${esc(chip.dataset.itipname || '')}</b><span>${esc(chip.dataset.itip || '')}</span>`;
+  svTip.on = chip; el.style.left = '0px'; el.classList.add('on');
+  // 品の上に出す（上に入らないときは下に。左右は画面からはみ出さないように）
+  const r = chip.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  let y = r.top - h - 10, below = false;
+  if (y < 8) { y = r.bottom + 10; below = true; }
+  el.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  el.style.top = y + 'px';
+  el.classList.toggle('below', below);
+}
+function svTipHide(ms) {
+  clearTimeout(svTip.t);
+  svTip.t = setTimeout(() => { if (svTip.el) svTip.el.classList.remove('on'); svTip.on = null; }, ms || 0);
+}
+const svTipOf = e => e.target && e.target.closest ? e.target.closest('.sv [data-itip]') : null;
+// パソコン：カーソルを合わせている間
+document.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') { const c = svTipOf(e); if (c) svTipShow(c); } });
+document.addEventListener('pointerout', e => { if (e.pointerType === 'mouse') { const c = svTipOf(e); if (c && !c.contains(e.relatedTarget)) svTipHide(); } });
+// スマホ：押している間（指を離しても少しのあいだ残す）。ほかの所を押したら消す
+document.addEventListener('pointerdown', e => { const c = svTipOf(e); if (c && e.pointerType !== 'mouse') svTipShow(c); else if (!c && svTip.on) svTipHide(); }, { passive: true });
+['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => { if (e.pointerType !== 'mouse' && svTip.on) svTipHide(1600); }, { passive: true }));
+// キーボード（Tab で選んだとき）
+document.addEventListener('focusin', e => { const c = svTipOf(e); if (c && c.matches(':focus-visible')) svTipShow(c); });
+document.addEventListener('focusout', e => { if (svTipOf(e)) svTipHide(); });
+addEventListener('scroll', () => { if (svTip.on) svTipHide(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && svTip.on) svTipHide(); });
 let fviewCur = null;
 /* グループのKPがメンバーのキャラシを見たとき、秘匿も見せる（読めるかどうかはサーバーが決める） */
 async function loadKpSecret(c) {
