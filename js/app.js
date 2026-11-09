@@ -1948,6 +1948,7 @@ onBoth('click', e => {
       if (bgmFor === c.id) stopBgm();
       state.chars = state.chars.filter(x => x.id !== c.id);
       state.activeId = state.chars.length ? state.chars[0].id : null;
+      if (c.owner || me) queueCharDelete(c.id);   // サーバーからも消すまで覚えておく（途中でページを閉じても、次に開いたときに消す）
       unsetGroupChar(c.id);
       save(); renderAll();
       if (!state.chars.length) { selTab = 'mine'; showSelect(); toast('探索者をすべて削除しました。「＋ 新しい探索者」から作れます。'); }
@@ -3158,6 +3159,42 @@ async function pullSecrets(ids) {
   (data || []).forEach(r => m.set(r.char_id, r.body || ''));
   return m;
 }
+/* ---- 削除したキャラが、ほかの端末から復活しないように ----
+   前は「どのキャラをサーバーに送ったか」を開いているあいだしか覚えていなかったので、
+   アプリの更新などで読み込み直した端末（古いキャラを持ったままのスマホなど）が、ほかの端末で削除したキャラを「新しいキャラ」と思って送り直していた。
+   ・サーバー（14-deleted-chars.sql）：削除すると「削除したしるし」が残り、削除より前の内容を送ってきても受け取らない
+   ・アプリ：しるしのあるキャラはこの端末からも片付ける。この端末で削除したキャラは、送り終わるまで state.delQueue に覚えておく（途中で閉じても消し忘れない） */
+let tombOff = false;   // 14-deleted-chars.sql をまだ実行していないとき
+async function deletedOnServer(ids) {   // 返り値：キャラの id → 削除した時刻
+  const m = new Map();
+  if (tombOff || !sb || !ids.length) return m;
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await sb.from('deleted_chars').select('id,deleted_at').in('id', ids.slice(i, i + 100));
+    if (error) { if (/deleted_chars|does not exist|Could not find/i.test(String(error.message))) tombOff = true; return m; }
+    (data || []).forEach(r => m.set(r.id, Date.parse(r.deleted_at) || 0));
+  }
+  return m;
+}
+function queueCharDelete(id) {   // この端末で削除した：サーバーからも消すまで覚えておく（11-edit.js から呼ぶ）
+  state.delQueue = state.delQueue || [];
+  if (!state.delQueue.includes(id)) state.delQueue.push(id);
+}
+function dropDeleted(ids) {   // ほかの端末で削除されたキャラを、この端末からも片付ける
+  const set = new Set(ids);
+  const hit = state.chars.filter(c => set.has(c.id));
+  if (!hit.length) return 0;
+  hit.forEach(c => { if (c.bgm?.src === 'idb') AudioDB.del(c.id).catch(() => {}); if (bgmFor === c.id) stopBgm(); });
+  state.chars = state.chars.filter(c => !set.has(c.id));
+  ids.forEach(id => lastSynced.delete(id));
+  if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
+  toast(`ほかの端末で削除した探索者${hit.length}人を、この端末からも片付けました。`);
+  return hit.length;
+}
+function afterDrop() {   // 片付けたあとの画面
+  saveNow(); renderAll();
+  if (!state.chars.length && $('select').hidden) { selTab = 'mine'; showSelect(); }
+  else if (!$('select').hidden) renderSelect();
+}
 async function flushSync() {
   if (!sb || !me) return;
   clearTimeout(syncTimer); syncTimer = null;
@@ -3170,20 +3207,28 @@ async function flushSync() {
     // 立ち絵の入ったキャラは大きいので、だいたい3MBずつに分けて送る（一度に全部送ると失敗しやすい）
     const batches = [];
     rows.forEach(r => { const b = batches[batches.length - 1]; if (b && b.size + r[1].length <= 3e6) { b.rows.push(r); b.size += r[1].length; } else batches.push({ rows: [r], size: r[1].length }); });
+    const refused = [];
     for (const b of batches) {
-      const { error } = await sb.from('characters').upsert(b.rows.map(([c]) => ({ id: c.id, owner: me.id, name: c.profile.name || '', locked: !!c.locked, data: withoutSecret(c), updated_at: new Date(c.updatedAt || Date.now()).toISOString() })));
+      const { data: put, error } = await sb.from('characters').upsert(b.rows.map(([c]) => ({ id: c.id, owner: me.id, name: c.profile.name || '', locked: !!c.locked, data: withoutSecret(c), updated_at: new Date(c.updatedAt || Date.now()).toISOString() }))).select('id');
       if (error) throw error;
-      await pushSecrets(b.rows.map(([c]) => c));
-      b.rows.forEach(([c, js]) => lastSynced.set(c.id, js));
-      b.rows.forEach(([c]) => { if (shares && shares[c.id]) uploadShareCard(c, shares[c.id]); });   // 共有中なら、リンクのカードの画像も新しく
+      // サーバーが受け取らなかったキャラ＝ほかの端末で削除済み（削除より前の古い内容だった）
+      const got = put ? new Set(put.map(r => r.id)) : null;
+      const kept = got ? b.rows.filter(([c]) => got.has(c.id)) : b.rows;
+      if (got) b.rows.forEach(([c]) => { if (!got.has(c.id)) refused.push(c.id); });
+      await pushSecrets(kept.map(([c]) => c));
+      kept.forEach(([c, js]) => lastSynced.set(c.id, js));
+      kept.forEach(([c]) => { if (shares && shares[c.id]) uploadShareCard(c, shares[c.id]); });   // 共有中なら、リンクのカードの画像も新しく
     }
     const live = new Set(mine.map(c => c.id));
-    const gone = [...lastSynced.keys()].filter(id => !live.has(id));
+    const queued = (state.delQueue || []).slice();
+    const gone = [...new Set([...lastSynced.keys(), ...queued])].filter(id => !live.has(id));
     if (gone.length) {
       const { error } = await sb.from('characters').delete().in('id', gone);
       if (error) throw error;
       gone.forEach(id => lastSynced.delete(id));
     }
+    if (queued.length) { state.delQueue = (state.delQueue || []).filter(id => !queued.includes(id)); saveNow(); }   // 送っているあいだに削除した分は残す
+    if (refused.length && dropDeleted(refused)) afterDrop();
     setSync('ok');
   } catch (e) { setSync('error', jaErr(e)); clearTimeout(retryTimer); retryTimer = setTimeout(() => { if (me && syncState === 'error') flushSync(); }, 30000); }   // 失敗したら30秒後にもう一度
   finally { syncing = false; if (syncAgain) { syncAgain = false; scheduleSync(); } }
@@ -3193,19 +3238,27 @@ async function pullAndMerge() {
   const { data, error } = await sb.from('characters').select('id,data,locked,updated_at').eq('owner', me.id);
   if (error) throw error;
   lastSynced.clear();
-  const secrets = await pullSecrets((data || []).map(r => r.id));
-  (data || []).forEach(r => {
+  const onServer = new Set((data || []).map(r => r.id));
+  const queued = new Set(state.delQueue || []);
+  const rows = (data || []).filter(r => !queued.has(r.id));   // この端末で削除して、まだサーバーから消せていないキャラは取りこまない
+  const secrets = await pullSecrets(rows.map(r => r.id));
+  rows.forEach(r => {
     const sc = Object.assign({}, r.data, { locked: !!r.locked, owner: me.id });
     sc.secret = secrets.has(r.id) ? secrets.get(r.id) : (state.chars.find(c => c.id === r.id)?.secret || r.data.secret || '');
     const i = state.chars.findIndex(c => c.id === r.id);
     if (i < 0) { state.chars.push(sc); lastSynced.set(sc.id, JSON.stringify(sc)); }
     else if ((sc.updatedAt || 0) >= (state.chars[i].updatedAt || 0)) { state.chars[i] = sc; lastSynced.set(sc.id, JSON.stringify(sc)); }
   });
+  // サーバーに無いキャラのうち、ほかの端末で削除したもの（削除したあとにこの端末で書きかえていないもの）は片付ける
+  const tomb = await deletedOnServer(myChars().filter(c => !onServer.has(c.id)).map(c => c.id));
+  const dead = myChars().filter(c => tomb.has(c.id) && (c.updatedAt || 0) <= tomb.get(c.id)).map(c => c.id);
+  const dropped = dropDeleted(dead);
   const real = state.chars.filter(c => !c.sample);
   if (real.length && state.chars.some(c => c.sample)) state.chars = real;
   if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
   saveNow();
   renderAll();
+  if (dropped && !state.chars.length && $('select').hidden) { selTab = 'mine'; showSelect(); }
   await flushSync();
 }
 /* ---- ほかの端末での変更を取りこむ（画面にもどったとき・ときどき） ----
@@ -3223,9 +3276,12 @@ async function refreshFromCloud() {
     if (error) throw error;
     const server = new Map((data || []).map(r => [r.id, Date.parse(r.updated_at) || 0]));
     const busy = editingNow() ? state.activeId : null;   // 入力中のキャラは、いまは入れかえない（次の確認で）
-    const need = [...server].filter(([id, t]) => { const l = state.chars.find(c => c.id === id); return id !== busy && (!l || t > (l.updatedAt || 0)); }).map(([id]) => id);
-    // ほかの端末で削除されたキャラ（この端末では、前に同期したあと書きかえていないもの）
-    const gone = myChars().filter(c => c.id !== busy && lastSynced.has(c.id) && !server.has(c.id) && lastSynced.get(c.id) === JSON.stringify(c)).map(c => c.id);
+    const queued = new Set(state.delQueue || []);
+    const need = [...server].filter(([id, t]) => { const l = state.chars.find(c => c.id === id); return id !== busy && !queued.has(id) && (!l || t > (l.updatedAt || 0)); }).map(([id]) => id);
+    // ほかの端末で削除されたキャラ（この端末では、前に同期したあと書きかえていないもの／サーバーに「削除したしるし」があるもの）
+    const lonely = myChars().filter(c => c.id !== busy && !server.has(c.id));
+    const tomb = await deletedOnServer(lonely.map(c => c.id));
+    const gone = lonely.filter(c => (lastSynced.has(c.id) && lastSynced.get(c.id) === JSON.stringify(c)) || (tomb.has(c.id) && (c.updatedAt || 0) <= tomb.get(c.id))).map(c => c.id);
     if (!need.length && !gone.length) return false;
     let rows = [];
     for (let i = 0; i < need.length; i += 5) {   // 立ち絵が重いので5人ずつ
@@ -3241,7 +3297,7 @@ async function refreshFromCloud() {
       if (i < 0) state.chars.push(sc); else state.chars[i] = sc;
       lastSynced.set(sc.id, JSON.stringify(sc));
     });
-    if (gone.length) { state.chars = state.chars.filter(c => !gone.includes(c.id)); gone.forEach(id => lastSynced.delete(id)); }
+    if (gone.length) dropDeleted(gone);
     const real = state.chars.filter(c => !c.sample);
     if (real.length && state.chars.some(c => c.sample)) state.chars = real;
     if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
@@ -3249,7 +3305,8 @@ async function refreshFromCloud() {
     const activeChanged = rows.some(r => r.id === state.activeId) || gone.length;
     renderShelf(); renderOutput();
     if (activeChanged) { renderSheet(); if (!$('panel-ov').hidden && panelKey) fillPanel(panelKey); }
-    if (!$('select').hidden) renderSelect();
+    if (!state.chars.length && $('select').hidden) { selTab = 'mine'; showSelect(); }
+    else if (!$('select').hidden) renderSelect();
     setSync('ok');
     return true;
   } catch (e) { setSync('error', jaErr(e)); return false; }

@@ -162,6 +162,7 @@ onBoth('click', e => {
       if (bgmFor === c.id) stopBgm();
       state.chars = state.chars.filter(x => x.id !== c.id);
       state.activeId = state.chars.length ? state.chars[0].id : null;
+      if (c.owner || me) queueCharDelete(c.id);   // サーバーからも消すまで覚えておく（途中でページを閉じても、次に開いたときに消す）
       unsetGroupChar(c.id);
       save(); renderAll();
       if (!state.chars.length) { selTab = 'mine'; showSelect(); toast('探索者をすべて削除しました。「＋ 新しい探索者」から作れます。'); }
