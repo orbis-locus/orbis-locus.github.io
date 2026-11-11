@@ -28,6 +28,7 @@
 | 12-char-secrets.sql | キャラシの秘匿欄（char_secrets・can_read_secret。持ち主とグループのKPだけ読める） | 済み（2026-11-08 にエラーなしで実行） |
 | 13-secret-open.sql | 秘匿の「公開する／しない」（char_secrets.is_open、公開中は「キャラシを読める人」も読める、共有リンクにも出す） | 済み（2026-11-08 に列があることを確認） |
 | 14-deleted-chars.sql | 削除したキャラが復活しないように（deleted_chars と、characters の削除・追加のトリガー） | 済み（2026-11-11 に再実行。表があり anon から読めないことを確認） |
+| 16-testers.sql | テスター（app_testers・am_unlocked。app_users_list と set_app_role に 'tester' を足した） | **未実行**（2026-11-11 に作成） |
 | 15-feature-wants.sql | 無料版の「欲しい！」の数（feature_wants・add_want は anon も可・want_counts はマスター/編集者だけ） | 済み（2026-11-11 に確認：表は anon から読めない・数は anon から見られない・add_want は呼べる） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。短く・英数字だけで書き、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。

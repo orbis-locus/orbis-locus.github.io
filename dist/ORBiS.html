@@ -8979,15 +8979,18 @@ async function ueCheckAdmin() {
       else { const r2 = await sb.rpc('is_app_admin'); role = r2.data === true ? 'master' : null; } // 05-app-roles.sql がまだのとき
     } catch (e) { role = null; }
   }
+  // マスター・編集者・テスターは、無料版の鍵なしで全部使える（34-free.js。テスターは supabase/16-testers.sql）
+  let unlock = !!role;
+  if (!unlock && me && sb) { try { const r = await sb.rpc('am_unlocked'); unlock = !r.error && r.data === true; } catch (e) { unlock = false; } }
   UE.role = role;
   const ok = UE.admin = !!role;
-  setUnlockAll(ok);   // マスター・編集者は、無料版の鍵なしで全部使える（34-free.js）
+  setUnlockAll(unlock);
   if (!ueIsMaster() && UE.tab !== 'look') UE.tab = 'look';
   const b = $('ue-open'); if (b) b.hidden = !ok;
   if (!ok && UE.on) ueStop(); else if (UE.on) ueRenderBody();
 }
 const ueNoPick = () => UE.pause || UE.tab !== 'look';
-const UE_ROLE = { master: 'マスター', editor: '編集者', none: 'なし' };
+const UE_ROLE = { master: 'マスター', editor: '編集者', tester: 'テスター', none: 'なし' };
 async function ueLoadUsers() {
   UE.users = null; ueRenderBody();
   const { data, error } = await sb.rpc('app_users_list');
@@ -8999,7 +9002,7 @@ function ueRolesHtml() {
   if (UE.users.err) return `<p class="ue-hint">${esc(UE.users.err)}</p>`;
   const q = UE.userQ.trim().toLowerCase();
   const list = UE.users.filter(u => !q || String(u.username).toLowerCase().includes(q));
-  return `<p class="ue-hint">マスター：画面の編集・公開・権限の変更<br>編集者：画面の編集と仮保存だけ（公開はできない）</p>
+  return `<p class="ue-hint">マスター：画面の編集・公開・権限の変更<br>編集者：画面の編集と仮保存だけ（公開はできない）<br>テスター：無料版の鍵なしで全部使える（画面の編集はできない）</p>
     <input type="search" class="ue-search" id="ue-user-q" placeholder="ユーザー名でさがす" value="${esc(UE.userQ)}">
     <div class="ue-users">${list.map(u => `<label class="ue-user"><span>${esc(u.username)}${me && u.user_id === me.id ? '<small>（あなた）</small>' : ''}</span>
       <select data-ue-role="${esc(u.user_id)}">${Object.entries(UE_ROLE).map(([k, l]) => `<option value="${k}" ${(u.role || 'none') === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`).join('') || '<p class="ue-hint">見つかりません</p>'}</div>`;

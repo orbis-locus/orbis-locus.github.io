@@ -23,7 +23,7 @@
 - ルール（6版 `coc6`／7版 `coc7`）の能力値・技能・DB計算は `01-rules.js` の `SYS`。
 - 主な機能とファイル：取り込み（いあきゃら・ココフォリア・テキスト）04 / ココフォリア出力 06 / 魔導書テーマ 09・11-book.css（本）・18-book-ui.css（本のまわりの画面） / テーマ 15 / BGM 19 / フレンド 20 / クラウド同期 21 / ダイス 22 / グループ 25 / 探索者選択 26 / オープニング 27（ORBiS 版と魔法陣。localStorage の charasheet-kobo.intro で切りかえ。ORBiS 版の曲と、全体の音量 VOL もここ） / 画面の編集モード 28・15-ui-editor.css / アクアリウムテーマ 29・19-aqua.css / キャラシの共有リンク 30（リンクのカードは cloudflare/share-worker.js を Cloudflare Workers で動かす）/ ORBiS テーマ（メイン・初めて開いた人のテーマ）31・20-orbis.css / 効果音（テーマごと）32 / 引っ越しの受け取り 33 / 無料版の鍵と「欲しい！」34（制限の決まりは 03-state.js の FREE_EDITION） / 起動 35（いちばん最後）。
 - サーバーは Supabase（接続先は 21-cloud.js。公開してよい publishable key）。見える範囲は RLS でサーバー側に強制している。
-- 権限は `app_admins.role`（'master' / 'editor'）。画面の編集はどちらもできる。公開（`ui_layout` への書きこみ）と権限の変更（`set_app_role` 関数）はマスターだけ。編集者は `ui_drafts` に仮保存し、マスターがそれを読み込んで公開する。編集で使う画像は Storage の `ui-assets`。
+- 権限は `app_admins.role`（'master' / 'editor'）。ほかに「テスター」（別の表 `app_testers`、16-testers.sql）：無料版の鍵が外れるだけで、編集の権限はない。画面の編集はどちらもできる。公開（`ui_layout` への書きこみ）と権限の変更（`set_app_role` 関数）はマスターだけ。編集者は `ui_drafts` に仮保存し、マスターがそれを読み込んで公開する。編集で使う画像は Storage の `ui-assets`。
 - 編集できる項目は 28-ui-editor.js の `UE_SECS` にまとめてある（項目を増やすときはここに1行足す）。
 - 画面の編集モードで公開した見た目の変更は、コードではなく Supabase の `ui_layout` に入っている（CSSを上書き）。コードで見た目を直しても変わらないときはそちらを疑う。編集パネルの「書き出し」の内容を貼ってもらえば、コードに組み込める。
 - DB を変えるときは `supabase/` に**番号付きの新しいSQLファイルを追加**し、何度実行しても大丈夫な書き方（`if not exists`、`create or replace`、policy は drop してから create）にする。オーナーが SQL Editor で手動実行するので、実行が必要なことを必ず伝える。
