@@ -52,7 +52,7 @@
 
 ## 4. 残っていること・確認待ち
 
-- **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。ブランチ `claude/charming-tesla-n89og7` にあり、**main にはまだ入れていない**（同期ズレの直しも同じブランチ）。残りは docs/release-checklist.md の【必須】（権利表記・規約・確認メール・容量・守り・荒らし対策・配る物）。
+- **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。2026-11-11 に main に入れて公開済み（同期ズレの直し・テスターもいっしょ）。公開サイトはもう無料版。お友達はマスターが「権限」タブでテスターにする。残りは docs/release-checklist.md の【必須】（権利表記・規約・確認メール・容量・守り・荒らし対策・配る物）。
 
 - **公開サイトの引っ越し（2026-11-08・完了）**：新しい住所は https://orbis-locus.github.io/ （GitHub アカウント orbis-locus、リポジトリ orbis-locus.github.io）。済み：新しいリポジトリへ push・GitHub Pages 公開、前の住所 https://kanno-925.github.io/charasheet/ を引っ越しページに（オーナーが kanno-925/charasheet の main の index.html を move/index.html に差しかえ。表示を確認済み）、Supabase の URL Configuration（オーナーが設定。こちらからは確かめられない）。Cloudflare の入口（orbis-share）も貼りかえ済み（新しい住所へ移動することを確認）。
   - Claude につながる GitHub は orbis-locus に変わったので、**kanno-925/charasheet にはもう書きこめない**。前のリポジトリで何かするときは、オーナーに GitHub のサイトからアップロードしてもらう。
