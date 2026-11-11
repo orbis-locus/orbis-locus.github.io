@@ -4,6 +4,7 @@ load().catch(() => {}).finally(() => {
   applyTheme();
   renderAll();
   renderSelect();
+  renderGroupBadge();   // 無料版はグループのタブに鍵
   ueApply();
   initCloud();
   if (sharedToken) openSharedView(sharedToken);   // 共有リンクから開いた

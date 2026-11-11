@@ -10,10 +10,10 @@ const inviteCount = () => G.list.filter(g => { const r = myRow(g); return r && r
 const isFriendUid = uid => !!(online && online.friends.some(u => u.id === uid));
 function renderGroupBadge() {
   const n = inviteCount(), el = $('sel-greq');
-  if (el) el.innerHTML = n ? `<b class="req-badge">${n}</b>` : '';
+  if (el) el.innerHTML = isFree() ? `<i class="tab-lock" title="製品版で解放予定">${LOCK_SVG}</i>` : n ? `<b class="req-badge">${n}</b>` : '';
 }
 async function loadGroups() {
-  if (!sb || !me) { G.list = []; renderGroupBadge(); return; }
+  if (!sb || !me || isFree()) { G.list = []; renderGroupBadge(); return; }   // 無料版はグループを使わない（鍵の表示だけ）
   try {
     const { data, error } = await sb.from('groups').select('id,owner,locked,data,updated_at');
     if (error) throw error;
@@ -108,6 +108,7 @@ function groupCardHtml(g, kind) {
 function sortGroups(list) { return [...list].sort((a, b) => String(b.data.date || '').localeCompare(String(a.data.date || '')) || String(b.updated || '').localeCompare(String(a.updated || ''))); }
 function renderGroupSelect(stage) {
   stage.classList.remove('grid'); stage.classList.add('listv'); stage.style.height = '';
+  if (isFree()) { stage.innerHTML = `<div class="grp-gate free-gate">${lockCardHtml('group')}</div>`; return; }   // 無料版：鍵と「欲しい！」
   if (!cloudReady() || !me) {
     stage.innerHTML = `<div class="grp-gate"><p>グループは、アカウントを持っている人どうしで作ります。代表者がグループを作ってフレンドを招待し、招待された人がキーパーか探索者かを選んで参加します。</p><button class="btn primary" type="button" id="sel-login">ログイン・新規登録</button></div>`;
     return;

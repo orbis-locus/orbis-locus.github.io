@@ -1612,6 +1612,31 @@ label.btn { display: inline-block; }
 .gm-transfer select { flex: 1 1 200px; min-width: 0; }
 .gm-transfer { border-color: color-mix(in srgb, var(--amber) 40%, var(--line)); }
 
+/* ===== 無料版の鍵（製品版で解放予定）と「欲しい！」 34-free.js ===== */
+.lock-card { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 6px 4px; }
+.lock-ic { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--sky), var(--cyan)); color: #fff; box-shadow: 0 6px 18px rgb(0 0 0 / .15); }
+.lock-ic svg, .tp-lock svg, .tab-lock svg { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.lock-t { font-size: 1.15rem; color: var(--ink); }
+.lock-tag { font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; color: var(--sky); border: 1px solid var(--sky); background: rgb(255 255 255 / .35); }
+.lock-card p { margin: 0; max-width: 40ch; line-height: 1.7; }
+.lock-d { color: var(--ink); }
+.lock-ask { color: var(--muted); font-size: .9rem; }
+.lock-want { min-width: 12em; font-size: 1.05rem; }
+.lock-thanks { color: var(--sky); font-weight: 700; }
+.modal-lock { max-width: 440px; }
+.free-gate { border-style: solid; }
+.free-gate .lock-card { padding: 4px 0; }
+.tp-sw { position: relative; }
+.tp-locked .tp-sw > i { opacity: .45; }
+.tp-lock { position: absolute; inset: auto -6px -6px auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--solid); }
+.tp-locked .tp-s { color: var(--sky); font-weight: 700; }
+.tab-lock { display: inline-grid; place-items: center; width: 1.1em; height: 1.1em; margin-left: 4px; vertical-align: -2px; opacity: .75; }
+.tab-lock svg { width: 100%; height: 100%; }
+.wants-box { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line-strong); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.wants-tbl { border-collapse: collapse; min-width: 220px; }
+.wants-tbl td { padding: 4px 10px; border-bottom: 1px solid var(--line); }
+.wants-tbl td:last-child { text-align: right; font-weight: 700; }
+
 /* ===== icon editor ===== */
 .token img { transform-origin: 50% 15%; }
 .ico-wrap { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: center; }

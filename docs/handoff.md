@@ -1,6 +1,6 @@
 # 引き継ぎメモ（新しいチャットで最初に読む）
 
-最終更新：2026-11-09
+最終更新：2026-11-11
 前のチャットでやったこと・決まったこと・残っていることのまとめ。
 細かい変更の一覧は `docs/history.md`、作業のルールは `CLAUDE.md` を見る。
 
@@ -28,6 +28,7 @@
 | 12-char-secrets.sql | キャラシの秘匿欄（char_secrets・can_read_secret。持ち主とグループのKPだけ読める） | 済み（2026-11-08 にエラーなしで実行） |
 | 13-secret-open.sql | 秘匿の「公開する／しない」（char_secrets.is_open、公開中は「キャラシを読める人」も読める、共有リンクにも出す） | 済み（2026-11-08 に列があることを確認） |
 | 14-deleted-chars.sql | 削除したキャラが復活しないように（deleted_chars と、characters の削除・追加のトリガー） | **未実行**（2026-11-09 に作成。オーナーに実行をお願いした） |
+| 15-feature-wants.sql | 無料版の「欲しい！」の数（feature_wants・add_want は anon も可・want_counts はマスター/編集者だけ） | **未実行**（2026-11-11 に作成） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。短く・英数字だけで書き、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。
 - 新しいサーバー関数は Supabase が anon（ログインしていない人）にも実行権を付ける。`revoke ... from public, anon` と、関数の中で `auth.uid() is null` を止めることを必ず入れる。
@@ -49,6 +50,8 @@
 - 2026-11-07〜08 のこのチャット：共有リンク・共有カード（Cloudflare）・立ち絵の差分・同期の直し・ORBiS テーマ・ロゴ・テーマごとの画面と効果音・オープニングの ORBiS 版と曲・音量・秘匿の公開。詳しくは history.md。
 
 ## 4. 残っていること・確認待ち
+
+- **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。ブランチ `claude/charming-tesla-n89og7` にあり、**main にはまだ入れていない**（同期ズレの直しも同じブランチ）。残りは docs/release-checklist.md の【必須】（権利表記・規約・確認メール・容量・守り・荒らし対策・配る物）。
 
 - **公開サイトの引っ越し（2026-11-08・完了）**：新しい住所は https://orbis-locus.github.io/ （GitHub アカウント orbis-locus、リポジトリ orbis-locus.github.io）。済み：新しいリポジトリへ push・GitHub Pages 公開、前の住所 https://kanno-925.github.io/charasheet/ を引っ越しページに（オーナーが kanno-925/charasheet の main の index.html を move/index.html に差しかえ。表示を確認済み）、Supabase の URL Configuration（オーナーが設定。こちらからは確かめられない）。Cloudflare の入口（orbis-share）も貼りかえ済み（新しい住所へ移動することを確認）。
   - Claude につながる GitHub は orbis-locus に変わったので、**kanno-925/charasheet にはもう書きこめない**。前のリポジトリで何かするときは、オーナーに GitHub のサイトからアップロードしてもらう。

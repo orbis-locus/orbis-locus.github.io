@@ -1634,6 +1634,31 @@ label.btn { display: inline-block; }
 .gm-transfer select { flex: 1 1 200px; min-width: 0; }
 .gm-transfer { border-color: color-mix(in srgb, var(--amber) 40%, var(--line)); }
 
+/* ===== 無料版の鍵（製品版で解放予定）と「欲しい！」 34-free.js ===== */
+.lock-card { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 6px 4px; }
+.lock-ic { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--sky), var(--cyan)); color: #fff; box-shadow: 0 6px 18px rgb(0 0 0 / .15); }
+.lock-ic svg, .tp-lock svg, .tab-lock svg { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.lock-t { font-size: 1.15rem; color: var(--ink); }
+.lock-tag { font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; color: var(--sky); border: 1px solid var(--sky); background: rgb(255 255 255 / .35); }
+.lock-card p { margin: 0; max-width: 40ch; line-height: 1.7; }
+.lock-d { color: var(--ink); }
+.lock-ask { color: var(--muted); font-size: .9rem; }
+.lock-want { min-width: 12em; font-size: 1.05rem; }
+.lock-thanks { color: var(--sky); font-weight: 700; }
+.modal-lock { max-width: 440px; }
+.free-gate { border-style: solid; }
+.free-gate .lock-card { padding: 4px 0; }
+.tp-sw { position: relative; }
+.tp-locked .tp-sw > i { opacity: .45; }
+.tp-lock { position: absolute; inset: auto -6px -6px auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--solid); }
+.tp-locked .tp-s { color: var(--sky); font-weight: 700; }
+.tab-lock { display: inline-grid; place-items: center; width: 1.1em; height: 1.1em; margin-left: 4px; vertical-align: -2px; opacity: .75; }
+.tab-lock svg { width: 100%; height: 100%; }
+.wants-box { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line-strong); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.wants-tbl { border-collapse: collapse; min-width: 220px; }
+.wants-tbl td { padding: 4px 10px; border-bottom: 1px solid var(--line); }
+.wants-tbl td:last-child { text-align: right; font-weight: 700; }
+
 /* ===== icon editor ===== */
 .token img { transform-origin: 50% 15%; }
 .ico-wrap { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: center; }
@@ -3816,6 +3841,13 @@ body.ue-on .ue-panel { cursor: auto; }
   </div>
 </div>
 
+<div class="overlay" id="modal-lock" hidden>
+  <div class="modal modal-lock" role="dialog" aria-modal="true" aria-label="製品版で解放予定">
+    <div id="lock-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-share" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
     <h2 id="share-title">キャラシを共有</h2>
@@ -4054,12 +4086,26 @@ function migrateV1(o) {
   return c;
 }
 
-/* 1人が持てる探索者は最大 50 人（見本は数えない） */
+/* ---- 無料版（サンプル版）の制限（2026-11-11 決定） ----
+   ・テーマは ORBiS だけ　・探索者は3人まで　・グループは鍵の表示（有料版で出す）
+   ・ログイン・フレンド・クラウド保存・共有は無料のまま
+   ・マスターと編集者（app_admins の人）は全部使える（28-ui-editor.js の ueCheckAdmin で unlockAll を立てる）
+   有料版を出すときは FREE_EDITION を false にする（この制限は画面の側だけ） */
+const FREE_EDITION = true;
+const FREE_MAX_CHARS = 3;
+const FREE_THEMES = ['orbis'];
+let unlockAll = (() => { try { return localStorage.getItem('charasheet-kobo.unlock') === '1'; } catch (e) { return false; } })();
+const isFree = () => FREE_EDITION && !unlockAll;
+const LOCK_SVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>';
+
+/* 1人が持てる探索者は最大 50 人（無料版は3人。見本は数えない） */
 const MAX_CHARS = 50;
+const maxChars = () => isFree() ? FREE_MAX_CHARS : MAX_CHARS;
 const charCount = () => state.chars.filter(c => !c.sample).length;
-const charRoom = () => Math.max(0, MAX_CHARS - charCount());
+const charRoom = () => Math.max(0, maxChars() - charCount());
 function canAddChar(n = 1) {
   if (charRoom() >= n) return true;
+  if (isFree()) { lockDialog('chars'); return false; }
   toast(`探索者は${MAX_CHARS}人までです。いらない探索者を削除してから作ってください。`);
   return false;
 }
@@ -5957,7 +6003,7 @@ $('preset-list').innerHTML = Object.entries(SYS).map(([k, v]) =>
   `<button class="preset" type="button" data-sys="${k}"><b>${esc(v.label)}</b><span>判定 ${esc(v.cmd)}&lt;=○○ ・ 技能${v.skills.length}種</span></button>`).join('');
 $('preset-list').addEventListener('click', e => {
   const b = e.target.closest('[data-sys]'); if (!b) return;
-  if (!canAddChar()) { closeModals(); return; }
+  if (!canAddChar()) { $('modal-new').hidden = true; return; }   // 無料版の鍵の小窓は残す
   const c = blank(b.dataset.sys);
   state.chars.unshift(c); state.activeId = c.id; save(); closeModals(); stopBgm();
   if (!$('select').hidden) leaveSelect(null, true);
@@ -5967,7 +6013,7 @@ $('preset-list').addEventListener('click', e => {
 });
 function openNewChar() {
   if (!canAddChar()) return;
-  $('new-count').textContent = `いま ${charCount()} 人 ／ 最大 ${MAX_CHARS} 人（あと ${charRoom()} 人作れます）`;
+  $('new-count').textContent = `いま ${charCount()} 人 ／ 最大 ${maxChars()} 人${isFree() ? '（無料版）' : ''}（あと ${charRoom()} 人作れます）`;
   openModal('modal-new');
 }
 $('btn-new').addEventListener('click', openNewChar);
@@ -6001,7 +6047,7 @@ $('import-run').addEventListener('click', () => {
     : (c && Array.isArray(c.params)) ? migrateV1(c) : null).filter(Boolean);
   if (!list.length) { err.textContent = '探索者のデータが見つかりませんでした。このアプリのバックアップか、ココフォリアのコマデータを貼り付けてください。'; return; }
   const room = charRoom();
-  if (!room) { err.textContent = `探索者は${MAX_CHARS}人までです。いらない探索者を削除してから読み込んでください。`; return; }
+  if (!room) { err.textContent = `探索者は${maxChars()}人まで${isFree() ? '（無料版）' : ''}です。いらない探索者を削除してから読み込んでください。`; return; }
   const cut = list.length - room;
   if (cut > 0) list = list.slice(0, room);
   list.forEach(c => { c.id = uid(); delete c.sample; });
@@ -6013,7 +6059,7 @@ $('import-run').addEventListener('click', () => {
   save(); closeModals(); renderAll();
   const info = list[0].importInfo;
   list.forEach(c => { delete c.importInfo; });
-  if (cut > 0) toast(`探索者は${MAX_CHARS}人までなので、先頭の${room}人だけ読み込みました（${cut}人は読み込んでいません）。`);
+  if (cut > 0) toast(`探索者は${maxChars()}人まで${isFree() ? '（無料版）' : ''}なので、先頭の${room}人だけ読み込みました（${cut}人は読み込んでいません）。`);
   else if (info && info.full) toast(`「${list[0].profile.name || '名無し'}」をいあきゃらのテキストから読み込みました。技能${info.matched}個${info.added ? `（うち${info.added}個は新しく追加）` : ''}の内訳、武器・所持品・財産・経歴・通過シナリオ・メモも入っています。`);
   else if (info) toast(`「${list[0].profile.name || '名無し'}」を読み込みました。技能${info.matched}個を反映${info.added ? `、${info.added}個を新しく追加` : ''}しました。技能の値は「その他」欄に入っています。`);
   else toast(`${list.length}人の探索者を読み込みました。`);
@@ -6050,15 +6096,18 @@ const THEME_PRESETS = {
   aqua:   { name: 'アクアリウム', sub: '水底の遺跡と光、くらげ', look: 'dark aqua', vals: { bg: '#04173c', solid: '#0b2c5c', ink: '#e8f7ff', sky: '#7fd6ff', cyan: '#b4f1ff', amber: '#9fe8ff' } },
   dot:    { name: 'ドット', sub: '星降る夜のピクセル', look: 'dark dot', vals: { bg: '#0b0e30', solid: '#141a4c', ink: '#e8eeff', sky: '#86a8ff', cyan: '#a8d8ff', amber: '#ffd36b' } },
 };
-const presetOf = () => THEME_PRESETS[state.themePreset] || THEME_PRESETS.orbis;   // 選んでいない人（初めての人）は ORBiS
-const themeVals = () => ({ ...THEME_DEFAULT, ...presetOf().vals, ...(state.theme || {}) });
+const themeLocked = k => isFree() && !FREE_THEMES.includes(k);   // 無料版で使えないテーマ
+/* いま使うテーマ。選んでいない人（初めての人）は ORBiS。無料版で使えないテーマを選んでいた人も ORBiS（選んだ記録は残すので、有料版になると戻る） */
+const presetKey = () => { const k = state.themePreset && THEME_PRESETS[state.themePreset] ? state.themePreset : 'orbis'; return themeLocked(k) ? 'orbis' : k; };
+const presetOf = () => THEME_PRESETS[presetKey()];
+const themeVals = () => ({ ...THEME_DEFAULT, ...presetOf().vals, ...(presetKey() === (state.themePreset || 'orbis') ? state.theme || {} : {}) });   // 変えた色は、そのテーマを使っているときだけ
 function renderPresets() {
-  const cur = state.themePreset && THEME_PRESETS[state.themePreset] ? state.themePreset : 'orbis';
+  const cur = presetKey();
   $('theme-presets').innerHTML = Object.entries(THEME_PRESETS).map(([k, t]) => {
-    const v = { ...THEME_DEFAULT, ...t.vals };
-    return `<button type="button" class="tp ${k === cur ? 'on' : ''}" data-preset-theme="${k}" aria-pressed="${k === cur}">
-      <span class="tp-sw" style="background:${v.bg}"><i style="background:${v.solid};border-color:${v.sky}"><b style="background:linear-gradient(100deg, ${v.sky}, ${v.cyan})"></b><em style="background:${v.amber}"></em><u style="background:${v.ink}"></u></i></span>
-      <span class="tp-n">${t.name}</span><span class="tp-s">${t.sub}</span>
+    const v = { ...THEME_DEFAULT, ...t.vals }, lk = themeLocked(k);
+    return `<button type="button" class="tp ${k === cur ? 'on' : ''} ${lk ? 'tp-locked' : ''}" data-preset-theme="${k}" aria-pressed="${k === cur}">
+      <span class="tp-sw" style="background:${v.bg}"><i style="background:${v.solid};border-color:${v.sky}"><b style="background:linear-gradient(100deg, ${v.sky}, ${v.cyan})"></b><em style="background:${v.amber}"></em><u style="background:${v.ink}"></u></i>${lk ? `<span class="tp-lock">${LOCK_SVG}</span>` : ''}</span>
+      <span class="tp-n">${t.name}</span><span class="tp-s">${lk ? '製品版で解放予定' : t.sub}</span>
     </button>`;
   }).join('');
 }
@@ -6131,6 +6180,7 @@ $('theme-rows').addEventListener('input', e => {
   if (e.target.type === 'color') rgb = hexToRgb(e.target.value);
   else if (e.target.dataset.ch != null) rgb[+e.target.dataset.ch] = Math.max(0, Math.min(255, Number(e.target.value) || 0));
   const hex = rgbToHex(rgb);
+  if (presetKey() !== (state.themePreset || 'orbis')) { state.themePreset = presetKey(); state.theme = {}; }   // 無料版で使えないテーマのまま色を変えた：いま見えている ORBiS の色として覚える
   state.theme = { ...(state.theme || {}), [k]: hex };
   applyTheme(); save();
   row.querySelector('input[type="color"]').value = hex;
@@ -6151,6 +6201,7 @@ $('bg-remove').addEventListener('click', () => { bgSet(bgSlot, ''); applyBg(); r
 $('bg-slots').addEventListener('click', e => { const b = e.target.closest('[data-bgslot]'); if (!b) return; bgSlot = b.dataset.bgslot; renderBgControls(); });
 $('theme-presets').addEventListener('click', e => {
   const b = e.target.closest('[data-preset-theme]'); if (!b) return;
+  if (themeLocked(b.dataset.presetTheme)) { lockDialog('theme:' + b.dataset.presetTheme); return; }
   state.themePreset = b.dataset.presetTheme; state.theme = {};
   applyTheme(); save(); renderPresets(); renderThemeRows(); renderSheet();
   fxAt(b, true);
@@ -7335,7 +7386,7 @@ function renderAccount() {
       </form>
       <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
       <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
-      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>`;
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}`;
     return;
   }
 
@@ -7382,6 +7433,7 @@ $('acct-body').addEventListener('click', async e => {
   if (a.dataset.acct === 'avatar-off') { if (!arm(a, 'もう一度押すと外す')) return; saveAvatar(''); return; }
   if (a.dataset.acct === 'sync') { try { await pullAndMerge(); await loadFriendships(); toast('同期しました。'); } catch (er) { setSync('error', jaErr(er)); } }
   if (a.dataset.acct === 'friends') { closeModals(); openFriends(); }
+  if (a.dataset.acct === 'wants') loadWantCounts();
   if (a.dataset.acct === 'logout') { if (!arm(a, 'もう一度押すとログアウト')) return; closeModals(); logout(); }
 });
 $('acct-body').addEventListener('change', async e => {
@@ -8050,10 +8102,10 @@ const inviteCount = () => G.list.filter(g => { const r = myRow(g); return r && r
 const isFriendUid = uid => !!(online && online.friends.some(u => u.id === uid));
 function renderGroupBadge() {
   const n = inviteCount(), el = $('sel-greq');
-  if (el) el.innerHTML = n ? `<b class="req-badge">${n}</b>` : '';
+  if (el) el.innerHTML = isFree() ? `<i class="tab-lock" title="製品版で解放予定">${LOCK_SVG}</i>` : n ? `<b class="req-badge">${n}</b>` : '';
 }
 async function loadGroups() {
-  if (!sb || !me) { G.list = []; renderGroupBadge(); return; }
+  if (!sb || !me || isFree()) { G.list = []; renderGroupBadge(); return; }   // 無料版はグループを使わない（鍵の表示だけ）
   try {
     const { data, error } = await sb.from('groups').select('id,owner,locked,data,updated_at');
     if (error) throw error;
@@ -8148,6 +8200,7 @@ function groupCardHtml(g, kind) {
 function sortGroups(list) { return [...list].sort((a, b) => String(b.data.date || '').localeCompare(String(a.data.date || '')) || String(b.updated || '').localeCompare(String(a.updated || ''))); }
 function renderGroupSelect(stage) {
   stage.classList.remove('grid'); stage.classList.add('listv'); stage.style.height = '';
+  if (isFree()) { stage.innerHTML = `<div class="grp-gate free-gate">${lockCardHtml('group')}</div>`; return; }   // 無料版：鍵と「欲しい！」
   if (!cloudReady() || !me) {
     stage.innerHTML = `<div class="grp-gate"><p>グループは、アカウントを持っている人どうしで作ります。代表者がグループを作ってフレンドを招待し、招待された人がキーパーか探索者かを選んで参加します。</p><button class="btn primary" type="button" id="sel-login">ログイン・新規登録</button></div>`;
     return;
@@ -8928,6 +8981,7 @@ async function ueCheckAdmin() {
   }
   UE.role = role;
   const ok = UE.admin = !!role;
+  setUnlockAll(ok);   // マスター・編集者は、無料版の鍵なしで全部使える（34-free.js）
   if (!ueIsMaster() && UE.tab !== 'look') UE.tab = 'look';
   const b = $('ue-open'); if (b) b.hidden = !ok;
   if (!ok && UE.on) ueStop(); else if (UE.on) ueRenderBody();
@@ -10625,7 +10679,7 @@ async function moveTake(d) {
   } else {
     incoming.forEach(c => {
       const i = state.chars.findIndex(x => x.id === c.id);
-      if (i < 0) { if (charRoom() > 0) { state.chars.push(c); n++; } }
+      if (i < 0) { if (charCount() < MAX_CHARS) { state.chars.push(c); n++; } }   // 引っ越しは無料版の人数（3人）に関係なく、前の住所の探索者を全部運ぶ
       else if ((c.updatedAt || 0) > (state.chars[i].updatedAt || 0)) { state.chars[i] = c; n++; }
     });
     state.chars = state.chars.filter(c => !c.sample);
@@ -10644,12 +10698,84 @@ async function moveTake(d) {
   return n;
 }
 
+/* ================= 無料版（サンプル版）の鍵と「欲しい！」ボタン ================= */
+/* 制限の決まり（何を止めるか）は 03-state.js の FREE_EDITION のところ。
+   鍵のかかった機能を押すと、説明と「欲しい！」ボタンを出す。押された数はサーバー（feature_wants、supabase/15-feature-wants.sql）に
+   1人（1つの端末）1機能1回だけ数える。ログインしていない人も数える。マスターはアカウントの小窓で数を見られる。 */
+const WANT_KEY = 'charasheet-kobo.wants', VOTER_KEY = 'charasheet-kobo.voter', UNLOCK_KEY = 'charasheet-kobo.unlock';
+function lockInfo(f) {
+  if (f === 'group') return { t: 'グループ', d: 'シナリオごとにグループを作ってフレンドを招待し、キーパーと探索者の記録を残せます。キーパーがダイスを振れる回数を決めたり、探索者の秘匿を読んだりもできます。' };
+  if (f === 'chars') return { t: `探索者を${FREE_MAX_CHARS + 1}人以上`, d: `無料版で作れる探索者は${FREE_MAX_CHARS}人までです（製品版では${MAX_CHARS}人まで）。いらない探索者を削除すると、新しく作れます。` };
+  const k = f.replace(/^theme:/, ''), t = THEME_PRESETS[k];
+  return { t: `テーマ「${t ? t.name : k}」`, d: `${t ? esc(t.sub) + '。' : ''}無料版で使えるテーマは ORBiS だけです。` };
+}
+const wantedList = () => { try { const a = JSON.parse(localStorage.getItem(WANT_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+function voterId() {
+  try {
+    let v = localStorage.getItem(VOTER_KEY);
+    if (!v) { v = (crypto.randomUUID ? crypto.randomUUID() : uid() + uid()); localStorage.setItem(VOTER_KEY, v); }
+    return v;
+  } catch (e) { return uid() + uid(); }
+}
+function lockCardHtml(f) {
+  const i = lockInfo(f), done = wantedList().includes(f);
+  return `<div class="lock-card">
+    <span class="lock-ic">${LOCK_SVG}</span>
+    <b class="lock-t">${i.t}</b>
+    <span class="lock-tag">製品版で解放予定</span>
+    <p class="lock-d">${i.d}</p>
+    ${done ? '<p class="lock-thanks">「欲しい！」を送りました。ありがとうございます！</p>'
+      : `<p class="lock-ask">使ってみたいと思ったら「欲しい！」を押してください。押された数を、製品版を作るかどうかの参考にします。</p>
+    <button class="btn primary lock-want" type="button" data-want="${f}">♡ 欲しい！</button>`}
+  </div>`;
+}
+function lockDialog(f) {
+  $('lock-body').innerHTML = lockCardHtml(f);
+  openModal('modal-lock');
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-want]'); if (!b) return;
+  const f = b.dataset.want, c = sbClient();
+  if (wantedList().includes(f)) return;
+  if (!c) { toast('いまは送れませんでした。ネットにつながっているか確かめてください。'); return; }
+  b.disabled = true;
+  const { error } = await c.rpc('add_want', { f, v: voterId() });
+  if (error) { b.disabled = false; toast('いまは送れませんでした。少したってから、もう一度押してください。'); return; }
+  try { localStorage.setItem(WANT_KEY, JSON.stringify([...wantedList(), f])); } catch (er) { /* */ }
+  const card = b.closest('.lock-card'); if (card) card.outerHTML = lockCardHtml(f);
+  snd('copy');
+  toast('「欲しい！」を送りました。ありがとうございます！');
+});
+/* マスター・編集者は全部使える（ueCheckAdmin から呼ぶ）。端末に覚えておき、次に開いたときもすぐ使えるように */
+function setUnlockAll(on) {
+  on = !!on;
+  if (unlockAll === on) return;
+  unlockAll = on;
+  try { on ? localStorage.setItem(UNLOCK_KEY, '1') : localStorage.removeItem(UNLOCK_KEY); } catch (e) { /* */ }
+  applyTheme(); renderAll(); renderGroupBadge();
+  if (!$('modal-theme').hidden) renderPresets();
+  if (!$('select').hidden) renderSelect();
+  if (on && me) loadGroups().then(() => { if (!$('select').hidden && selTab === 'groups') renderSelect(); });
+}
+/* マスター用：「欲しい！」の数（アカウントの小窓） */
+const wantsBoxHtml = () => FREE_EDITION && typeof UE !== 'undefined' && UE.role === 'master'
+  ? '<div class="wants-box"><button class="btn small" type="button" data-acct="wants">「欲しい！」の数を見る（マスター）</button><div id="wants-out"></div></div>' : '';
+async function loadWantCounts() {
+  const out = $('wants-out'); if (!out || !sb) return;
+  out.innerHTML = '<p class="empty">読み込み中…</p>';
+  const { data, error } = await sb.rpc('want_counts');
+  if (error) { out.innerHTML = `<p class="err">${esc(/want_counts|Could not find/i.test(error.message || '') ? 'サーバーの準備（supabase/15-feature-wants.sql の実行）がまだのようです。' : jaErr(error))}</p>`; return; }
+  const rows = (data || []).sort((a, b) => b.n - a.n);
+  out.innerHTML = rows.length ? `<table class="wants-tbl">${rows.map(r => `<tr><td>${lockInfo(r.feature).t}</td><td>${r.n}</td></tr>`).join('')}</table>` : '<p class="empty">まだ押されていません。</p>';
+}
+
 /* ================= 起動 ================= */
 /* 保存データの読み込み（IndexedDB）は少し時間がかかるので、終わってから画面を作る */
 load().catch(() => {}).finally(() => {
   applyTheme();
   renderAll();
   renderSelect();
+  renderGroupBadge();   // 無料版はグループのタブに鍵
   ueApply();
   initCloud();
   if (sharedToken) openSharedView(sharedToken);   // 共有リンクから開いた

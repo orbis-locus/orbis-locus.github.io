@@ -15,15 +15,18 @@ const THEME_PRESETS = {
   aqua:   { name: 'アクアリウム', sub: '水底の遺跡と光、くらげ', look: 'dark aqua', vals: { bg: '#04173c', solid: '#0b2c5c', ink: '#e8f7ff', sky: '#7fd6ff', cyan: '#b4f1ff', amber: '#9fe8ff' } },
   dot:    { name: 'ドット', sub: '星降る夜のピクセル', look: 'dark dot', vals: { bg: '#0b0e30', solid: '#141a4c', ink: '#e8eeff', sky: '#86a8ff', cyan: '#a8d8ff', amber: '#ffd36b' } },
 };
-const presetOf = () => THEME_PRESETS[state.themePreset] || THEME_PRESETS.orbis;   // 選んでいない人（初めての人）は ORBiS
-const themeVals = () => ({ ...THEME_DEFAULT, ...presetOf().vals, ...(state.theme || {}) });
+const themeLocked = k => isFree() && !FREE_THEMES.includes(k);   // 無料版で使えないテーマ
+/* いま使うテーマ。選んでいない人（初めての人）は ORBiS。無料版で使えないテーマを選んでいた人も ORBiS（選んだ記録は残すので、有料版になると戻る） */
+const presetKey = () => { const k = state.themePreset && THEME_PRESETS[state.themePreset] ? state.themePreset : 'orbis'; return themeLocked(k) ? 'orbis' : k; };
+const presetOf = () => THEME_PRESETS[presetKey()];
+const themeVals = () => ({ ...THEME_DEFAULT, ...presetOf().vals, ...(presetKey() === (state.themePreset || 'orbis') ? state.theme || {} : {}) });   // 変えた色は、そのテーマを使っているときだけ
 function renderPresets() {
-  const cur = state.themePreset && THEME_PRESETS[state.themePreset] ? state.themePreset : 'orbis';
+  const cur = presetKey();
   $('theme-presets').innerHTML = Object.entries(THEME_PRESETS).map(([k, t]) => {
-    const v = { ...THEME_DEFAULT, ...t.vals };
-    return `<button type="button" class="tp ${k === cur ? 'on' : ''}" data-preset-theme="${k}" aria-pressed="${k === cur}">
-      <span class="tp-sw" style="background:${v.bg}"><i style="background:${v.solid};border-color:${v.sky}"><b style="background:linear-gradient(100deg, ${v.sky}, ${v.cyan})"></b><em style="background:${v.amber}"></em><u style="background:${v.ink}"></u></i></span>
-      <span class="tp-n">${t.name}</span><span class="tp-s">${t.sub}</span>
+    const v = { ...THEME_DEFAULT, ...t.vals }, lk = themeLocked(k);
+    return `<button type="button" class="tp ${k === cur ? 'on' : ''} ${lk ? 'tp-locked' : ''}" data-preset-theme="${k}" aria-pressed="${k === cur}">
+      <span class="tp-sw" style="background:${v.bg}"><i style="background:${v.solid};border-color:${v.sky}"><b style="background:linear-gradient(100deg, ${v.sky}, ${v.cyan})"></b><em style="background:${v.amber}"></em><u style="background:${v.ink}"></u></i>${lk ? `<span class="tp-lock">${LOCK_SVG}</span>` : ''}</span>
+      <span class="tp-n">${t.name}</span><span class="tp-s">${lk ? '製品版で解放予定' : t.sub}</span>
     </button>`;
   }).join('');
 }
@@ -96,6 +99,7 @@ $('theme-rows').addEventListener('input', e => {
   if (e.target.type === 'color') rgb = hexToRgb(e.target.value);
   else if (e.target.dataset.ch != null) rgb[+e.target.dataset.ch] = Math.max(0, Math.min(255, Number(e.target.value) || 0));
   const hex = rgbToHex(rgb);
+  if (presetKey() !== (state.themePreset || 'orbis')) { state.themePreset = presetKey(); state.theme = {}; }   // 無料版で使えないテーマのまま色を変えた：いま見えている ORBiS の色として覚える
   state.theme = { ...(state.theme || {}), [k]: hex };
   applyTheme(); save();
   row.querySelector('input[type="color"]').value = hex;
@@ -116,6 +120,7 @@ $('bg-remove').addEventListener('click', () => { bgSet(bgSlot, ''); applyBg(); r
 $('bg-slots').addEventListener('click', e => { const b = e.target.closest('[data-bgslot]'); if (!b) return; bgSlot = b.dataset.bgslot; renderBgControls(); });
 $('theme-presets').addEventListener('click', e => {
   const b = e.target.closest('[data-preset-theme]'); if (!b) return;
+  if (themeLocked(b.dataset.presetTheme)) { lockDialog('theme:' + b.dataset.presetTheme); return; }
   state.themePreset = b.dataset.presetTheme; state.theme = {};
   applyTheme(); save(); renderPresets(); renderThemeRows(); renderSheet();
   fxAt(b, true);

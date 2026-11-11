@@ -66,12 +66,26 @@ function migrateV1(o) {
   return c;
 }
 
-/* 1人が持てる探索者は最大 50 人（見本は数えない） */
+/* ---- 無料版（サンプル版）の制限（2026-11-11 決定） ----
+   ・テーマは ORBiS だけ　・探索者は3人まで　・グループは鍵の表示（有料版で出す）
+   ・ログイン・フレンド・クラウド保存・共有は無料のまま
+   ・マスターと編集者（app_admins の人）は全部使える（28-ui-editor.js の ueCheckAdmin で unlockAll を立てる）
+   有料版を出すときは FREE_EDITION を false にする（この制限は画面の側だけ） */
+const FREE_EDITION = true;
+const FREE_MAX_CHARS = 3;
+const FREE_THEMES = ['orbis'];
+let unlockAll = (() => { try { return localStorage.getItem('charasheet-kobo.unlock') === '1'; } catch (e) { return false; } })();
+const isFree = () => FREE_EDITION && !unlockAll;
+const LOCK_SVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>';
+
+/* 1人が持てる探索者は最大 50 人（無料版は3人。見本は数えない） */
 const MAX_CHARS = 50;
+const maxChars = () => isFree() ? FREE_MAX_CHARS : MAX_CHARS;
 const charCount = () => state.chars.filter(c => !c.sample).length;
-const charRoom = () => Math.max(0, MAX_CHARS - charCount());
+const charRoom = () => Math.max(0, maxChars() - charCount());
 function canAddChar(n = 1) {
   if (charRoom() >= n) return true;
+  if (isFree()) { lockDialog('chars'); return false; }
   toast(`探索者は${MAX_CHARS}人までです。いらない探索者を削除してから作ってください。`);
   return false;
 }

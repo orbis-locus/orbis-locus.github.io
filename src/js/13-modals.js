@@ -23,7 +23,7 @@ $('preset-list').innerHTML = Object.entries(SYS).map(([k, v]) =>
   `<button class="preset" type="button" data-sys="${k}"><b>${esc(v.label)}</b><span>判定 ${esc(v.cmd)}&lt;=○○ ・ 技能${v.skills.length}種</span></button>`).join('');
 $('preset-list').addEventListener('click', e => {
   const b = e.target.closest('[data-sys]'); if (!b) return;
-  if (!canAddChar()) { closeModals(); return; }
+  if (!canAddChar()) { $('modal-new').hidden = true; return; }   // 無料版の鍵の小窓は残す
   const c = blank(b.dataset.sys);
   state.chars.unshift(c); state.activeId = c.id; save(); closeModals(); stopBgm();
   if (!$('select').hidden) leaveSelect(null, true);
@@ -33,7 +33,7 @@ $('preset-list').addEventListener('click', e => {
 });
 function openNewChar() {
   if (!canAddChar()) return;
-  $('new-count').textContent = `いま ${charCount()} 人 ／ 最大 ${MAX_CHARS} 人（あと ${charRoom()} 人作れます）`;
+  $('new-count').textContent = `いま ${charCount()} 人 ／ 最大 ${maxChars()} 人${isFree() ? '（無料版）' : ''}（あと ${charRoom()} 人作れます）`;
   openModal('modal-new');
 }
 $('btn-new').addEventListener('click', openNewChar);
@@ -67,7 +67,7 @@ $('import-run').addEventListener('click', () => {
     : (c && Array.isArray(c.params)) ? migrateV1(c) : null).filter(Boolean);
   if (!list.length) { err.textContent = '探索者のデータが見つかりませんでした。このアプリのバックアップか、ココフォリアのコマデータを貼り付けてください。'; return; }
   const room = charRoom();
-  if (!room) { err.textContent = `探索者は${MAX_CHARS}人までです。いらない探索者を削除してから読み込んでください。`; return; }
+  if (!room) { err.textContent = `探索者は${maxChars()}人まで${isFree() ? '（無料版）' : ''}です。いらない探索者を削除してから読み込んでください。`; return; }
   const cut = list.length - room;
   if (cut > 0) list = list.slice(0, room);
   list.forEach(c => { c.id = uid(); delete c.sample; });
@@ -79,7 +79,7 @@ $('import-run').addEventListener('click', () => {
   save(); closeModals(); renderAll();
   const info = list[0].importInfo;
   list.forEach(c => { delete c.importInfo; });
-  if (cut > 0) toast(`探索者は${MAX_CHARS}人までなので、先頭の${room}人だけ読み込みました（${cut}人は読み込んでいません）。`);
+  if (cut > 0) toast(`探索者は${maxChars()}人まで${isFree() ? '（無料版）' : ''}なので、先頭の${room}人だけ読み込みました（${cut}人は読み込んでいません）。`);
   else if (info && info.full) toast(`「${list[0].profile.name || '名無し'}」をいあきゃらのテキストから読み込みました。技能${info.matched}個${info.added ? `（うち${info.added}個は新しく追加）` : ''}の内訳、武器・所持品・財産・経歴・通過シナリオ・メモも入っています。`);
   else if (info) toast(`「${list[0].profile.name || '名無し'}」を読み込みました。技能${info.matched}個を反映${info.added ? `、${info.added}個を新しく追加` : ''}しました。技能の値は「その他」欄に入っています。`);
   else toast(`${list.length}人の探索者を読み込みました。`);

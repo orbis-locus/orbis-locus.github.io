@@ -36,7 +36,7 @@ async function moveTake(d) {
   } else {
     incoming.forEach(c => {
       const i = state.chars.findIndex(x => x.id === c.id);
-      if (i < 0) { if (charRoom() > 0) { state.chars.push(c); n++; } }
+      if (i < 0) { if (charCount() < MAX_CHARS) { state.chars.push(c); n++; } }   // 引っ越しは無料版の人数（3人）に関係なく、前の住所の探索者を全部運ぶ
       else if ((c.updatedAt || 0) > (state.chars[i].updatedAt || 0)) { state.chars[i] = c; n++; }
     });
     state.chars = state.chars.filter(c => !c.sample);
