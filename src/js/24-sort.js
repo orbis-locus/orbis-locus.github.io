@@ -120,7 +120,7 @@ function renderFriendSelect(stage) {
   const colorOf = u => (friendsOf().find(f => f.uid === u.id) || {}).color || '#1f6fe0';
   const bubble = ({ u, kind }, i, xy) => {
     const chars = (o.chars || {})[u.id] || [];
-    const sub = kind === 'fr' ? (o.chars && o.chars[u.id] !== undefined ? `公開キャラ ${chars.length}人` : '公開キャラ …') : kind === 'in' ? '申請が届いています' : '承認待ち';
+    const sub = kind === 'fr' ? (isFree() ? 'キャラシは製品版で' : o.chars && o.chars[u.id] !== undefined ? `公開キャラ ${chars.length}人` : '公開キャラ …') : kind === 'in' ? '申請が届いています' : '承認待ち';
     const minis = kind === 'fr' && chars.length ? `<span class="sel-minis">${chars.slice(0, 4).map(ch => `<i style="--tc:${esc(ch.color)}">${ch.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : esc((ch.name || '？').charAt(0))}</i>`).join('')}${chars.length > 4 ? `<i class="more">+${chars.length - 4}</i>` : ''}</span>` : '';
     return `<button class="sel-char sel-friend ${kind}" type="button" data-fuid="${u.id}" data-fname="${esc(u.username)}" data-kind="${kind}" style="--i:${i};--B:${B}px${xy ? `;left:calc(50% + ${xy[0].toFixed(1)}px);top:calc(50% + ${xy[1].toFixed(1)}px)` : ''}" aria-label="${esc(u.username)}${kind === 'fr' ? 'さんのキャラシを見る' : kind === 'in' ? 'さんからの申請を確認する' : 'さん（承認待ち）'}">
       <span class="token" style="--tc:${esc(colorOf(u))}">${avImg(u.id) || esc((u.username || '？').charAt(0))}</span>${kind === 'in' ? '<span class="sel-reqmark">申請</span>' : ''}
@@ -136,6 +136,7 @@ function renderFriendSelect(stage) {
 }
 async function loadFriendChars() {
   if (!sb || !me || !online) return;
+  if (isFree()) { online.chars = {}; return; }   // 無料版はフレンドのキャラシを見ないので、読みこまない
   const ids = online.friends.map(u => u.id);
   const map = {};
   ids.forEach(id => { map[id] = []; });

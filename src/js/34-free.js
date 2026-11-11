@@ -5,6 +5,7 @@
 const WANT_KEY = 'charasheet-kobo.wants', VOTER_KEY = 'charasheet-kobo.voter', UNLOCK_KEY = 'charasheet-kobo.unlock';
 function lockInfo(f) {
   if (f === 'group') return { t: 'グループ', d: 'シナリオごとにグループを作ってフレンドを招待し、キーパーと探索者の記録を残せます。キーパーがダイスを振れる回数を決めたり、探索者の秘匿を読んだりもできます。' };
+  if (f === 'friendview') return { t: 'フレンドのキャラシを見る', d: 'フレンドが公開しているキャラシを、読み取り専用で見たり、ココフォリア用にコピーしたりできます。フレンドの申請・一覧は無料版でも使えます。' };
   if (f === 'chars') return { t: `探索者を${FREE_MAX_CHARS + 1}人以上`, d: `無料版で作れる探索者は${FREE_MAX_CHARS}人までです（製品版では${MAX_CHARS}人まで）。いらない探索者を削除すると、新しく作れます。` };
   const k = f.replace(/^theme:/, ''), t = THEME_PRESETS[k];
   return { t: `テーマ「${t ? t.name : k}」`, d: `${t ? esc(t.sub) + '。' : ''}無料版で使えるテーマは ORBiS だけです。` };
@@ -55,7 +56,11 @@ function setUnlockAll(on) {
   applyTheme(); renderAll(); renderGroupBadge();
   if (!$('modal-theme').hidden) renderPresets();
   if (!$('select').hidden) renderSelect();
-  if (on && me) loadGroups().then(() => { if (!$('select').hidden && selTab === 'groups') renderSelect(); });
+  if (on && me) {
+    loadGroups().then(() => { if (!$('select').hidden && selTab === 'groups') renderSelect(); });
+    loadFriendChars().then(() => { if (!$('select').hidden && selTab === 'friends') renderSelect(); }).catch(() => {});
+  }
+  if (me && online && !$('modal-friends').hidden) renderOnline();
 }
 /* マスター用：「欲しい！」の数（アカウントの小窓） */
 const wantsBoxHtml = () => FREE_EDITION && typeof UE !== 'undefined' && UE.role === 'master'

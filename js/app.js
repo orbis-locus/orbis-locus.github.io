@@ -146,8 +146,8 @@ function migrateV1(o) {
 }
 
 /* ---- 無料版（サンプル版）の制限（2026-11-11 決定） ----
-   ・テーマは ORBiS だけ　・探索者は3人まで　・グループは鍵の表示（有料版で出す）
-   ・ログイン・フレンド・クラウド保存・共有は無料のまま
+   ・テーマは ORBiS だけ　・探索者は3人まで　・グループは鍵の表示（有料版で出す）　・フレンドのキャラシを見るのも鍵（2026-11-11 追加）
+   ・ログイン・フレンド（申請・一覧）・クラウド保存・共有リンクは無料のまま
    ・マスターと編集者（app_admins の人）は全部使える（28-ui-editor.js の ueCheckAdmin で unlockAll を立てる）
    有料版を出すときは FREE_EDITION を false にする（この制限は画面の側だけ） */
 const FREE_EDITION = true;
@@ -3594,7 +3594,7 @@ function renderOnline() {
     <p class="err" id="ol-err" role="alert"></p>
     ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button></div>`).join('')}</div>` : ''}
     ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button></div>`).join('')}</div>` : ''}
-    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button></div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
+    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">${isFree() ? `<i class="tab-lock">${LOCK_SVG}</i>` : ''}キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button></div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
   </div>`;
 }
 const pairFilter = (a, b) => `and(requester.eq.${a},addressee.eq.${b}),and(requester.eq.${b},addressee.eq.${a})`;
@@ -3651,6 +3651,7 @@ $('online-friends').addEventListener('click', async e => {
 /* ---- フレンドのキャラシを見る（読み取り専用） ---- */
 let fviewChars = [], fviewName = '';
 async function viewFriend(uid, name) {
+  if (isFree()) { lockDialog('friendview'); return; }   // 無料版：フレンドのキャラシを見るのは製品版（34-free.js）
   fviewName = name || 'フレンド';
   $('fview-title').textContent = `${fviewName}さんのキャラシ`;
   $('fview-body').innerHTML = '<p class="empty">読み込み中…</p>';
@@ -4110,7 +4111,7 @@ function renderFriendSelect(stage) {
   const colorOf = u => (friendsOf().find(f => f.uid === u.id) || {}).color || '#1f6fe0';
   const bubble = ({ u, kind }, i, xy) => {
     const chars = (o.chars || {})[u.id] || [];
-    const sub = kind === 'fr' ? (o.chars && o.chars[u.id] !== undefined ? `公開キャラ ${chars.length}人` : '公開キャラ …') : kind === 'in' ? '申請が届いています' : '承認待ち';
+    const sub = kind === 'fr' ? (isFree() ? 'キャラシは製品版で' : o.chars && o.chars[u.id] !== undefined ? `公開キャラ ${chars.length}人` : '公開キャラ …') : kind === 'in' ? '申請が届いています' : '承認待ち';
     const minis = kind === 'fr' && chars.length ? `<span class="sel-minis">${chars.slice(0, 4).map(ch => `<i style="--tc:${esc(ch.color)}">${ch.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : esc((ch.name || '？').charAt(0))}</i>`).join('')}${chars.length > 4 ? `<i class="more">+${chars.length - 4}</i>` : ''}</span>` : '';
     return `<button class="sel-char sel-friend ${kind}" type="button" data-fuid="${u.id}" data-fname="${esc(u.username)}" data-kind="${kind}" style="--i:${i};--B:${B}px${xy ? `;left:calc(50% + ${xy[0].toFixed(1)}px);top:calc(50% + ${xy[1].toFixed(1)}px)` : ''}" aria-label="${esc(u.username)}${kind === 'fr' ? 'さんのキャラシを見る' : kind === 'in' ? 'さんからの申請を確認する' : 'さん（承認待ち）'}">
       <span class="token" style="--tc:${esc(colorOf(u))}">${avImg(u.id) || esc((u.username || '？').charAt(0))}</span>${kind === 'in' ? '<span class="sel-reqmark">申請</span>' : ''}
@@ -4126,6 +4127,7 @@ function renderFriendSelect(stage) {
 }
 async function loadFriendChars() {
   if (!sb || !me || !online) return;
+  if (isFree()) { online.chars = {}; return; }   // 無料版はフレンドのキャラシを見ないので、読みこまない
   const ids = online.friends.map(u => u.id);
   const map = {};
   ids.forEach(id => { map[id] = []; });
@@ -6767,6 +6769,7 @@ async function moveTake(d) {
 const WANT_KEY = 'charasheet-kobo.wants', VOTER_KEY = 'charasheet-kobo.voter', UNLOCK_KEY = 'charasheet-kobo.unlock';
 function lockInfo(f) {
   if (f === 'group') return { t: 'グループ', d: 'シナリオごとにグループを作ってフレンドを招待し、キーパーと探索者の記録を残せます。キーパーがダイスを振れる回数を決めたり、探索者の秘匿を読んだりもできます。' };
+  if (f === 'friendview') return { t: 'フレンドのキャラシを見る', d: 'フレンドが公開しているキャラシを、読み取り専用で見たり、ココフォリア用にコピーしたりできます。フレンドの申請・一覧は無料版でも使えます。' };
   if (f === 'chars') return { t: `探索者を${FREE_MAX_CHARS + 1}人以上`, d: `無料版で作れる探索者は${FREE_MAX_CHARS}人までです（製品版では${MAX_CHARS}人まで）。いらない探索者を削除すると、新しく作れます。` };
   const k = f.replace(/^theme:/, ''), t = THEME_PRESETS[k];
   return { t: `テーマ「${t ? t.name : k}」`, d: `${t ? esc(t.sub) + '。' : ''}無料版で使えるテーマは ORBiS だけです。` };
@@ -6817,7 +6820,11 @@ function setUnlockAll(on) {
   applyTheme(); renderAll(); renderGroupBadge();
   if (!$('modal-theme').hidden) renderPresets();
   if (!$('select').hidden) renderSelect();
-  if (on && me) loadGroups().then(() => { if (!$('select').hidden && selTab === 'groups') renderSelect(); });
+  if (on && me) {
+    loadGroups().then(() => { if (!$('select').hidden && selTab === 'groups') renderSelect(); });
+    loadFriendChars().then(() => { if (!$('select').hidden && selTab === 'friends') renderSelect(); }).catch(() => {});
+  }
+  if (me && online && !$('modal-friends').hidden) renderOnline();
 }
 /* マスター用：「欲しい！」の数（アカウントの小窓） */
 const wantsBoxHtml = () => FREE_EDITION && typeof UE !== 'undefined' && UE.role === 'master'
