@@ -31,6 +31,7 @@
 | 16-testers.sql | テスター（app_testers・am_unlocked。app_users_list と set_app_role に 'tester' を足した） | 済み（2026-11-11 に確認。チャットで渡した版はお知らせの文が英語） |
 | 17-want-friendview.sql | 「欲しい！」に friendview（フレンドのキャラシを見る）を足す（add_want を作り直す） | **未実行**（2026-11-11 に作成） |
 | 18-char-images.sql | 画像の置き場所 char-images（公開・1枚5MB・1人100MB。char_images_used） | 済み（2026-11-12 に確認：置き場所あり・ログインなしでは置けない） |
+| 19-limits.sql | 大きさの上限（キャラシ1MB・60人、グループ200KB、画面の編集2MB、ui-assets 5MB） | **未実行**（2026-11-12 に作成） |
 | 15-feature-wants.sql | 無料版の「欲しい！」の数（feature_wants・add_want は anon も可・want_counts はマスター/編集者だけ） | 済み（2026-11-11 に確認：表は anon から読めない・数は anon から見られない・add_want は呼べる） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。短く・英数字だけで書き、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。

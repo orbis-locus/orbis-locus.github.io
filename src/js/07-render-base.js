@@ -6,11 +6,13 @@ const curFace = c => (c.faces && c.face >= 0 && c.faces[c.face] && c.faces[c.fac
 const portraitSrc = c => { const f = curFace(c); return f ? f.src : basePortrait(c); };
 const iconSrc = c => c.icon || basePortrait(c);   // アイコンは差分を切りかえても変えない
 const MAX_FACES = 20;
-const cropStyle = k => { k = k || {}; const x = k.x ?? 50, y = k.y ?? 15, z = k.z ?? 1; return `object-position:${x}% ${y}%;transform:scale(${z});transform-origin:${x}% ${y}%`; };
+/* アイコンの位置と大きさ。数字だけを使う（キャラシのデータに文字を入れられても、画面の部品の中に入りこまないように） */
+const cropNum = (v, d, lo, hi) => { const n = Number(v); return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+const cropStyle = k => { k = k || {}; const x = cropNum(k.x, 50, -100, 200), y = cropNum(k.y, 15, -100, 200), z = cropNum(k.z, 1, .1, 10); return `object-position:${x}% ${y}%;transform:scale(${z});transform-origin:${x}% ${y}%`; };
 const tokenHtml = c => {
   const src = c.avatar || iconSrc(c);
   const img = src ? `<img src="${esc(imgSrc(src))}" alt="" ${c.avatar ? '' : `style="${cropStyle(c.iconCrop)}"`} onerror="this.remove()">` : '';
-  return `<span class="token" style="--tc:${esc(c.profile.color || '#1f6fe0')}" aria-hidden="true">${esc(initial(c))}${img}</span>`;
+  return `<span class="token" style="--tc:${cssColor(c.profile.color)}" aria-hidden="true">${esc(initial(c))}${img}</span>`;
 };
 
 function renderShelf() {

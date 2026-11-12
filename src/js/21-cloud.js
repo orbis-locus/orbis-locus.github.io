@@ -60,6 +60,10 @@ function sbClient() {
 }
 const jaErr = e => {
   const m = String((e && (e.message || e.error_description)) || e || '');
+  // サーバーの大きさの上限（supabase/19-limits.sql）
+  if (/ORBIS_CHAR_TOO_LARGE/.test(m)) return 'キャラシが大きすぎて保存できませんでした（1人分 1MB まで）。メモや経歴を短くするか、画像を減らしてください。';
+  if (/ORBIS_TOO_MANY_CHARS/.test(m)) return 'サーバーに保存できる探索者の数（60人）を超えています。使っていない探索者を削除してください。';
+  if (/ORBIS_DATA_TOO_LARGE/.test(m)) return 'データが大きすぎて保存できませんでした。メモなどを短くしてください。';
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
   if (/already registered|already been registered/i.test(m)) return 'このメールアドレスはすでに登録されています。ログインしてください。';

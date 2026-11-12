@@ -175,7 +175,7 @@ function orbisChrome() {
 function orbisHtml(c) {
   const p = c.profile, S = SYS[c.system], f = curFace(c);
   // まん中の大きな丸：差分を選んでいればその絵、なければアイコン
-  const big = f ? `<span class="token ob-face" style="--tc:${esc(p.color || '#6f8cf0')}"><img src="${esc(imgSrc(f.src))}" alt="" style="${cropStyle(c.iconCrop)}" onerror="this.remove()"></span>` : tokenHtml(c);
+  const big = f ? `<span class="token ob-face" style="--tc:${cssColor(p.color, '#6f8cf0')}"><img src="${esc(imgSrc(f.src))}" alt="" style="${cropStyle(c.iconCrop)}" onerror="this.remove()"></span>` : tokenHtml(c);
   const spark = (x, y, r, cls = '') => `<path class="ob-sp ${cls}" d="${obStarPath(x, y, r)}"/>`;
   return `
     <div class="ob-st">

@@ -249,7 +249,10 @@ const ueHas = (o, k) => o[k] != null && o[k] !== '';
 /* 上書き用のCSSを作る */
 function ueCss() {
   let css = '';
+  // 波かっこ・< > は消す（値や部品の住所から、別のきまりを足したり文を閉じたりできないように）
+  const safe = x => String(x).replace(/[{}<>]/g, '');
   Object.entries(ueShown().items).forEach(([s, o]) => {
+    s = safe(s);
     const d = [];
     UE_PROPS.forEach(p => { if (p.css && ueHas(o, p.k)) d.push(...p.css(o[p.k]).split(';')); });
     if (ueHas(o, 'bw')) d.push(`border:${o.bw}px solid ${o.bc || 'currentColor'}`);
@@ -265,9 +268,9 @@ function ueCss() {
       const [tx, ty] = (o.tb && o.tb !== 'none' ? o.tb : '0px 0px').split(' ');
       d.push(`translate:calc(${tx} + ${o.x || 0}px) calc(${ty || '0px'} + ${o.y || 0}px)`);
     }
-    if (d.length) css += `${s}{${d.map(x => x + ' !important').join(';')}}\n`;
+    if (d.length) css += `${s}{${d.map(x => safe(x) + ' !important').join(';')}}\n`;
     // フォントは、アプリが中の部品ごとに決めているので、中の部品にもまとめて効かせる
-    if (o.font) css += `${s}, ${s} *:not(svg):not(svg *){font-family:${ueFontStack(o.font)} !important}\n`;
+    if (o.font) css += `${s}, ${s} *:not(svg):not(svg *){font-family:${safe(ueFontStack(o.font))} !important}\n`;
     if (o.hide) css += `body:not(.ue-on) ${s}{display:none !important}\nbody.ue-on ${s}{opacity:.3 !important;outline:2px dashed #e2483d !important}\n`;
   });
   return css;

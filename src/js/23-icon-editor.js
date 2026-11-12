@@ -4,7 +4,7 @@ function renderIconPreview() {
   const c = active(), src = iconEd.src;
   $('ico-stage').innerHTML = src ? `<img id="ico-img" src="${esc(imgSrc(src))}" alt="" draggable="false" style="${cropStyle(iconEd.crop)}">` : `<span class="ico-none">画像がありません。<br>下の「アイコン用の画像を選ぶ」か、プロフィールで立ち絵を設定してください。</span>`;
   $('ico-zoom').value = iconEd.crop.z; $('ico-zoom-v').textContent = Math.round(iconEd.crop.z * 100) + '%';
-  $('ico-mini').innerHTML = [56, 34, 22].map(sz => `<span class="token" style="--tc:${esc(c.profile.color || '#1f6fe0')};width:${sz}px;height:${sz}px">${src ? `<img src="${esc(imgSrc(src))}" alt="" style="${cropStyle(iconEd.crop)}">` : esc(initial(c))}</span>`).join('');
+  $('ico-mini').innerHTML = [56, 34, 22].map(sz => `<span class="token" style="--tc:${cssColor(c.profile.color)};width:${sz}px;height:${sz}px">${src ? `<img src="${esc(imgSrc(src))}" alt="" style="${cropStyle(iconEd.crop)}">` : esc(initial(c))}</span>`).join('');
   $('ico-own').hidden = !iconEd.src || iconEd.src !== iconEd.own;
 }
 function openIconEditor() {

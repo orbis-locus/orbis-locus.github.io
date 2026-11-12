@@ -4031,6 +4031,8 @@ const KEY_V1 = 'charasheet-kobo.v1';
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
+/* 色は「#」と英数字だけのときだけ使う（ほかの人のキャラシの色の欄に、外の画像を読みこむ文などを入れられないように） */
+const cssColor = (v, def = '#1f6fe0') => /^#[0-9a-f]{3,8}$/i.test(String(v || '').trim()) ? String(v).trim() : def;
 const num = v => { const n = Number(String(v ?? '').trim()); return isFinite(n) ? n : 0; };
 const calc = (expr, vars = {}) => {
   const s = String(expr).replace(/[A-Z]+/g, k => vars[k] ?? 0);
@@ -4662,11 +4664,13 @@ const curFace = c => (c.faces && c.face >= 0 && c.faces[c.face] && c.faces[c.fac
 const portraitSrc = c => { const f = curFace(c); return f ? f.src : basePortrait(c); };
 const iconSrc = c => c.icon || basePortrait(c);   // アイコンは差分を切りかえても変えない
 const MAX_FACES = 20;
-const cropStyle = k => { k = k || {}; const x = k.x ?? 50, y = k.y ?? 15, z = k.z ?? 1; return `object-position:${x}% ${y}%;transform:scale(${z});transform-origin:${x}% ${y}%`; };
+/* アイコンの位置と大きさ。数字だけを使う（キャラシのデータに文字を入れられても、画面の部品の中に入りこまないように） */
+const cropNum = (v, d, lo, hi) => { const n = Number(v); return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+const cropStyle = k => { k = k || {}; const x = cropNum(k.x, 50, -100, 200), y = cropNum(k.y, 15, -100, 200), z = cropNum(k.z, 1, .1, 10); return `object-position:${x}% ${y}%;transform:scale(${z});transform-origin:${x}% ${y}%`; };
 const tokenHtml = c => {
   const src = c.avatar || iconSrc(c);
   const img = src ? `<img src="${esc(imgSrc(src))}" alt="" ${c.avatar ? '' : `style="${cropStyle(c.iconCrop)}"`} onerror="this.remove()">` : '';
-  return `<span class="token" style="--tc:${esc(c.profile.color || '#1f6fe0')}" aria-hidden="true">${esc(initial(c))}${img}</span>`;
+  return `<span class="token" style="--tc:${cssColor(c.profile.color)}" aria-hidden="true">${esc(initial(c))}${img}</span>`;
 };
 
 function renderShelf() {
@@ -4940,7 +4944,7 @@ function sectionBody(key, c) {
           <div class="bgm-now ${c.bgm ? 'on' : ''}"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 15.5V5.2l8-1.7v10"/><circle cx="5.8" cy="15.5" r="2.3"/><circle cx="13.8" cy="13.5" r="2.3"/></svg><span id="bgm-now-name">${c.bgm ? esc(c.bgm.name || 'BGM') : '未設定'}</span>${c.bgm ? `<small class="bgm-kind">${c.bgm.src === 'yt' ? 'YouTube' : c.bgm.src === 'url' ? 'URL' : 'ファイル'}</small>` : ''}</div>
           <div class="row"><label class="btn small" for="f-bgm-file">音楽ファイルを選ぶ</label><input type="file" id="f-bgm-file" accept="audio/*,.mp3,.m4a,.ogg,.wav" hidden>${c.bgm ? '<button class="btn small" type="button" data-act="bgm-play">再生</button><button class="btn small danger" type="button" data-act="bgm-remove">BGMを外す</button>' : ''}</div>
           <div class="row"><input class="inp" id="f-bgm-url" placeholder="YouTubeのURL、または音楽ファイルのURL" value="${(c.bgm?.src === 'url' || c.bgm?.src === 'yt') ? esc(c.bgm.url) : ''}"><button class="btn small" type="button" data-act="bgm-url">URLで設定</button></div>
-          ${c.bgm ? `<label class="bg-slider" for="f-bgm-vol">音量<input type="range" id="f-bgm-vol" min="0" max="100" value="${c.bgm.volume ?? 60}"><output id="f-bgm-vol-v">${c.bgm.volume ?? 60}%</output></label>` : ''}
+          ${c.bgm ? `<label class="bg-slider" for="f-bgm-vol">音量<input type="range" id="f-bgm-vol" min="0" max="100" value="${cropNum(c.bgm.volume ?? 60, 60, 0, 100)}"><output id="f-bgm-vol-v">${cropNum(c.bgm.volume ?? 60, 60, 0, 100)}%</output></label>` : ''}
           <p>YouTubeは動画ページのURL（https://www.youtube.com/watch?v=… や https://youtu.be/…）をそのまま貼れます。再生中は左下に小さく動画が出ます。音楽ファイル（mp3・m4a・oggなど）はこのブラウザ内に保存され、バックアップには含まれません。</p>
         </div>
       </div>
@@ -7101,6 +7105,10 @@ function sbClient() {
 }
 const jaErr = e => {
   const m = String((e && (e.message || e.error_description)) || e || '');
+  // サーバーの大きさの上限（supabase/19-limits.sql）
+  if (/ORBIS_CHAR_TOO_LARGE/.test(m)) return 'キャラシが大きすぎて保存できませんでした（1人分 1MB まで）。メモや経歴を短くするか、画像を減らしてください。';
+  if (/ORBIS_TOO_MANY_CHARS/.test(m)) return 'サーバーに保存できる探索者の数（60人）を超えています。使っていない探索者を削除してください。';
+  if (/ORBIS_DATA_TOO_LARGE/.test(m)) return 'データが大きすぎて保存できませんでした。メモなどを短くしてください。';
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
   if (/already registered|already been registered/i.test(m)) return 'このメールアドレスはすでに登録されています。ログインしてください。';
@@ -7993,7 +8001,7 @@ function renderIconPreview() {
   const c = active(), src = iconEd.src;
   $('ico-stage').innerHTML = src ? `<img id="ico-img" src="${esc(imgSrc(src))}" alt="" draggable="false" style="${cropStyle(iconEd.crop)}">` : `<span class="ico-none">画像がありません。<br>下の「アイコン用の画像を選ぶ」か、プロフィールで立ち絵を設定してください。</span>`;
   $('ico-zoom').value = iconEd.crop.z; $('ico-zoom-v').textContent = Math.round(iconEd.crop.z * 100) + '%';
-  $('ico-mini').innerHTML = [56, 34, 22].map(sz => `<span class="token" style="--tc:${esc(c.profile.color || '#1f6fe0')};width:${sz}px;height:${sz}px">${src ? `<img src="${esc(imgSrc(src))}" alt="" style="${cropStyle(iconEd.crop)}">` : esc(initial(c))}</span>`).join('');
+  $('ico-mini').innerHTML = [56, 34, 22].map(sz => `<span class="token" style="--tc:${cssColor(c.profile.color)};width:${sz}px;height:${sz}px">${src ? `<img src="${esc(imgSrc(src))}" alt="" style="${cropStyle(iconEd.crop)}">` : esc(initial(c))}</span>`).join('');
   $('ico-own').hidden = !iconEd.src || iconEd.src !== iconEd.own;
 }
 function openIconEditor() {
@@ -8187,7 +8195,7 @@ function renderFriendSelect(stage) {
   const bubble = ({ u, kind }, i, xy) => {
     const chars = (o.chars || {})[u.id] || [];
     const sub = kind === 'fr' ? (isFree() ? 'キャラシは製品版で' : o.chars && o.chars[u.id] !== undefined ? `公開キャラ ${chars.length}人` : '公開キャラ …') : kind === 'in' ? '申請が届いています' : '承認待ち';
-    const minis = kind === 'fr' && chars.length ? `<span class="sel-minis">${chars.slice(0, 4).map(ch => `<i style="--tc:${esc(ch.color)}">${ch.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : esc((ch.name || '？').charAt(0))}</i>`).join('')}${chars.length > 4 ? `<i class="more">+${chars.length - 4}</i>` : ''}</span>` : '';
+    const minis = kind === 'fr' && chars.length ? `<span class="sel-minis">${chars.slice(0, 4).map(ch => `<i style="--tc:${cssColor(ch.color)}">${ch.avatar ? `<img src="${esc(ch.avatar)}" alt="">` : esc((ch.name || '？').charAt(0))}</i>`).join('')}${chars.length > 4 ? `<i class="more">+${chars.length - 4}</i>` : ''}</span>` : '';
     return `<button class="sel-char sel-friend ${kind}" type="button" data-fuid="${u.id}" data-fname="${esc(u.username)}" data-kind="${kind}" style="--i:${i};--B:${B}px${xy ? `;left:calc(50% + ${xy[0].toFixed(1)}px);top:calc(50% + ${xy[1].toFixed(1)}px)` : ''}" aria-label="${esc(u.username)}${kind === 'fr' ? 'さんのキャラシを見る' : kind === 'in' ? 'さんからの申請を確認する' : 'さん（承認待ち）'}">
       <span class="token" style="--tc:${esc(colorOf(u))}">${avImg(u.id) || esc((u.username || '？').charAt(0))}</span>${kind === 'in' ? '<span class="sel-reqmark">申請</span>' : ''}
       <span class="sel-name">${esc(u.username)}</span><span class="sel-sys">${sub}</span>${minis}
@@ -9313,7 +9321,10 @@ const ueHas = (o, k) => o[k] != null && o[k] !== '';
 /* 上書き用のCSSを作る */
 function ueCss() {
   let css = '';
+  // 波かっこ・< > は消す（値や部品の住所から、別のきまりを足したり文を閉じたりできないように）
+  const safe = x => String(x).replace(/[{}<>]/g, '');
   Object.entries(ueShown().items).forEach(([s, o]) => {
+    s = safe(s);
     const d = [];
     UE_PROPS.forEach(p => { if (p.css && ueHas(o, p.k)) d.push(...p.css(o[p.k]).split(';')); });
     if (ueHas(o, 'bw')) d.push(`border:${o.bw}px solid ${o.bc || 'currentColor'}`);
@@ -9329,9 +9340,9 @@ function ueCss() {
       const [tx, ty] = (o.tb && o.tb !== 'none' ? o.tb : '0px 0px').split(' ');
       d.push(`translate:calc(${tx} + ${o.x || 0}px) calc(${ty || '0px'} + ${o.y || 0}px)`);
     }
-    if (d.length) css += `${s}{${d.map(x => x + ' !important').join(';')}}\n`;
+    if (d.length) css += `${s}{${d.map(x => safe(x) + ' !important').join(';')}}\n`;
     // フォントは、アプリが中の部品ごとに決めているので、中の部品にもまとめて効かせる
-    if (o.font) css += `${s}, ${s} *:not(svg):not(svg *){font-family:${ueFontStack(o.font)} !important}\n`;
+    if (o.font) css += `${s}, ${s} *:not(svg):not(svg *){font-family:${safe(ueFontStack(o.font))} !important}\n`;
     if (o.hide) css += `body:not(.ue-on) ${s}{display:none !important}\nbody.ue-on ${s}{opacity:.3 !important;outline:2px dashed #e2483d !important}\n`;
   });
   return css;
@@ -10427,7 +10438,7 @@ function orbisChrome() {
 function orbisHtml(c) {
   const p = c.profile, S = SYS[c.system], f = curFace(c);
   // まん中の大きな丸：差分を選んでいればその絵、なければアイコン
-  const big = f ? `<span class="token ob-face" style="--tc:${esc(p.color || '#6f8cf0')}"><img src="${esc(imgSrc(f.src))}" alt="" style="${cropStyle(c.iconCrop)}" onerror="this.remove()"></span>` : tokenHtml(c);
+  const big = f ? `<span class="token ob-face" style="--tc:${cssColor(p.color, '#6f8cf0')}"><img src="${esc(imgSrc(f.src))}" alt="" style="${cropStyle(c.iconCrop)}" onerror="this.remove()"></span>` : tokenHtml(c);
   const spark = (x, y, r, cls = '') => `<path class="ob-sp ${cls}" d="${obStarPath(x, y, r)}"/>`;
   return `
     <div class="ob-st">

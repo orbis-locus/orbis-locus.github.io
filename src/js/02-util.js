@@ -4,6 +4,8 @@ const KEY_V1 = 'charasheet-kobo.v1';
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = id => document.getElementById(id);
+/* 色は「#」と英数字だけのときだけ使う（ほかの人のキャラシの色の欄に、外の画像を読みこむ文などを入れられないように） */
+const cssColor = (v, def = '#1f6fe0') => /^#[0-9a-f]{3,8}$/i.test(String(v || '').trim()) ? String(v).trim() : def;
 const num = v => { const n = Number(String(v ?? '').trim()); return isFinite(n) ? n : 0; };
 const calc = (expr, vars = {}) => {
   const s = String(expr).replace(/[A-Z]+/g, k => vars[k] ?? 0);
