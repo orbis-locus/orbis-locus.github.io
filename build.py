@@ -105,4 +105,14 @@ icons1 = f'<link rel="icon" type="image/png" href="{data_uri("brand/favicon-64.p
 readme = (ROOT / 'booth' / 'はじめにお読みください.txt').read_text(encoding='utf-8').replace('\r\n', '\n').replace('\n', '\r\n')
 (dist / 'はじめにお読みください.txt').write_text(readme, encoding='utf-8-sig', newline='')
 
-print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/はじめにお読みください.txt, dist/claude-artifact.html')
+# BOOTH は .html と .txt をそのまま置けないので、2つを ORBiS フォルダに入れた zip にまとめる。
+# 日付は決まった日にする（毎回ちがう日付だと、中身が同じでも zip が変わってしまうため）
+import zipfile
+with zipfile.ZipFile(dist / 'ORBiS.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+    for name in ('ORBiS.html', 'はじめにお読みください.txt'):
+        info = zipfile.ZipInfo('ORBiS/' + name, date_time=(2026, 11, 12, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o644 << 16
+        z.writestr(info, (dist / name).read_bytes())
+
+print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/はじめにお読みください.txt, dist/ORBiS.zip, dist/claude-artifact.html')

@@ -11,7 +11,7 @@
 - アプリ名：**ORBiS**（旧：キャラシ工房。2026-11-06 に改名）
 - 公開URL：https://orbis-locus.github.io/ （GitHub Pages。`orbis-locus/orbis-locus.github.io` の main に push すると数分で反映）。前の住所 https://kanno-925.github.io/charasheet/ （`kanno-925/charasheet`）は引っ越しページ。これまでの履歴は前のリポジトリにある
 - **公開サイトは無料サンプル版**（03-state.js の FREE_EDITION = true。テーマは ORBiS だけ・探索者3人まで・グループとフレンドのキャラシを見るのは鍵）。マスター・編集者・テスターは鍵なし。
-- 1ファイル版：`dist/ORBiS.html`（ダブルクリックで動く。画像・音も中に入っている）。BOOTH ではこれと `dist/はじめにお読みください.txt` を配る予定。
+- 1ファイル版：`dist/ORBiS.html`（ダブルクリックで動く。画像・音も中に入っている）。BOOTH では、これと `dist/はじめにお読みください.txt` を zip にまとめた `dist/ORBiS.zip` を配る（build.py が作る）。
 - Claude の公開版（Artifact）：https://claude.ai/artifact/ULwQZd62EkbS88ZrvJv96v （`dist/claude-artifact.html` を公開。git には入れない）
 - サーバー：Supabase（プロジェクト `umrouqvbmnttirdzixvc`）。SQL Editor：https://supabase.com/dashboard/project/umrouqvbmnttirdzixvc/sql/new
   - メール：ORBiS 用の Gmail（オーナーの ORBiS 用アカウント・アプリ パスワード。アドレスは公開のリポジトリには書かない）から SMTP で送る。新規登録の確認メールはオン（`/auth/v1/settings` の mailer_autoconfirm が false）。Site URL は https://orbis-locus.github.io/ 。手順は docs/mail-setup.md。Gmail の送信は1日500通くらいまで。
@@ -64,7 +64,7 @@
 ## 4. 残っていること・確認待ち
 
 - **実機の確認（オーナー待ち）**：`docs/device-check.md`（iPhone・Android・パソコン・1ファイル版のログイン・共有リンクのカード）。おかしな所があれば、端末・テーマ・場所・様子を聞いて直す。
-- **BOOTH への登録（オーナー）**：配るのは `dist/ORBiS.html` と `dist/はじめにお読みください.txt`。文と画像は `booth/商品ページ.md`・`booth/images/`。カテゴリと公開日はオーナーが決める。**BOOTH のページの URL が決まったら、説明書（booth/はじめにお読みください.txt）とアプリ（利用規約の第2条・お問い合わせなど）に「正しい手に入れ先」として書く。**
+- **BOOTH への登録（オーナー）**：配るのは `dist/ORBiS.zip`（ORBiS.html と説明書を zip にしたもの。BOOTH は .html・.txt をそのまま置けない）。文と画像は `booth/商品ページ.md`・`booth/images/`。カテゴリと公開日はオーナーが決める。**BOOTH のページの URL が決まったら、説明書（booth/はじめにお読みください.txt）とアプリ（利用規約の第2条・お問い合わせなど）に「正しい手に入れ先」として書く。**
 - **規約・プライバシーポリシーの文**：オーナーが読んで直したい所があれば直す（index.html の modal-legal。大事な変更をしたら日付も）。
 - 【推奨】TRPGライツ事務局に「無料のキャラシ作成ツールを BOOTH で配ってよいか」確かめる（オーナー）。
 - 【推奨】で残っているもの（release-checklist.md）：アカウントを自分で消せる機能（いまはお問い合わせ→オーナーが Supabase の Authentication → Users で消す）、ブロック、申請・招待の連打の上限、新規登録のボット対策（CAPTCHA）、ユーザー名の禁止語、RLS の見直し、パスワードの設定の確認、バックアップ、料金の目安、バックアップの書き出しを目立たせる、使い方の案内。
