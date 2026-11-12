@@ -57,6 +57,8 @@
 
 ## 4. 残っていること・確認待ち
 
+- **BOOTH への登録（2026-11-12〜・オーナー）**：配るのは dist/ORBiS.html と dist/はじめにお読みください.txt。文と画像は booth/商品ページ.md・booth/images/。BOOTH のページの URL が決まったら、説明書とアプリの「正しい手に入れ先」に書く。
+
 - **実機の確認（2026-11-12〜・オーナー待ち）**：docs/device-check.md（iPhone・Android・パソコン・1ファイル版のログイン）。自動の点検は済み。
 
 - **メールの設定（2026-11-12・完了）**：ORBiS 用の Gmail（アプリ パスワード）を Supabase の SMTP に設定、メールの文を日本語に、Site URL を https://orbis-locus.github.io/ に直した（前の住所のままで、メールのリンクが引っ越しページに行っていた）、Confirm email をオン（mailer_autoconfirm: false を確認）。パスワードの再設定と新規登録の確認メールが届くことをオーナーが確認。手順は docs/mail-setup.md。Gmail の送信は1日500通くらいまで。

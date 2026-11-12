@@ -101,4 +101,8 @@ icons1 = f'<link rel="icon" type="image/png" href="{data_uri("brand/favicon-64.p
 (dist / 'ORBiS.html').write_text(page(inline_css, inline_js, icons1), encoding='utf-8')
 (dist / 'claude-artifact.html').write_text(f'{head}\n{icons1}\n{inline_css}\n\n{markup}\n{inline_js}\n', encoding='utf-8')
 
-print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/claude-artifact.html')
+# BOOTH でいっしょに配る説明書。Windows のメモ帳でも文字化けしないよう、BOM つき・改行は CRLF にする
+readme = (ROOT / 'booth' / 'はじめにお読みください.txt').read_text(encoding='utf-8').replace('\r\n', '\n').replace('\n', '\r\n')
+(dist / 'はじめにお読みください.txt').write_text(readme, encoding='utf-8-sig', newline='')
+
+print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/はじめにお読みください.txt, dist/claude-artifact.html')
