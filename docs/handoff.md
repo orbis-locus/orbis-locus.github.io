@@ -33,7 +33,7 @@
 | 18-char-images.sql | 画像の置き場所 char-images（公開・1枚5MB・1人100MB。char_images_used） | 済み（2026-11-12 に確認：置き場所あり・ログインなしでは置けない） |
 | 19-limits.sql | 大きさの上限（キャラシ1MB・60人、グループ200KB、画面の編集2MB、ui-assets 5MB） | 済み（2026-11-12 に確認：大きすぎるキャラシ・グループが断られる） |
 | 20-reports.sql | 通報（reports・report_user・report_list・mod_action。一覧と対応はマスターだけ） | 済み（2026-11-12 に確認：表と3つの関数があり、ログインなしでは使えない。貼り付け用の版は、消したグループ名が「(removed)」） |
-| 21-contacts.sql | お問い合わせ（contacts・send_contact は anon も可・contact_list と contact_close はマスターだけ） | **未実行**（2026-11-12 に作成。手元の PostgreSQL で動きを確認済み） |
+| 21-contacts.sql | お問い合わせ（contacts・send_contact は anon も可・contact_list と contact_close はマスターだけ） | 済み（2026-11-12 に確認：関数があり、ログインなしでは一覧・閉じる・表の読み取りができない） |
 | 15-feature-wants.sql | 無料版の「欲しい！」の数（feature_wants・add_want は anon も可・want_counts はマスター/編集者だけ） | 済み（2026-11-11 に確認：表は anon から読めない・数は anon から見られない・add_want は呼べる） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。短く・英数字だけで書き、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。
