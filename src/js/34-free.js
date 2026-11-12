@@ -47,6 +47,8 @@ document.addEventListener('click', async e => {
   snd('copy');
   toast('「欲しい！」を送りました。ありがとうございます！');
 });
+/* 権利表記・このアプリについて（探索者をえらぶ画面の下の文から開く） */
+document.addEventListener('click', e => { if (e.target.closest('[data-about]')) openModal('modal-about'); });
 /* マスター・編集者は全部使える（ueCheckAdmin から呼ぶ）。端末に覚えておき、次に開いたときもすぐ使えるように */
 function setUnlockAll(on) {
   on = !!on;

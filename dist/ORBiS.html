@@ -837,6 +837,15 @@ label.btn { display: inline-block; }
 /* 「まだ探索者／フレンドがいません」の文：せまい画面ではみ出さないように折り返す（どのテーマでも） */
 .sel-empty { white-space: normal; width: min(90%, 460px); text-align: center; line-height: 1.6; }
 
+/* 権利表記（探索者をえらぶ画面のいちばん下）と「このアプリについて」の小窓 */
+.sel-credit { margin: 14px auto 4px; max-width: 720px; padding: 0 16px; text-align: center; font-size: 11.5px; line-height: 1.7; color: var(--ink); opacity: .72; overflow-wrap: anywhere; }
+.link-btn { display: inline; margin-left: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.about-credit { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgb(127 127 127 / .08); font-size: 13px; line-height: 1.7; }
+.about-credit p, .about-note p { margin: 0 0 6px; }
+.about-credit p:last-child, .about-note p:last-child { margin-bottom: 0; }
+.about-credit p[lang="en"] { font-size: 12px; overflow-wrap: anywhere; }
+.about-note { margin-top: 14px; font-size: 13px; line-height: 1.75; color: var(--muted); }
+
 /* ===== charts ===== */
 .chart-fig { margin: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--solid); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .chart-fig figcaption { font-size: 12px; font-weight: 700; color: var(--ink); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -3596,6 +3605,7 @@ body.ue-on .ue-panel { cursor: auto; }
       <button class="btn" type="button" id="sel-theme">テーマ・背景</button>
       <button class="btn acct-btn" type="button" id="sel-account">ログイン</button>
     </div>
+    <p class="sel-credit">本作は、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。<button type="button" class="link-btn" data-about>権利表記・このアプリについて</button></p>
   </div>
 </div>
 
@@ -3838,6 +3848,25 @@ body.ue-on .ue-panel { cursor: auto; }
   <div class="modal modal-xwide" role="dialog" aria-modal="true" aria-labelledby="fview-title">
     <div class="fview-head"><h2 id="fview-title"></h2><button class="btn ghost" type="button" data-close>閉じる</button></div>
     <div id="fview-body"></div>
+  </div>
+</div>
+
+<!-- 権利表記（KADOKAWA「クトゥルフ神話TRPG二次創作ガイドライン（個人向け）」https://product.kadokawa.co.jp/cthulhu/guideline.html の文そのまま。2026-11-12 に確認） -->
+<div class="overlay" id="modal-about" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <h2 id="about-title">権利表記・このアプリについて</h2>
+    <div class="about-credit">
+      <p>本作は、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。</p>
+      <p lang="en">Call of Cthulhu is copyright ©1981, 2015, 2019 by Chaosium Inc. ;all rights reserved. Arranged by Arclight Inc.</p>
+      <p lang="en">Call of Cthulhu is a registered trademark of Chaosium Inc.</p>
+      <p lang="en">PUBLISHED BY KADOKAWA CORPORATION　「クトゥルフ神話TRPG」「新クトゥルフ神話TRPG」</p>
+    </div>
+    <div class="about-note">
+      <p>ORBiS は、個人が作った<b>非公式</b>のキャラクターシート作成ツールです。株式会社アークライト・株式会社KADOKAWA・Chaosium Inc. の公式のものではなく、これらの会社とは関係ありません。</p>
+      <p>いあきゃら・ココフォリアは、それぞれの運営者のサービスです。ORBiS はそのデータの読み込み・書き出しに対応しているだけの、非公式のツールです。</p>
+      <p>ルールの細かい内容は、ルールブックでご確認ください。</p>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
   </div>
 </div>
 
@@ -10752,6 +10781,8 @@ document.addEventListener('click', async e => {
   snd('copy');
   toast('「欲しい！」を送りました。ありがとうございます！');
 });
+/* 権利表記・このアプリについて（探索者をえらぶ画面の下の文から開く） */
+document.addEventListener('click', e => { if (e.target.closest('[data-about]')) openModal('modal-about'); });
 /* マスター・編集者は全部使える（ueCheckAdmin から呼ぶ）。端末に覚えておき、次に開いたときもすぐ使えるように */
 function setUnlockAll(on) {
   on = !!on;

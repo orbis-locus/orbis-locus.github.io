@@ -815,6 +815,15 @@ label.btn { display: inline-block; }
 /* 「まだ探索者／フレンドがいません」の文：せまい画面ではみ出さないように折り返す（どのテーマでも） */
 .sel-empty { white-space: normal; width: min(90%, 460px); text-align: center; line-height: 1.6; }
 
+/* 権利表記（探索者をえらぶ画面のいちばん下）と「このアプリについて」の小窓 */
+.sel-credit { margin: 14px auto 4px; max-width: 720px; padding: 0 16px; text-align: center; font-size: 11.5px; line-height: 1.7; color: var(--ink); opacity: .72; overflow-wrap: anywhere; }
+.link-btn { display: inline; margin-left: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.about-credit { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgb(127 127 127 / .08); font-size: 13px; line-height: 1.7; }
+.about-credit p, .about-note p { margin: 0 0 6px; }
+.about-credit p:last-child, .about-note p:last-child { margin-bottom: 0; }
+.about-credit p[lang="en"] { font-size: 12px; overflow-wrap: anywhere; }
+.about-note { margin-top: 14px; font-size: 13px; line-height: 1.75; color: var(--muted); }
+
 /* ===== charts ===== */
 .chart-fig { margin: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--solid); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .chart-fig figcaption { font-size: 12px; font-weight: 700; color: var(--ink); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
