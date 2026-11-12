@@ -3578,7 +3578,8 @@ function renderAccount() {
         <label>ログインID（メールアドレス）<input class="inp" type="email" id="ac-email" autocomplete="email" required></label>
         <label>パスワード（8文字以上）<input class="inp" type="password" id="ac-pass" autocomplete="new-password" minlength="8" required></label>
         <label>パスワード（確認のため、もう一度）<input class="inp" type="password" id="ac-pass2" autocomplete="new-password" minlength="8" required></label>
-        <button class="btn primary" type="submit">この内容でアカウントを作る</button>
+        <label class="acct-agree"><input type="checkbox" id="ac-agree" required><span><button class="link-btn" type="button" data-legal="terms">利用規約</button>と<button class="link-btn" type="button" data-legal="privacy">プライバシーポリシー</button>を読んで、同意します</span></label>
+        <button class="btn primary" type="submit">同意してアカウントを作る</button>
         <p class="err" id="ac-err" role="alert"></p>
         <p class="empty">登録すると、このブラウザにあるキャラシもアカウントに保存されます。</p>
       </form>
@@ -3659,6 +3660,7 @@ $('acct-body').addEventListener('submit', async e => {
       if (!/^[^\s]{2,20}$/.test(username)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
       if (pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
       if (pass !== ($('ac-pass2').value || '')) { err.textContent = '確認用のパスワードが一致しません。同じパスワードを2回入れてください。'; return; }
+      if (!$('ac-agree').checked) { err.textContent = '利用規約とプライバシーポリシーを読んで、「同意します」にチェックを入れてください。'; return; }
       const av = await sb.rpc('username_available', { name: username });
       if (av.error) throw av.error;
       if (av.data === false) { err.textContent = 'そのユーザー名はすでに使われています。別のユーザー名にしてください。'; return; }
@@ -7066,6 +7068,49 @@ $('mod-body').addEventListener('click', async e => {
   } catch (er) { toast(jaErr(er)); b.disabled = false; }
   MOD.busy = false;
 });
+
+/* ================= 利用規約・プライバシーポリシー・お問い合わせ ================= */
+/* 文は index.html の modal-legal に書いてある。data-legal="terms / privacy / contact" のボタンで、そのタブを開く。
+   アカウントを作る小窓の上にも重ねて開くので、閉じるときはこの小窓だけを閉じる（入力した内容が消えないように）。 */
+
+/* お問い合わせ先：オーナーが用意したら、ここに書く（どちらか片方だけでもよい）。
+   CONTACT_FORM … Google フォームなどのURL（https:// から）
+   CONTACT_MAIL … 問い合わせ専用のメールアドレス（本名や、ふだん使いのアドレスは書かない） */
+const CONTACT_FORM = '';
+const CONTACT_MAIL = '';
+
+function legalContactHtml() {
+  const a = [];
+  if (/^https:\/\//.test(CONTACT_FORM)) a.push(`<a class="btn primary" href="${esc(CONTACT_FORM)}" target="_blank" rel="noopener">お問い合わせフォームを開く</a>`);
+  if (CONTACT_MAIL) a.push(`<p>メール：<a href="mailto:${esc(CONTACT_MAIL)}">${esc(CONTACT_MAIL)}</a></p>`);
+  return a.length ? a.join('') : '<p class="legal-wait">お問い合わせ先は、いま準備中です。決まりしだい、ここに書きます。</p>';
+}
+function legalTab(k) {
+  const box = $('modal-legal');
+  box.querySelectorAll('[data-legal-tab]').forEach(b => { const on = b.dataset.legalTab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  box.querySelectorAll('[data-legal-doc]').forEach(d => { d.hidden = d.dataset.legalDoc !== k; });
+  if (k === 'contact') $('legal-contact').innerHTML = legalContactHtml();
+  const m = box.querySelector('.modal'); if (m) m.scrollTop = 0;
+}
+function openLegal(k) {
+  legalTab(k || 'terms');
+  $('modal-legal').hidden = false;
+  const b = $('modal-legal').querySelector('.legal-tab.on'); b && b.focus();
+}
+const closeLegal = () => { $('modal-legal').hidden = true; };
+/* 先に（capture で）受け取り、ほかの小窓まで閉じてしまう共通の処理（13-modals.js）には渡さない */
+addEventListener('click', e => {
+  const open = e.target.closest('[data-legal]');
+  if (open) { e.preventDefault(); openLegal(open.dataset.legal); return; }
+  const ov = $('modal-legal');
+  if (ov.hidden) return;
+  const t = e.target.closest('[data-legal-tab]');
+  if (t) { legalTab(t.dataset.legalTab); return; }
+  if (e.target === ov || e.target.closest('[data-legal-close]')) { e.stopPropagation(); closeLegal(); }
+}, true);
+addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('modal-legal').hidden) { e.stopPropagation(); closeLegal(); }
+}, true);
 
 /* ================= 起動 ================= */
 /* 保存データの読み込み（IndexedDB）は少し時間がかかるので、終わってから画面を作る */

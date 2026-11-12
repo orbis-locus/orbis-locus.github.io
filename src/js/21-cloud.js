@@ -503,7 +503,8 @@ function renderAccount() {
         <label>ログインID（メールアドレス）<input class="inp" type="email" id="ac-email" autocomplete="email" required></label>
         <label>パスワード（8文字以上）<input class="inp" type="password" id="ac-pass" autocomplete="new-password" minlength="8" required></label>
         <label>パスワード（確認のため、もう一度）<input class="inp" type="password" id="ac-pass2" autocomplete="new-password" minlength="8" required></label>
-        <button class="btn primary" type="submit">この内容でアカウントを作る</button>
+        <label class="acct-agree"><input type="checkbox" id="ac-agree" required><span><button class="link-btn" type="button" data-legal="terms">利用規約</button>と<button class="link-btn" type="button" data-legal="privacy">プライバシーポリシー</button>を読んで、同意します</span></label>
+        <button class="btn primary" type="submit">同意してアカウントを作る</button>
         <p class="err" id="ac-err" role="alert"></p>
         <p class="empty">登録すると、このブラウザにあるキャラシもアカウントに保存されます。</p>
       </form>
@@ -584,6 +585,7 @@ $('acct-body').addEventListener('submit', async e => {
       if (!/^[^\s]{2,20}$/.test(username)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
       if (pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
       if (pass !== ($('ac-pass2').value || '')) { err.textContent = '確認用のパスワードが一致しません。同じパスワードを2回入れてください。'; return; }
+      if (!$('ac-agree').checked) { err.textContent = '利用規約とプライバシーポリシーを読んで、「同意します」にチェックを入れてください。'; return; }
       const av = await sb.rpc('username_available', { name: username });
       if (av.error) throw av.error;
       if (av.data === false) { err.textContent = 'そのユーザー名はすでに使われています。別のユーザー名にしてください。'; return; }
