@@ -7400,6 +7400,8 @@ const jaErr = e => {
   if (/already registered|already been registered/i.test(m)) return 'このメールアドレスはすでに登録されています。ログインしてください。';
   if (/duplicate key|profiles_username_lower|23505/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
   if (/Database error saving new user/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
+  // メールを送れなかった（Supabase の標準のメールは運営チームにしか送れない・送る設定のまちがい など）
+  if (/not authorized|Error sending|sending (confirmation|recovery|magic link) email|SMTP/i.test(m)) return 'いまはメールを送れませんでした（運営のメールの設定中です）。少したってからもう一度ためすか、「お問い合わせ」から知らせてください。';
   if (/rate limit|too many/i.test(m)) return '短い時間に何度も送信されました。しばらく待ってからもう一度試してください。';
   if (/Password should be/i.test(m)) return 'パスワードが短すぎます。8文字以上にしてください。';
   if (/valid email|invalid email|Unable to validate email/i.test(m)) return 'メールアドレスの形が正しくありません。';

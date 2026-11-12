@@ -1,0 +1,22 @@
+# サーバー（Supabase の無料プロジェクト）は、7日ほど使われないと自動で止まる。
+# 公開前など、だれもアプリを開かない日が続いても止まらないように、2日に1回だけ
+# 「画面の編集の内容」（だれでも読める ui_layout）をサーバーに読みに行く。
+# 使うのはアプリにも書いてある、公開してよいキー（publishable key）だけ。
+name: サーバーが止まらないように見回る
+on:
+  schedule:
+    - cron: '17 3 */2 * *'
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: サーバーに読みに行く
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            'https://umrouqvbmnttirdzixvc.supabase.co/rest/v1/ui_layout?select=id&limit=1' \
+            -H 'apikey: '"$KEY")
+          echo "返事: $code"
+          test "$code" = "200"
+        env:
+          KEY: sb_publishable_9GwpXgDVVrzCeWjihR6yzQ_uKQsxbia
