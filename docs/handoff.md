@@ -57,7 +57,7 @@
 
 ## 4. 残っていること・確認待ち
 
-- **メールの設定（2026-11-12〜・オーナーの作業待ち）**：Supabase の標準のメールは運営チームにしか届かない（1時間2通）ので、ふつうの利用者はパスワードの再設定メールを受け取れない。いまは新規登録の確認メールもオフ（mailer_autoconfirm: true）。手順は docs/mail-setup.md（ORBiS 用 Gmail を SMTP に → 日本語の文 → 試す → Confirm email をオン）。終わったら /auth/v1/settings の mailer_autoconfirm が false になったか確かめる。
+- **メールの設定（2026-11-12・完了）**：ORBiS 用の Gmail（アプリ パスワード）を Supabase の SMTP に設定、メールの文を日本語に、Site URL を https://orbis-locus.github.io/ に直した（前の住所のままで、メールのリンクが引っ越しページに行っていた）、Confirm email をオン（mailer_autoconfirm: false を確認）。パスワードの再設定と新規登録の確認メールが届くことをオーナーが確認。手順は docs/mail-setup.md。Gmail の送信は1日500通くらいまで。
 
 - **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。2026-11-11 に main に入れて公開済み（同期ズレの直し・テスターもいっしょ）。公開サイトはもう無料版。お友達はマスターが「権限」タブでテスターにする。権利表記はアプリの中に入れた（2026-11-12）。規約・プライバシーポリシーもアプリに入れた（2026-11-12）。お問い合わせはアプリの中の入力欄（21-contacts.sql）。残りは docs/release-checklist.md の【必須】（確認メール・動作確認・配る物）。
 
