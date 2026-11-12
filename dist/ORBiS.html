@@ -7184,6 +7184,101 @@ function afterDrop() {   // 片付けたあとの画面
   if (!state.chars.length && $('select').hidden) { selTab = 'mine'; showSelect(); }
   else if (!$('select').hidden) renderSelect();
 }
+/* ---- 立ち絵などの画像は、キャラシ本体とは別に Storage（char-images）に置く（18-char-images.sql） ----
+   データベース（無料枠は約500MB）に立ち絵をそのまま入れると、数十人ですぐいっぱいになるため。
+   ・送るとき：キャラシの中の画像（立ち絵・差分・自分で選んだアイコン・キャラの背景）を「持ち主の id/中身から作った名前」で置き、
+     サーバーに送るキャラシには、その画像の URL だけを書く（この端末の中のキャラシはそのまま）
+   ・小さなアイコン（avatar）は一覧で使うので、今までどおりキャラシの中に入れる
+   ・前に画像ごと送ったキャラは、ログインしたときに読みこんで、もう一度送り直す（そのとき画像が分かれる）
+   ・使われなくなった画像は、ときどき片付ける（cleanupImages） */
+const IMG_BUCKET = 'char-images';
+let imgOff = false;            // 18-char-images.sql をまだ実行していないとき（画像ごと送る）
+const imgDone = new Set();     // この端末で置き終わった画像
+const imgHashes = new Map();
+const cyrb = (s, seed) => {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0, ch; i < s.length; i++) { ch = s.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+};
+function imgHash(s) {   // 画像の中身から作る名前（同じ画像は同じ名前になるので、2回置かなくてすむ）
+  let h = imgHashes.get(s);
+  if (!h) { if (imgHashes.size > 400) imgHashes.clear(); h = cyrb(s, 1) + cyrb(s, 7); imgHashes.set(s, h); }
+  return h;
+}
+const IMG_EXT = { webp: 'webp', png: 'png', jpeg: 'jpg', gif: 'gif' };
+const imgPathOf = u => { const m = /^data:image\/(webp|png|jpeg|gif)[;,]/.exec(u || ''); return m && me ? `${me.id}/${imgHash(u)}.${IMG_EXT[m[1]]}` : null; };
+const imgBase = () => `${CLOUD.url.replace(/\/$/, '')}/storage/v1/object/public/${IMG_BUCKET}/`;
+const isInline = u => typeof u === 'string' && u.startsWith('data:image/');
+const charImgs = d => [d.portrait, d.icon, d.bgImage, ...(Array.isArray(d.faces) ? d.faces.map(f => f && f.src) : [])].filter(Boolean);
+const hasInlineImg = d => !!d && charImgs(d).some(isInline);
+function dataUrlBlob(u) {
+  const [head, data] = u.split(','), type = head.slice(5).split(';')[0];
+  const bin = atob(data), arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type });
+}
+async function putImage(u) {   // 画像を置いて、その URL を返す（置けないときは元のまま）
+  if (imgOff || !isInline(u)) return u;
+  const path = imgPathOf(u); if (!path) return u;
+  if (!imgDone.has(path)) {
+    const blob = dataUrlBlob(u);
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(path, blob, { contentType: blob.type, upsert: false, cacheControl: '31536000' });
+    if (error) {
+      const m = String(error.message || '') + ' ' + String(error.statusCode || '') + ' ' + String(error.error || '');
+      if (/exist|duplicate|409/i.test(m)) { /* もう置いてある */ }
+      else if (/bucket not found/i.test(m)) { imgOff = true; return u; }
+      else if (/row-level security|403|unauthorized/i.test(m)) throw new Error('画像の置き場所がいっぱいです（1人 100MB まで）。使っていない立ち絵・差分・背景画像を消すと、また保存できます。');
+      else throw error;
+    }
+    imgDone.add(path);
+  }
+  return imgBase() + path;
+}
+async function cloudCopy(c) {   // サーバーに送る形（秘匿を抜き、画像は URL に）
+  const d = withoutSecret(c);
+  if (imgOff || !hasInlineImg(d)) return d;
+  const out = Object.assign({}, d);
+  if (isInline(out.portrait)) out.portrait = await putImage(out.portrait);
+  if (isInline(out.icon)) out.icon = await putImage(out.icon);
+  if (isInline(out.bgImage)) out.bgImage = await putImage(out.bgImage);
+  if (Array.isArray(out.faces)) {
+    const fs = [];
+    for (const f of out.faces) fs.push(f && isInline(f.src) ? Object.assign({}, f, { src: await putImage(f.src) }) : f);
+    out.faces = fs;
+  }
+  return out;
+}
+/* 使われなくなった画像を片付ける（10分に1回まで）。サーバーのキャラシとこの端末のキャラシのどちらにも出てこない、
+   1時間より前に置いた画像だけを消す（ほかの端末が置いたばかりの画像は消さない） */
+let imgCleanAt = 0, imgDirty = false, imgCleanTimer = null;
+async function cleanupImages() {
+  if (imgOff || !sb || !me || !imgDirty) return;
+  const wait = imgCleanAt + 600000 - Date.now();
+  if (wait > 0) { if (!imgCleanTimer) imgCleanTimer = setTimeout(() => { imgCleanTimer = null; cleanupImages(); }, wait); return; }   // 10分たったら、もう一度
+  imgCleanAt = Date.now(); imgDirty = false;
+  try {
+    const files = [];
+    for (let off = 0; off < 20000; off += 1000) {
+      const { data, error } = await sb.storage.from(IMG_BUCKET).list(me.id, { limit: 1000, offset: off });
+      if (error) return;
+      files.push(...(data || []));
+      if (!data || data.length < 1000) break;
+    }
+    if (!files.length) return;
+    const used = new Set(), base = imgBase() + me.id + '/';
+    const note = u => { if (typeof u !== 'string') return; if (u.startsWith(base)) used.add(u.slice(base.length)); else if (isInline(u)) { const p = imgPathOf(u); if (p) used.add(p.slice(me.id.length + 1)); } };
+    myChars().forEach(c => charImgs(c).forEach(note));
+    const { data: rows, error } = await sb.from('characters').select('portrait:data->>portrait,icon:data->>icon,bg:data->>bgImage,faces:data->faces').eq('owner', me.id);
+    if (error) return;   // サーバーのキャラシを確かめられないときは、何も消さない
+    (rows || []).forEach(r => { [r.portrait, r.icon, r.bg].forEach(note); (Array.isArray(r.faces) ? r.faces : []).forEach(f => note(f && f.src)); });
+    const old = Date.now() - 3600000;
+    const gone = files.filter(f => f.name && !used.has(f.name) && Date.parse(f.created_at || 0) < old).map(f => `${me.id}/${f.name}`);
+    for (let i = 0; i < gone.length; i += 100) await sb.storage.from(IMG_BUCKET).remove(gone.slice(i, i + 100));
+    gone.forEach(p => imgDone.delete(p));
+  } catch (e) { /* 片付けは次の機会に */ }
+}
 async function flushSync() {
   if (!sb || !me) return;
   clearTimeout(syncTimer); syncTimer = null;
@@ -7192,13 +7287,19 @@ async function flushSync() {
   try {
     const mine = myChars();
     const rows = [];
-    mine.forEach(c => { c.owner = me.id; const js = JSON.stringify(c); if (lastSynced.get(c.id) !== js) rows.push([c, js]); });
-    // 立ち絵の入ったキャラは大きいので、だいたい3MBずつに分けて送る（一度に全部送ると失敗しやすい）
+    for (const c of mine) {
+      c.owner = me.id; const js = JSON.stringify(c);
+      if (lastSynced.get(c.id) === js) continue;
+      const cd = await cloudCopy(c);   // 画像は Storage に置いて URL に
+      if (cd !== c && charImgs(c).some(isInline)) imgDirty = true;
+      rows.push([c, js, cd, cd === c ? js.length : JSON.stringify(cd).length]);
+    }
+    // 大きいキャラ（画像を分けられなかったとき）もあるので、だいたい3MBずつに分けて送る（一度に全部送ると失敗しやすい）
     const batches = [];
-    rows.forEach(r => { const b = batches[batches.length - 1]; if (b && b.size + r[1].length <= 3e6) { b.rows.push(r); b.size += r[1].length; } else batches.push({ rows: [r], size: r[1].length }); });
+    rows.forEach(r => { const b = batches[batches.length - 1]; if (b && b.size + r[3] <= 3e6) { b.rows.push(r); b.size += r[3]; } else batches.push({ rows: [r], size: r[3] }); });
     const refused = [];
     for (const b of batches) {
-      const { data: put, error } = await sb.from('characters').upsert(b.rows.map(([c]) => ({ id: c.id, owner: me.id, name: c.profile.name || '', locked: !!c.locked, data: withoutSecret(c), updated_at: new Date(c.updatedAt || Date.now()).toISOString() }))).select('id');
+      const { data: put, error } = await sb.from('characters').upsert(b.rows.map(([c, , cd]) => ({ id: c.id, owner: me.id, name: c.profile.name || '', locked: !!c.locked, data: cd, updated_at: new Date(c.updatedAt || Date.now()).toISOString() }))).select('id');
       if (error) throw error;
       // サーバーが受け取らなかったキャラ＝ほかの端末で削除済み（削除より前の古い内容だった）
       const got = put ? new Set(put.map(r => r.id)) : null;
@@ -7215,10 +7316,12 @@ async function flushSync() {
       const { error } = await sb.from('characters').delete().in('id', gone);
       if (error) throw error;
       gone.forEach(id => lastSynced.delete(id));
+      imgDirty = true;   // 削除したキャラの画像を、あとで片付ける
     }
     if (queued.length) { state.delQueue = (state.delQueue || []).filter(id => !queued.includes(id)); saveNow(); }   // 送っているあいだに削除した分は残す
     if (refused.length && dropDeleted(refused)) afterDrop();
     setSync('ok');
+    cleanupImages();   // 使われなくなった画像の片付け（待たない）
   } catch (e) { setSync('error', jaErr(e)); clearTimeout(retryTimer); retryTimer = setTimeout(() => { if (me && syncState === 'error') flushSync(); }, 30000); }   // 失敗したら30秒後にもう一度
   finally { syncing = false; if (syncAgain) { syncAgain = false; scheduleSync(); } }
 }
@@ -7235,8 +7338,10 @@ async function pullAndMerge() {
     const sc = Object.assign({}, r.data, { locked: !!r.locked, owner: me.id });
     sc.secret = secrets.has(r.id) ? secrets.get(r.id) : (state.chars.find(c => c.id === r.id)?.secret || r.data.secret || '');
     const i = state.chars.findIndex(c => c.id === r.id);
-    if (i < 0) { state.chars.push(sc); lastSynced.set(sc.id, JSON.stringify(sc)); }
-    else if ((sc.updatedAt || 0) >= (state.chars[i].updatedAt || 0)) { state.chars[i] = sc; lastSynced.set(sc.id, JSON.stringify(sc)); }
+    // 前に画像ごと送ったキャラは「送った」と覚えないでおく → このあとの flushSync で画像を分けて送り直す
+    const mark = () => { if (!hasInlineImg(r.data)) lastSynced.set(sc.id, JSON.stringify(sc)); else imgDirty = true; };
+    if (i < 0) { state.chars.push(sc); mark(); }
+    else if ((sc.updatedAt || 0) >= (state.chars[i].updatedAt || 0)) { state.chars[i] = sc; mark(); }
   });
   // サーバーに無いキャラのうち、ほかの端末で削除したもの（削除したあとにこの端末で書きかえていないもの）は片付ける
   const tomb = await deletedOnServer(myChars().filter(c => !onServer.has(c.id)).map(c => c.id));
@@ -7284,7 +7389,7 @@ async function refreshFromCloud() {
       const i = state.chars.findIndex(c => c.id === r.id);
       sc.secret = secrets.has(r.id) ? secrets.get(r.id) : (i >= 0 ? state.chars[i].secret || '' : '');
       if (i < 0) state.chars.push(sc); else state.chars[i] = sc;
-      lastSynced.set(sc.id, JSON.stringify(sc));
+      if (!hasInlineImg(r.data)) lastSynced.set(sc.id, JSON.stringify(sc));   // 画像ごと入っていたら、画像を分けて送り直す
     });
     if (gone.length) dropDeleted(gone);
     const real = state.chars.filter(c => !c.sample);
