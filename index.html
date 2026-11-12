@@ -346,6 +346,23 @@ img { max-width: 100%; }
   </div>
 </div>
 
+<!-- 荒らし対策：通報する小窓と、マスターが通報を見る小窓（35-report.js） -->
+<div class="overlay" id="modal-report" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="report-title">
+    <h2 id="report-title">通報</h2>
+    <div id="report-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>やめる</button><button class="btn primary" type="button" id="report-send">通報を送る</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-mod" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="mod-title">
+    <h2 id="mod-title">届いた通報</h2>
+    <p>不適切なら、名前のリセット・アイコンやグループの名前を消すことができます。問題がなければ「問題なし」で閉じます。同じ相手・同じ内容の通報は、まとめて閉じます。</p>
+    <div id="mod-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-lock" hidden>
   <div class="modal modal-lock" role="dialog" aria-modal="true" aria-label="製品版で解放予定">
     <div id="lock-body"></div>

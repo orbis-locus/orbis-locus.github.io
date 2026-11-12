@@ -95,7 +95,7 @@ function groupCardHtml(g, kind) {
       <div class="gc-title"><b>${esc(d.name || '無題のシナリオ')}</b>${d.date ? `<span class="gc-date">${esc(d.date)}</span>` : ''}</div>
       ${g.locked ? `<span class="gc-lock" title="グループの参加者以外には見えません">${LOCK_ICON}非公開</span>` : ''}
       <span class="gc-owner">代表 ${dot(gUser(g.owner), g.owner)}${esc(gUser(g.owner))}</span>
-      ${actions}
+      ${actions}${owner ? '' : reportBtn(g.owner, gUser(g.owner), { id: g.id, name: d.name || '' })}
     </div>
     <div class="gc-row"><span class="gc-role kp">KP</span><div class="gc-pls">${kp.length ? kp.map(x => `<span class="gc-kp">${dot(x.name, x.user)}${esc(x.name || '？')}</span>`).join('') : '<span class="gc-none">未定</span>'}</div></div>
     <div class="gc-row"><span class="gc-role pl">探索者</span><div class="gc-pls">${chips || '<span class="gc-none">未定</span>'}</div></div>

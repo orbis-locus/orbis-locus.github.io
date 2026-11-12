@@ -3558,7 +3558,7 @@ function renderAccount() {
       </form>
       <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
       <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
-      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}`;
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}${modBoxHtml()}`;
     return;
   }
 
@@ -3606,6 +3606,7 @@ $('acct-body').addEventListener('click', async e => {
   if (a.dataset.acct === 'sync') { try { await pullAndMerge(); await loadFriendships(); toast('同期しました。'); } catch (er) { setSync('error', jaErr(er)); } }
   if (a.dataset.acct === 'friends') { closeModals(); openFriends(); }
   if (a.dataset.acct === 'wants') loadWantCounts();
+  if (a.dataset.acct === 'reports') { closeModals(); openMod(); }
   if (a.dataset.acct === 'logout') { if (!arm(a, 'もう一度押すとログアウト')) return; closeModals(); logout(); }
 });
 $('acct-body').addEventListener('change', async e => {
@@ -3705,9 +3706,9 @@ function renderOnline() {
     <p class="ol-me">あなたのユーザー名：<b>${esc(me.username)}</b>（これを友達に教えると申請してもらえます）</p>
     <form class="ol-search" id="ol-search"><input class="inp" id="ol-name" placeholder="相手のユーザー名" autocomplete="off" aria-label="相手のユーザー名"><button class="btn primary" type="submit">フレンド申請</button></form>
     <p class="err" id="ol-err" role="alert"></p>
-    ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button></div>`).join('')}</div>` : ''}
-    ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button></div>`).join('')}</div>` : ''}
-    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">${isFree() ? `<i class="tab-lock">${LOCK_SVG}</i>` : ''}キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button></div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
+    ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button>${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
+    ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button>${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
+    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">${isFree() ? `<i class="tab-lock">${LOCK_SVG}</i>` : ''}キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button>${reportBtn(u.id, u.username)}</div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
   </div>`;
 }
 const pairFilter = (a, b) => `and(requester.eq.${a},addressee.eq.${b}),and(requester.eq.${b},addressee.eq.${a})`;
@@ -4361,7 +4362,7 @@ function groupCardHtml(g, kind) {
       <div class="gc-title"><b>${esc(d.name || '無題のシナリオ')}</b>${d.date ? `<span class="gc-date">${esc(d.date)}</span>` : ''}</div>
       ${g.locked ? `<span class="gc-lock" title="グループの参加者以外には見えません">${LOCK_ICON}非公開</span>` : ''}
       <span class="gc-owner">代表 ${dot(gUser(g.owner), g.owner)}${esc(gUser(g.owner))}</span>
-      ${actions}
+      ${actions}${owner ? '' : reportBtn(g.owner, gUser(g.owner), { id: g.id, name: d.name || '' })}
     </div>
     <div class="gc-row"><span class="gc-role kp">KP</span><div class="gc-pls">${kp.length ? kp.map(x => `<span class="gc-kp">${dot(x.name, x.user)}${esc(x.name || '？')}</span>`).join('') : '<span class="gc-none">未定</span>'}</div></div>
     <div class="gc-row"><span class="gc-role pl">探索者</span><div class="gc-pls">${chips || '<span class="gc-none">未定</span>'}</div></div>
@@ -5159,6 +5160,7 @@ async function ueCheckAdmin() {
   UE.role = role;
   const ok = UE.admin = !!role;
   setUnlockAll(unlock);
+  if (role === 'master') loadReports(true);   // 届いている通報（35-report.js）
   if (!ueIsMaster() && UE.tab !== 'look') UE.tab = 'look';
   const b = $('ue-open'); if (b) b.hidden = !ok;
   if (!ok && UE.on) ueStop(); else if (UE.on) ueRenderBody();
@@ -6955,6 +6957,115 @@ async function loadWantCounts() {
   const rows = (data || []).sort((a, b) => b.n - a.n);
   out.innerHTML = rows.length ? `<table class="wants-tbl">${rows.map(r => `<tr><td>${lockInfo(r.feature).t}</td><td>${r.n}</td></tr>`).join('')}</table>` : '<p class="empty">まだ押されていません。</p>';
 }
+
+/* ================= 荒らし対策：通報と、マスターの対応 ================= */
+/* サーバーは supabase/20-reports.sql。
+   ・通報：フレンドの一覧（届いた申請・申請中・フレンド）とグループのカードの「通報」から。ユーザー名・アイコン・グループの名前・そのほか
+   ・マスター：アカウントの小窓の「通報を見る」で一覧。名前をリセット・アイコンを消す・グループの名前を消す・問題なしで閉じる
+   通報したことは相手には伝わらない。通報の中身を見られるのはマスターだけ */
+const RP_KIND = { username: 'ユーザー名', avatar: 'アイコン画像', group: 'グループの名前', other: 'そのほか' };
+const RP_MSG = {
+  login: 'ログインしてから通報してください。', self: '自分自身は通報できません。', kind: '通報の種類が正しくありません。',
+  nouser: 'そのユーザーは見つかりませんでした（もう退会したのかもしれません）。', nogroup: 'そのグループは見つかりませんでした（もう削除されたのかもしれません）。',
+  toomany: '通報は1日20件までです。明日またお願いします。',
+};
+let rpCtx = null;
+/* 「通報」ボタン（相手の id と名前。グループのカードではグループの id と名前も） */
+const reportBtn = (uid, name, grp) => !me || !uid || uid === me.id ? ''
+  : `<button class="rp-btn" type="button" data-report="${esc(uid)}" data-rname="${esc(name || '')}"${grp ? ` data-rgroup="${esc(grp.id)}" data-rgname="${esc(grp.name || '')}"` : ''} title="不適切な名前や画像を運営に知らせる">通報</button>`;
+function openReport(ctx) {
+  rpCtx = ctx;
+  const kinds = ctx.group ? ['group', 'username', 'avatar', 'other'] : ['username', 'avatar', 'other'];
+  $('report-title').textContent = `${ctx.name || 'このユーザー'}さんを通報`;
+  $('report-body').innerHTML = `
+    <p>不適切な名前や画像を、運営に知らせます。運営が確かめて、必要なら名前や画像を消します。<b>通報したことは、相手には伝わりません。</b></p>
+    <div class="rp-kinds" role="radiogroup" aria-label="なにが不適切ですか">
+      ${kinds.map((k, i) => `<label class="rp-kind"><input type="radio" name="rp-kind" value="${k}" ${i === 0 ? 'checked' : ''}><span>${RP_KIND[k]}${k === 'group' ? `「${esc(ctx.group.name || '無題')}」` : ''}${k === 'other' ? '' : 'が不適切'}</span></label>`).join('')}
+    </div>
+    <label class="lbl" for="rp-note">くわしく（書かなくても送れます・500文字まで）</label>
+    <textarea class="inp" id="rp-note" rows="3" maxlength="500" placeholder="例：ひどい言葉が入っている、なりすましている など"></textarea>
+    <p class="err" id="rp-err" role="alert"></p>`;
+  $('report-send').disabled = false;
+  openModal('modal-report');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-report]'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!me || !sb) { toast('ログインしてから通報してください。'); return; }
+  openReport({ uid: b.dataset.report, name: b.dataset.rname, group: b.dataset.rgroup ? { id: b.dataset.rgroup, name: b.dataset.rgname } : null });
+}, true);
+$('report-send').addEventListener('click', async () => {
+  if (!rpCtx || !sb || !me) return;
+  const kind = (document.querySelector('input[name="rp-kind"]:checked') || {}).value || 'other';
+  const btn = $('report-send'), err = $('rp-err');
+  btn.disabled = true; err.textContent = '';
+  try {
+    const { data, error } = await sb.rpc('report_user', { target: rpCtx.uid, kind, ref: kind === 'group' && rpCtx.group ? rpCtx.group.id : null, note: ($('rp-note').value || '').trim() });
+    if (error) throw error;
+    if (data !== 'ok') { err.textContent = RP_MSG[data] || 'うまく送れませんでした。'; btn.disabled = false; return; }
+    $('modal-report').hidden = true;
+    toast('通報を送りました。運営が確かめます。ありがとうございます。');
+  } catch (er) {
+    err.textContent = /report_user|Could not find the function/i.test(String(er && er.message)) ? 'いまは通報を送れません（サーバーの準備中です）。' : jaErr(er);
+    btn.disabled = false;
+  }
+});
+
+/* ---- マスター：通報の一覧と対応 ---- */
+const MOD = { list: null, err: '', busy: false };
+const isMaster = () => typeof UE !== 'undefined' && UE.role === 'master';
+const modBoxHtml = () => isMaster()
+  ? `<div class="wants-box"><button class="btn small" type="button" data-acct="reports">通報を見る（マスター）${MOD.list && MOD.list.length ? `<b class="req-badge">${MOD.list.length}</b>` : ''}</button></div>` : '';
+async function loadReports(announce) {   // announce：ログインしたときに、届いている数を1回だけお知らせする
+  if (!sb || !me || !isMaster()) { MOD.list = null; return; }
+  const { data, error } = await sb.rpc('report_list');
+  if (error) { MOD.list = null; MOD.err = /report_list|Could not find the function/i.test(error.message || '') ? 'サーバーの準備（supabase/20-reports.sql の実行）がまだのようです。' : jaErr(error); }
+  else { MOD.list = data || []; MOD.err = ''; }
+  if (!$('modal-mod').hidden) renderMod();
+  if (!$('modal-account').hidden) renderAccount();
+  if (announce && !MOD.told && MOD.list && MOD.list.length) { MOD.told = true; toast(`通報が${MOD.list.length}件届いています（アカウントの小窓の「通報を見る」から確かめられます）。`); }
+}
+function renderMod() {
+  const el = $('mod-body');
+  if (MOD.err) { el.innerHTML = `<p class="err">${esc(MOD.err)}</p>`; return; }
+  if (!MOD.list) { el.innerHTML = '<p class="empty">読み込み中…</p>'; return; }
+  if (!MOD.list.length) { el.innerHTML = '<p class="empty">まだ対応していない通報はありません。</p>'; return; }
+  const day = t => { const d = new Date(t); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  el.innerHTML = MOD.list.map(r => {
+    const av = okAvatar(r.target_avatar), gone = r.target_name == null;
+    const acts = [];
+    if (!gone && (r.kind === 'username' || r.kind === 'other')) acts.push(['reset_name', '名前をリセット']);
+    if (!gone && av && (r.kind === 'avatar' || r.kind === 'other')) acts.push(['clear_avatar', 'アイコンを消す']);
+    if (r.kind === 'group' && r.group_name != null) acts.push(['rename_group', 'グループの名前を消す']);
+    return `<article class="mod-card">
+      <div class="mod-head"><span class="mod-kind">${RP_KIND[r.kind] || esc(r.kind)}</span><small>${esc(day(r.created_at))} ・ 通報した人：${esc(r.reporter_name || '（退会したユーザー）')}</small></div>
+      <div class="mod-target">
+        <span class="fav sm" style="--fc:var(--sky)">${av ? `<img src="${esc(av)}" alt="">` : esc((r.target_name || '？').charAt(0))}</span>
+        <div><b>${gone ? '（退会したユーザー）' : esc(r.target_name)}</b>
+          ${r.kind === 'group' ? `<small>グループの名前：「${esc(r.group_name != null ? r.group_name : '（もう削除されています）')}」${r.snap_name && r.snap_name !== r.group_name ? `（通報のとき：「${esc(r.snap_name)}」）` : ''}</small>`
+            : r.snap_name && r.snap_name !== r.target_name ? `<small>通報のときの名前：「${esc(r.snap_name)}」</small>` : ''}</div>
+      </div>
+      ${r.note ? `<p class="mod-note">${esc(r.note)}</p>` : ''}
+      <div class="mod-acts">${acts.map(([a, l]) => `<button class="btn small danger" type="button" data-mod="${a}" data-rid="${esc(r.id)}">${l}</button>`).join('')}<button class="btn small" type="button" data-mod="dismiss" data-rid="${esc(r.id)}">問題なし（閉じる）</button></div>
+    </article>`;
+  }).join('');
+}
+function openMod() { MOD.list = MOD.list || null; renderMod(); openModal('modal-mod'); loadReports(); }
+$('mod-body').addEventListener('click', async e => {
+  const b = e.target.closest('[data-mod]'); if (!b || MOD.busy) return;
+  const act = b.dataset.mod;
+  if (act !== 'dismiss' && !arm(b, 'もう一度押すと実行')) return;
+  MOD.busy = true; b.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('mod_action', { report_id: b.dataset.rid, act });
+    if (error) throw error;
+    if (data !== 'ok') throw new Error(data);
+    toast({ reset_name: '名前をリセットしました（相手は、自分で新しい名前に変えられます）。', clear_avatar: 'アイコンを消しました。', rename_group: 'グループの名前を消しました。', dismiss: '通報を閉じました。' }[act]);
+    await loadReports();
+    if (act === 'reset_name' || act === 'clear_avatar') { try { await loadFriendships(); } catch (er) { /* */ } }
+  } catch (er) { toast(jaErr(er)); b.disabled = false; }
+  MOD.busy = false;
+});
 
 /* ================= 起動 ================= */
 /* 保存データの読み込み（IndexedDB）は少し時間がかかるので、終わってから画面を作る */

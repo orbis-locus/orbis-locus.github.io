@@ -57,6 +57,7 @@ async function ueCheckAdmin() {
   UE.role = role;
   const ok = UE.admin = !!role;
   setUnlockAll(unlock);
+  if (role === 'master') loadReports(true);   // 届いている通報（35-report.js）
   if (!ueIsMaster() && UE.tab !== 'look') UE.tab = 'look';
   const b = $('ue-open'); if (b) b.hidden = !ok;
   if (!ok && UE.on) ueStop(); else if (UE.on) ueRenderBody();

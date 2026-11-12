@@ -53,4 +53,5 @@ js/31-orbis.js
 js/32-sfx.js
 js/33-move.js
 js/34-free.js
-js/35-main.js
+js/35-report.js
+js/36-main.js
