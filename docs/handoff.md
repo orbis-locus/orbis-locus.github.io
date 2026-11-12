@@ -33,6 +33,7 @@
 | 18-char-images.sql | 画像の置き場所 char-images（公開・1枚5MB・1人100MB。char_images_used） | 済み（2026-11-12 に確認：置き場所あり・ログインなしでは置けない） |
 | 19-limits.sql | 大きさの上限（キャラシ1MB・60人、グループ200KB、画面の編集2MB、ui-assets 5MB） | 済み（2026-11-12 に確認：大きすぎるキャラシ・グループが断られる） |
 | 20-reports.sql | 通報（reports・report_user・report_list・mod_action。一覧と対応はマスターだけ） | 済み（2026-11-12 に確認：表と3つの関数があり、ログインなしでは使えない。貼り付け用の版は、消したグループ名が「(removed)」） |
+| 21-contacts.sql | お問い合わせ（contacts・send_contact は anon も可・contact_list と contact_close はマスターだけ） | **未実行**（2026-11-12 に作成。手元の PostgreSQL で動きを確認済み） |
 | 15-feature-wants.sql | 無料版の「欲しい！」の数（feature_wants・add_want は anon も可・want_counts はマスター/編集者だけ） | 済み（2026-11-11 に確認：表は anon から読めない・数は anon から見られない・add_want は呼べる） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。短く・英数字だけで書き、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。
@@ -56,7 +57,7 @@
 
 ## 4. 残っていること・確認待ち
 
-- **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。2026-11-11 に main に入れて公開済み（同期ズレの直し・テスターもいっしょ）。公開サイトはもう無料版。お友達はマスターが「権限」タブでテスターにする。権利表記はアプリの中に入れた（2026-11-12）。規約・プライバシーポリシーもアプリに入れた（2026-11-12、問い合わせ先はオーナーが用意するまで「準備中」）。残りは docs/release-checklist.md の【必須】（問い合わせ先・確認メール・動作確認・配る物）。
+- **BOOTH の無料サンプル版（2026-11-11〜）**：無料版の中身は決定・制限は作成済み（history.md の 2026-11-11）。2026-11-11 に main に入れて公開済み（同期ズレの直し・テスターもいっしょ）。公開サイトはもう無料版。お友達はマスターが「権限」タブでテスターにする。権利表記はアプリの中に入れた（2026-11-12）。規約・プライバシーポリシーもアプリに入れた（2026-11-12）。お問い合わせはアプリの中の入力欄（21-contacts.sql）。残りは docs/release-checklist.md の【必須】（確認メール・動作確認・配る物）。
 
 - **公開サイトの引っ越し（2026-11-08・完了）**：新しい住所は https://orbis-locus.github.io/ （GitHub アカウント orbis-locus、リポジトリ orbis-locus.github.io）。済み：新しいリポジトリへ push・GitHub Pages 公開、前の住所 https://kanno-925.github.io/charasheet/ を引っ越しページに（オーナーが kanno-925/charasheet の main の index.html を move/index.html に差しかえ。表示を確認済み）、Supabase の URL Configuration（オーナーが設定。こちらからは確かめられない）。Cloudflare の入口（orbis-share）も貼りかえ済み（新しい住所へ移動することを確認）。
   - Claude につながる GitHub は orbis-locus に変わったので、**kanno-925/charasheet にはもう書きこめない**。前のリポジトリで何かするときは、オーナーに GitHub のサイトからアップロードしてもらう。
