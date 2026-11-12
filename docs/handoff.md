@@ -29,7 +29,7 @@
 | 13-secret-open.sql | 秘匿の「公開する／しない」（char_secrets.is_open、公開中は「キャラシを読める人」も読める、共有リンクにも出す） | 済み（2026-11-08 に列があることを確認） |
 | 14-deleted-chars.sql | 削除したキャラが復活しないように（deleted_chars と、characters の削除・追加のトリガー） | 済み（2026-11-11 に再実行。表があり anon から読めないことを確認） |
 | 16-testers.sql | テスター（app_testers・am_unlocked。app_users_list と set_app_role に 'tester' を足した） | 済み（2026-11-11 に確認。チャットで渡した版はお知らせの文が英語） |
-| 17-want-friendview.sql | 「欲しい！」に friendview（フレンドのキャラシを見る）を足す（add_want を作り直す） | **未実行**（2026-11-11 に作成） |
+| 17-want-friendview.sql | 「欲しい！」に friendview（フレンドのキャラシを見る）を足す（add_want を作り直す） | 済み（2026-11-12 にオーナーが実行） |
 | 18-char-images.sql | 画像の置き場所 char-images（公開・1枚5MB・1人100MB。char_images_used） | 済み（2026-11-12 に確認：置き場所あり・ログインなしでは置けない） |
 | 19-limits.sql | 大きさの上限（キャラシ1MB・60人、グループ200KB、画面の編集2MB、ui-assets 5MB） | 済み（2026-11-12 に確認：大きすぎるキャラシ・グループが断られる） |
 | 20-reports.sql | 通報（reports・report_user・report_list・mod_action。一覧と対応はマスターだけ） | 済み（2026-11-12 に確認：表と3つの関数があり、ログインなしでは使えない。貼り付け用の版は、消したグループ名が「(removed)」） |
