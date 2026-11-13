@@ -56,7 +56,7 @@ async function saveAvatar(v) {
   toast(v ? 'アイコンを変えました。フレンドやグループの人にも見えます。' : 'アイコンを外しました。');
 }
 function sbClient() {
-  if (!sb && cloudReady()) sb = window.supabase.createClient(CLOUD.url.replace(/\/$/, ''), CLOUD.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  if (!sb && cloudReady()) sb = window.supabase.createClient(CLOUD.url.replace(/\/$/, ''), CLOUD.key, { auth: Object.assign({ persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }, STAGING ? { storageKey: 'orbis-stg-auth' } : {}) });   // 検証版はログインの保存場所を本番と分ける
   return sb;
 }
 const jaErr = e => {
@@ -600,7 +600,7 @@ function renderAccount() {
       </form>
       <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
       <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
-      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${isMaster() ? '<div class="wants-box"><a class="btn small primary" href="https://orbis-locus.github.io/admin/" target="_blank" rel="noopener">管理ページを開く（マスター）</a></div>' : ''}${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}
       <p class="acct-del-link"><button class="link-btn" type="button" data-acct="delete">アカウントを削除する…</button></p>`;
     return;
   }

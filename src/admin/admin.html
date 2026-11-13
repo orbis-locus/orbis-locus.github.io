@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ORBiS 管理ページ</title>
+<link rel="icon" type="image/png" sizes="64x64" href="../assets/brand/favicon-64.png">
+<!-- build:css -->
+</head>
+<body>
+<!-- ORBiS の管理ページ（マスターだけ使える）。ソースは src/admin/、build.py が admin/index.html を作る。
+     タブ：検証版（staging/）・本番・通報・お問い合わせ・欲しい！・利用者と権限 -->
+<header class="ad-top">
+  <a class="ad-brand" href="../" title="本番のアプリを開く"><img src="../assets/brand/logo-dark.webp" alt="ORBiS"><span>管理ページ</span></a>
+  <div class="ad-me" id="ad-me"></div>
+</header>
+
+<main class="ad-main">
+  <section class="ad-card ad-login" id="ad-login" hidden>
+    <h1>ログイン</h1>
+    <p>管理ページは、マスターのアカウントだけが使えます。ORBiS と同じメールアドレスとパスワードでログインしてください。</p>
+    <form id="ad-login-form">
+      <label>メールアドレス<input class="ad-inp" type="email" id="ad-email" autocomplete="email" required></label>
+      <label>パスワード<input class="ad-inp" type="password" id="ad-pass" autocomplete="current-password" required></label>
+      <button class="ad-btn primary" type="submit">ログイン</button>
+      <p class="ad-err" id="ad-login-err" role="alert"></p>
+    </form>
+  </section>
+
+  <section class="ad-card" id="ad-deny" hidden>
+    <h1>マスターだけが使えます</h1>
+    <p id="ad-deny-msg">このアカウントには、管理ページを使う権限がありません。</p>
+  </section>
+
+  <section id="ad-app" hidden>
+    <nav class="ad-tabs" role="tablist" id="ad-tabs">
+      <button type="button" role="tab" data-tab="staging">検証版</button>
+      <button type="button" role="tab" data-tab="prod">本番</button>
+      <button type="button" role="tab" data-tab="reports">通報<b class="ad-badge" id="ad-badge-reports" hidden></b></button>
+      <button type="button" role="tab" data-tab="contacts">お問い合わせ<b class="ad-badge" id="ad-badge-contacts" hidden></b></button>
+      <button type="button" role="tab" data-tab="wants">欲しい！</button>
+      <button type="button" role="tab" data-tab="users">利用者と権限</button>
+    </nav>
+
+    <!-- 検証版：作っている途中のアプリ。本番とは、この端末の保存場所とログインが別 -->
+    <div class="ad-pane" data-pane="staging" hidden>
+      <div class="ad-bar">
+        <div class="ad-seg" data-size-for="staging">
+          <button type="button" data-size="pc" class="on">パソコン</button><button type="button" data-size="phone">スマホ</button><button type="button" data-size="full">いっぱい</button>
+        </div>
+        <button class="ad-btn" type="button" data-reload="staging">読み込み直す</button>
+        <a class="ad-btn" href="../staging/" target="_blank" rel="noopener">新しいタブで開く</a>
+      </div>
+      <details class="ad-notes" open>
+        <summary>検証版で変わったところ</summary>
+        <pre id="ad-notes">読み込み中…</pre>
+        <p class="ad-hint">検証版は、この端末の中の保存場所とログインが本番と別です（本番のキャラシとはまざりません）。ただしサーバーは本番と同じなので、ログインして試すときはテスト用のアカウントを使ってください。よければ Claude に「本番に入れて」と伝えます。</p>
+      </details>
+      <div class="ad-frame-wrap" data-frame-wrap="staging"><iframe title="検証版" data-frame="staging" data-src="../staging/"></iframe></div>
+    </div>
+
+    <!-- 本番：いま公開しているアプリ（くらべる用） -->
+    <div class="ad-pane" data-pane="prod" hidden>
+      <div class="ad-bar">
+        <div class="ad-seg" data-size-for="prod">
+          <button type="button" data-size="pc" class="on">パソコン</button><button type="button" data-size="phone">スマホ</button><button type="button" data-size="full">いっぱい</button>
+        </div>
+        <button class="ad-btn" type="button" data-reload="prod">読み込み直す</button>
+        <a class="ad-btn" href="../" target="_blank" rel="noopener">新しいタブで開く</a>
+      </div>
+      <div class="ad-frame-wrap" data-frame-wrap="prod"><iframe title="本番" data-frame="prod" data-src="../"></iframe></div>
+    </div>
+
+    <div class="ad-pane" data-pane="reports" hidden>
+      <div class="ad-head"><h2>届いた通報</h2><button class="ad-btn" type="button" data-refresh="reports">更新</button></div>
+      <p class="ad-hint">不適切なら、名前のリセット・アイコンやグループの名前を消すことができます。問題がなければ「問題なし」で閉じます。同じ相手・同じ内容の通報は、まとめて閉じます。</p>
+      <div id="ad-reports"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="contacts" hidden>
+      <div class="ad-head"><h2>届いたお問い合わせ</h2><button class="ad-btn" type="button" data-refresh="contacts">更新</button></div>
+      <p class="ad-hint">お返事先が書いてあれば「メールで返事を書く」でメールのアプリが開きます（送るのは、あなたのメールアドレスからです）。対応が終わったら「対応済みにする」を押してください。</p>
+      <div id="ad-contacts"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="wants" hidden>
+      <div class="ad-head"><h2>「欲しい！」の数</h2><button class="ad-btn" type="button" data-refresh="wants">更新</button></div>
+      <p class="ad-hint">無料版で鍵のかかった機能を、使ってみたいと押された数です（1人・1つの端末につき1機能1回）。製品版を作るかどうかの参考に。</p>
+      <div id="ad-wants"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="users" hidden>
+      <div class="ad-head"><h2>利用者と権限</h2><button class="ad-btn" type="button" data-refresh="users">更新</button></div>
+      <p class="ad-hint">マスター＝管理ページ・画面の編集・権限の変更ができる。編集者＝画面の編集（仮保存）だけ。テスター＝無料版の鍵が外れるだけ。マスターが1人もいなくなる変更はできません。</p>
+      <input class="ad-inp ad-search" id="ad-user-q" type="search" placeholder="ユーザー名でさがす">
+      <div id="ad-users"></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<!-- build:js -->
+</body>
+</html>

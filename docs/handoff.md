@@ -19,6 +19,11 @@
 - 共有リンクのカード：Cloudflare Workers の `orbis-share`（https://orbis-share.masakawwwww.workers.dev 、オーナーの Cloudflare アカウント）。`cloudflare/share-worker.js` を変えたら、オーナーに Cloudflare の「Edit code」で貼りかえて Deploy してもらう（自動では反映されない）。
 - 保存データの内部の名前（`charasheet-kobo…`）とバックアップの `app: 'charasheet-kobo'` は**改名後も変えていない**（変えると今のデータが読めなくなる）。
 
+## 1.5 検証版と管理ページ（2026-11-13〜）
+- 管理ページ：https://orbis-locus.github.io/admin/ （マスターだけ。タブ：検証版・本番・通報・お問い合わせ・欲しい！・利用者と権限）。ソースは src/admin/。
+- 検証版：https://orbis-locus.github.io/staging/ 。`python3 build.py staging` で作る（本番のファイルは変わらない）。変更点は src/staging-notes.md に書く。オーナーが確かめて「本番に入れて」と言ったら `python3 build.py` を実行する。くわしくは CLAUDE.md。
+- 2026-11-13 時点：本番には「管理ページへのリンク」と「STAGING のしくみ」はまだ入っていない（検証版だけ）。
+
 ## 2. Supabase の SQL（オーナーが SQL Editor で手で実行する）
 
 **01〜23 はすべて実行済み**（2026-11-13 時点）。

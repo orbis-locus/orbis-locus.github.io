@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="クトゥルフ神話TRPGのキャラクターシートを作って、ココフォリアのコマにそのまま貼り付けられるツール">
+<meta name="theme-color" content="#12133a">
+<meta name="apple-mobile-web-app-title" content="ORBiS">
+<meta name="application-name" content="ORBiS">
+<link rel="icon" type="image/png" sizes="64x64" href="../assets/brand/favicon-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/brand/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/brand/apple-touch-icon.png">
+
+<title>【検証版】ORBiS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Klee+One:wght@400;600&family=Zen+Kurenaido&family=Pinyon+Script&family=Lexend:wght@400;600;700&family=M+PLUS+Rounded+1c:wght@500;800&family=Shippori+Mincho+B1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Yuji+Syuku&family=Zen+Old+Mincho:wght@400;700&family=DotGothic16&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+html { color-scheme: light; }
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<link rel="stylesheet" href="app.css?v=81a2351d9a">
+</head>
+<body>
+<div class="stg-badge" aria-hidden="true">検証版</div>
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <canvas class="intro-dust" id="intro-dust" aria-hidden="true"></canvas>
+  <div class="intro-fog" aria-hidden="true"><span></span><span></span><span></span></div>
+  <svg class="intro-circle" id="intro-circle" viewBox="0 0 600 600" aria-hidden="true">
+    <defs><path id="ring-path" d="M300,300 m-252,0 a252,252 0 1,1 504,0 a252,252 0 1,1 -504,0"/></defs>
+    <g class="spin-a">
+      <circle cx="300" cy="300" r="286" class="gold"/>
+      <circle cx="300" cy="300" r="274" class="dash"/>
+      <text class="ring-text"><textPath href="#ring-path" textLength="1575" lengthAdjust="spacing">CALL OF CTHULHU ✦ TABLETOP ROLE PLAYING GAME ✦ ROLL THE DICE ✦ ORBiS CHARACTER SHEET ✦</textPath></text>
+      <circle cx="300" cy="300" r="232"/>
+      <polygon id="intro-star" class="gold"/>
+      <g id="intro-runes"></g>
+    </g>
+    <g class="spin-b">
+      <circle cx="300" cy="300" r="150" class="dash"/>
+      <circle cx="300" cy="300" r="122"/>
+      <polygon id="intro-hex"/>
+      <circle cx="300" cy="300" r="56" class="gold"/>
+    </g>
+  </svg>
+  <div class="intro-body">
+    <p class="intro-eyebrow">WELCOME TO THE TABLETOP</p>
+    <h2 class="intro-title" id="intro-title"><span>ようこそ、</span><span>TRPGの世界へ</span></h2>
+    <p class="intro-lead">ダイスを振れ。物語は、そこから始まる。</p>
+    <button class="intro-btn" id="intro-enter" type="button">ORBiS をひらく</button>
+    <p class="intro-foot">ORBiS — for CCFOLIA</p>
+  </div>
+</div>
+
+<div class="select" id="select" aria-label="探索者をえらぶ">
+  <div class="select-in">
+    <div class="sel-head">
+      <p class="eyebrow" id="sel-eyebrow">SELECT YOUR INVESTIGATOR</p>
+      <h2 id="sel-title">探索者をえらぶ</h2>
+      <p id="sel-desc">キャラを押すとシートが開きます。真ん中から新しい探索者をつくれます。</p>
+      <div class="sel-tabs" role="tablist" aria-label="表示の切り替え">
+        <button type="button" role="tab" data-seltab="mine" class="on" aria-selected="true">自分の探索者</button>
+        <button type="button" role="tab" data-seltab="friends" aria-selected="false">フレンド<span id="sel-req"></span></button>
+        <button type="button" role="tab" data-seltab="groups" aria-selected="false">グループ<span id="sel-greq"></span></button>
+      </div>
+      <div class="sel-sort" id="sel-sort">
+        <label class="sort-by"><span>並び順</span>
+          <select id="sort-key" aria-label="並び順">
+            <option value="created">追加した順</option><option value="name">名前（五十音）</option><option value="age">年齢</option>
+            <option value="birthday">誕生日（1月→12月）</option><option value="updated">最近さわった順</option><option value="system">版（6版／7版）</option>
+          </select></label>
+        <button type="button" class="sort-dir" id="sort-dir" aria-label="並びを逆にする"></button>
+        <div class="view-tg" role="group" aria-label="表示の形"><button type="button" data-view="orbit">ふよふよ</button><button type="button" data-view="list">一覧</button><button type="button" data-view="slide">スライド</button></div>
+      </div>
+    </div>
+    <div class="sel-stage" id="sel-stage"></div>
+    <div class="sel-foot">
+      <button class="btn" type="button" id="sel-import">読み込み（いあきゃら など）</button>
+      <button class="btn" type="button" id="sel-friends">フレンド管理</button>
+      <button class="btn" type="button" id="sel-theme">テーマ・背景</button>
+      <button class="btn acct-btn" type="button" id="sel-account">ログイン</button>
+    </div>
+    <p class="sel-credit">本作は、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。<span class="sel-links"><button type="button" class="link-btn" data-about>権利表記・このアプリについて</button><button type="button" class="link-btn" data-legal="terms">利用規約</button><button type="button" class="link-btn" data-legal="privacy">プライバシーポリシー</button><button type="button" class="link-btn" data-legal="contact">お問い合わせ</button></span></p>
+  </div>
+</div>
+
+<div class="bg-layer" id="bg-layer" aria-hidden="true"></div>
+<div class="peek" id="peek" hidden aria-hidden="true"></div>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div class="brand-text"><h1><span class="brand-logo" role="img" aria-label="ORBiS"></span></h1><small>キャラクターシート</small></div>
+    </div>
+    <div class="bar-actions">
+      <button class="btn" id="btn-select" type="button">探索者一覧</button>
+      <button class="btn" id="btn-friends" type="button">フレンド</button>
+      <button class="btn primary" id="btn-new" type="button">＋ 新しい探索者</button>
+      <button class="btn" id="btn-import" type="button">読み込み</button>
+      <button class="btn" id="btn-export" type="button">バックアップ</button>
+      <button class="btn" id="btn-theme" type="button">テーマ・背景</button>
+      <button class="btn acct-btn" id="btn-account" type="button">ログイン</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">CALL OF CTHULHU × CCFOLIA</p>
+      <h2 class="hero-title">探索者を、<br>つぎの世界へ。</h2>
+      <p class="hero-lead">クトゥルフ神話TRPGのキャラクターシートを作って、ワンクリックでココフォリアのコマに転送。データはこのブラウザの中に保存されます。</p>
+      <div class="hero-tags"><span>6TH EDITION</span><span>7TH EDITION</span><span>CHAT PALETTE</span></div>
+    </div>
+    <div class="orbit" aria-hidden="true">
+      <svg viewBox="0 0 260 260">
+        <defs>
+          <linearGradient id="core-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sky)"/><stop offset="1" style="stop-color:var(--cyan)"/></linearGradient>
+        </defs>
+        <circle class="ring dash" cx="130" cy="130" r="120"/>
+        <circle class="ring" cx="130" cy="130" r="92"/>
+        <circle class="ring" cx="130" cy="130" r="62"/>
+        <g class="spin">
+          <circle cx="130" cy="10" r="17" style="fill:var(--hp)"/><text class="node-label" x="130" y="10">HP</text>
+          <circle cx="234" cy="190" r="17" style="fill:var(--san)"/><text class="node-label" x="234" y="190">SAN</text>
+          <circle cx="26" cy="190" r="17" style="fill:var(--mp)"/><text class="node-label" x="26" y="190">MP</text>
+        </g>
+        <g class="spin rev">
+          <circle cx="130" cy="222" r="13" style="fill:var(--lime)"/><text class="node-label" x="130" y="222">DEX</text>
+          <circle cx="210" cy="84" r="13" style="fill:var(--orange)"/><text class="node-label" x="210" y="84">DB</text>
+          <circle cx="50" cy="84" r="7" style="fill:var(--yellow)"/>
+        </g>
+        <circle cx="130" cy="130" r="48" style="fill:var(--solid)"/>
+        <circle cx="130" cy="130" r="42" fill="url(#core-g)"/>
+        <text class="core-text" id="orbit-core" x="130" y="132">久</text>
+      </svg>
+    </div>
+  </section>
+
+  <div class="layout">
+    <nav class="shelf" aria-label="探索者一覧">
+      <p class="panel-label">INVESTIGATORS <span>探索者</span><span class="touch-hint">長押しで詳細</span><b class="pl-aq">キャラクター一覧<small>Character List</small></b></p>
+      <button class="shelf-new" id="shelf-new" type="button">＋ 新規作成</button>
+      <div class="shelf-list" id="shelf"></div>
+    </nav>
+
+    <main class="sheet" id="sheet"></main>
+
+    <aside class="tray" aria-label="ココフォリア出力">
+      <p class="panel-label">TRANSFER <span>ココフォリアのコマ</span></p>
+      <div class="koma">
+        <div id="koma-preview"><div class="koma-top" id="koma-head"></div><div class="rings" id="koma-rings"></div><div class="chips" id="koma-chips"></div></div>
+        <label class="opt"><input type="checkbox" id="opt-all"> 初期値のままの技能もチャットパレットに入れる</label>
+        <button class="btn primary copy-btn" id="btn-copy" type="button">ココフォリア用にコピー</button>
+        <div class="copy-status" id="copy-status" role="status"></div>
+        <ol class="steps">
+          <li>上のボタンでコマデータをコピー</li>
+          <li>ココフォリアのルームを開く</li>
+          <li>盤面をクリックして <kbd>Ctrl</kbd>+<kbd>V</kbd>（Macは <kbd>⌘</kbd>+<kbd>V</kbd>）</li>
+          <li><b>キャラクターコマ</b>が追加され、チャットパレットも入ります</li>
+        </ol>
+      </div>
+      <details class="out">
+        <summary>出力の中身を確認 <span>チャットパレット・JSON</span></summary>
+        <div class="out-sub">チャットパレット <span id="palette-count"></span></div>
+        <pre class="code" id="palette-out"></pre>
+        <div class="out-sub">出力JSON <span>上級者向け</span></div>
+        <pre class="code" id="json-out" tabindex="0"></pre>
+      </details>
+    </aside>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="ink-wear" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="holes"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".06 .5" numOctaves="1" seed="12" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2 2.1" result="gaps"/>
+      <feComposite in="holes" in2="gaps" operator="in" result="mask"/>
+      <feComposite in="SourceGraphic" in2="mask" operator="in" result="worn"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="2" seed="5" result="dens"/>
+      <feColorMatrix in="dens" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .7 .72" result="fade"/>
+      <feComposite in="worn" in2="fade" operator="in" result="faded"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="9" result="w"/>
+      <feDisplacementMap in="faded" in2="w" scale="1.2"/>
+    </filter>
+    <filter id="ink-wear-soft" x="-5%" y="-10%" width="110%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.55" result="holes"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".015" numOctaves="2" seed="7" result="dens"/>
+      <feColorMatrix in="dens" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 .78" result="fade"/>
+      <feComposite in="holes" in2="fade" operator="in" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+    </filter>
+    <linearGradient id="g-hp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--orange)"/><stop offset="1" style="stop-color:var(--hp)"/></linearGradient>
+    <linearGradient id="g-mp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--cyan)"/><stop offset="1" style="stop-color:var(--mp)"/></linearGradient>
+    <linearGradient id="g-san" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--pink)"/><stop offset="1" style="stop-color:var(--san)"/></linearGradient>
+    <linearGradient id="g-luck" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--yellow)"/><stop offset="1" style="stop-color:var(--orange)"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="panel-overlay" id="panel-ov" hidden>
+  <div class="sao" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+    <nav class="sao-menu" id="sao-menu" aria-label="項目"></nav>
+    <div class="sao-win" id="sao-win">
+      <span class="sao-line" id="sao-line" aria-hidden="true"></span>
+      <div class="sao-head">
+        <span class="sao-hic" id="sao-hic" aria-hidden="true"></span>
+        <div class="sao-title"><span class="panel-en" id="panel-en"></span><h2 id="panel-title" tabindex="-1"></h2></div>
+        <button class="sao-close" id="sao-close" type="button" data-close-panel aria-label="閉じる"></button>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="stage-ov" id="stage-ov" hidden>
+  <div class="stage" role="dialog" aria-modal="true" aria-label="立ち絵">
+    <div class="stage-rays" aria-hidden="true"></div>
+    <div class="stage-ring r2" aria-hidden="true"></div>
+    <div class="stage-ring r1" aria-hidden="true"></div>
+    <div class="stage-figure" id="stage-figure"></div>
+    <div class="stage-faces" id="stage-faces" aria-label="差分を切りかえる"></div>
+    <div class="stage-plate" id="stage-plate"><small id="stage-kana"></small><b id="stage-name"></b><span id="stage-sub"></span></div>
+    <div class="stage-tools">
+      <label class="btn small" for="stage-file">画像を選ぶ</label><input type="file" id="stage-file" accept="image/*" hidden>
+      <label class="btn small" for="stage-face-file">＋ 差分</label><input type="file" id="stage-face-file" accept="image/*" multiple hidden>
+      <button class="btn small" type="button" id="stage-profile">プロフィールを開く</button>
+      <button class="btn small danger" type="button" id="stage-remove">画像を外す</button>
+      <button class="sao-close" type="button" id="stage-close" aria-label="閉じる"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-theme" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="theme-title">
+    <h2 id="theme-title">テーマ・背景・カラー</h2>
+    <p>背景に好きな画像を敷いたり、RGBのスライダーや数値で画面全体の色を変えたりできます。左の丸を押すと色を選ぶこともできます。変更はすぐ反映され、このブラウザに保存されます。</p>
+    <div class="th-sec"><b>テーマ</b><span>選ぶと全体の色と雰囲気が変わります。下の色で細かく調整もできます。</span></div>
+    <div class="theme-presets" id="theme-presets"></div>
+    <div class="th-sec"><b>効果音</b><span>ボタンを押したときや、画面・窓を切りかえたときの音です。テーマごとに、そのテーマらしい音になります。</span></div>
+    <div class="sfx-row"><button class="btn" type="button" id="sfx-toggle" aria-pressed="true">効果音：オン（押すとオフ）</button></div>
+    <div class="th-sec"><b>音量</b><span>すべての音の大きさです。この端末に覚えます。キャラごとの BGM の音量は、そのキャラの BGM の設定で変えられます。</span></div>
+    <div class="vol-rows" id="vol-rows">
+      <label class="vol-row"><span>全体</span><input type="range" min="0" max="100" data-vol="master" aria-label="全体の音量"><b data-volv="master"></b></label>
+      <label class="vol-row"><span>BGM（キャラの曲）</span><input type="range" min="0" max="100" data-vol="bgm" aria-label="BGMの音量"><b data-volv="bgm"></b></label>
+      <label class="vol-row"><span>効果音</span><input type="range" min="0" max="100" data-vol="sfx" aria-label="効果音の音量"><b data-volv="sfx"></b></label>
+      <label class="vol-row"><span>はじめの画面の曲</span><input type="range" min="0" max="100" data-vol="title" aria-label="はじめの画面の曲の音量"><b data-volv="title"></b></label>
+    </div>
+    <div class="th-sec"><b>はじめの画面</b><span>アプリを開いたときに出る画面です。次に開いたときから変わります。</span></div>
+    <div class="intro-pick" id="intro-pick" role="group" aria-label="はじめの画面"><button type="button" class="btn" data-intro="orbis">ORBiS（星空と光）</button><button type="button" class="btn" data-intro="classic">魔法陣</button></div>
+    <div class="th-sec"><b>背景画像</b><span>どこの背景を変えるか選んでから、画像を選んでください。</span></div>
+    <div class="bg-slots" id="bg-slots" role="group" aria-label="背景を設定する場所">
+      <button type="button" data-bgslot="all" class="on">共通</button>
+      <button type="button" data-bgslot="sel">探索者をえらぶ画面</button>
+      <button type="button" data-bgslot="char">このキャラ（<span id="bgslot-char-name"></span>）</button>
+    </div>
+    <div class="bgset">
+      <div class="bg-thumb" id="bg-thumb"></div>
+      <div class="bg-ctl">
+        <span class="bg-hint" id="bg-slot-hint"></span>
+        <div class="row"><label class="btn small" for="bg-file">画像を選ぶ</label><input type="file" id="bg-file" accept="image/*" hidden><button class="btn small danger" type="button" id="bg-remove">画像を外す</button></div>
+        <label class="bg-slider" for="bg-veil">色を重ねる濃さ<input type="range" id="bg-veil" min="0" max="90"><output id="bg-veil-v"></output></label>
+        <label class="bg-slider" for="bg-blur">ぼかし<input type="range" id="bg-blur" min="0" max="20"><output id="bg-blur-v"></output></label>
+        <label class="bg-slider" for="bg-glass">パネルの透け具合<input type="range" id="bg-glass" min="0" max="100"><output id="bg-glass-v"></output></label>
+      </div>
+    </div>
+    <div class="theme-rows" id="theme-rows"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" id="theme-reset">色をテーマの初期値に戻す</button>
+      <button class="btn ghost" type="button" id="ue-open" title="Ctrl+Shift+E でも開けます" hidden>画面を編集する</button>
+      <button class="btn primary" type="button" data-close>完了</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="bgm" id="bgm" hidden>
+  <div class="yt-wrap" id="yt-wrap" hidden><div id="yt-frame"></div></div>
+  <div class="bgm-row">
+    <button class="bgm-play" id="bgm-play" type="button" aria-label="再生"></button>
+    <div class="bgm-info"><small>BGM <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="bgm-src" id="bgm-src"></span></small><b id="bgm-title"></b></div>
+  </div>
+  <div class="bgm-volrow">
+    <button class="bgm-mute" id="bgm-mute" type="button" aria-label="ミュート"></button>
+    <input type="range" id="bgm-vol" min="0" max="100" aria-label="BGMの音量">
+    <output id="bgm-vol-v"></output>
+  </div>
+</div>
+
+<div class="mbar" id="mbar">
+  <div class="mbar-stats" id="mbar-stats"></div>
+  <button class="btn mbar-copy" id="mbar-copy" type="button">コマをコピー</button>
+</div>
+
+<div class="overlay" id="modal-friends" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="friends-title">
+    <h2 id="friends-title">フレンド</h2>
+    <section id="online-friends"></section>
+    <div class="memo-head"><b>遊んだ仲間メモ</b><p>アカウントを持っていない仲間もここに登録できます。探索者の「通過シナリオ」で一緒に遊んだ人を選ぶと、冒険の記録がたまります。</p></div>
+    <form class="friend-form" id="friend-form">
+      <input type="color" class="fcolor" id="friend-color" value="#1f6fe0" aria-label="フレンドの色">
+      <input class="inp" id="friend-name" placeholder="フレンドの名前" aria-label="フレンドの名前" autocomplete="off">
+      <input class="inp" id="friend-note" placeholder="メモ（Discord・Xなど）" aria-label="メモ" autocomplete="off">
+      <button class="btn primary" type="submit">追加</button>
+    </form>
+    <div class="friend-list" id="friend-list"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-account" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="acct-title">
+    <h2 id="acct-title">アカウント</h2>
+    <div id="acct-body"></div>
+    <p class="about-links acct-legal"><button type="button" class="link-btn" data-legal="terms">利用規約</button><button type="button" class="link-btn" data-legal="privacy">プライバシーポリシー</button><button type="button" class="link-btn" data-legal="contact">お問い合わせ</button></p>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-fview" hidden>
+  <div class="modal modal-xwide" role="dialog" aria-modal="true" aria-labelledby="fview-title">
+    <div class="fview-head"><h2 id="fview-title"></h2><button class="btn ghost" type="button" data-close>閉じる</button></div>
+    <div id="fview-body"></div>
+  </div>
+</div>
+
+<!-- 権利表記（KADOKAWA「クトゥルフ神話TRPG二次創作ガイドライン（個人向け）」https://product.kadokawa.co.jp/cthulhu/guideline.html の文そのまま。2026-11-12 に確認） -->
+<div class="overlay" id="modal-about" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <h2 id="about-title">権利表記・このアプリについて</h2>
+    <div class="about-credit">
+      <p>本作は、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。</p>
+      <p lang="en">Call of Cthulhu is copyright ©1981, 2015, 2019 by Chaosium Inc. ;all rights reserved. Arranged by Arclight Inc.</p>
+      <p lang="en">Call of Cthulhu is a registered trademark of Chaosium Inc.</p>
+      <p lang="en">PUBLISHED BY KADOKAWA CORPORATION　「クトゥルフ神話TRPG」「新クトゥルフ神話TRPG」</p>
+    </div>
+    <div class="about-note">
+      <p>ORBiS は、個人が作った<b>非公式</b>のキャラクターシート作成ツールです。株式会社アークライト・株式会社KADOKAWA・Chaosium Inc. の公式のものではなく、これらの会社とは関係ありません。</p>
+      <p>いあきゃら・ココフォリアは、それぞれの運営者のサービスです。ORBiS はそのデータの読み込み・書き出しに対応しているだけの、非公式のツールです。</p>
+      <p>ルールの細かい内容は、ルールブックでご確認ください。</p>
+      <p class="about-links"><button type="button" class="link-btn" data-legal="terms">利用規約</button><button type="button" class="link-btn" data-legal="privacy">プライバシーポリシー</button><button type="button" class="link-btn" data-legal="contact">お問い合わせ</button></p>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<!-- 利用規約・プライバシーポリシー・お問い合わせ（36-legal.js）。
+     文を直すときはここを書きかえる。大事な変更をしたら、日付（legal-date）も変える。
+     お問い合わせはアプリの中の入力欄（36-legal.js の renderContactForm）から送り、サーバーの contacts に入る。 -->
+<div class="overlay" id="modal-legal" hidden>
+  <div class="modal modal-wide legal" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+    <h2 id="legal-title" class="vh">利用規約・プライバシーポリシー</h2>
+    <div class="legal-tabs" role="tablist">
+      <button type="button" class="legal-tab" role="tab" data-legal-tab="terms">利用規約</button>
+      <button type="button" class="legal-tab" role="tab" data-legal-tab="privacy">プライバシーポリシー</button>
+      <button type="button" class="legal-tab" role="tab" data-legal-tab="contact">お問い合わせ</button>
+    </div>
+
+    <section class="legal-doc" data-legal-doc="terms" role="tabpanel">
+      <h3>ORBiS 利用規約</h3>
+      <p>この利用規約（以下「規約」）は、ORBiS（以下「本サービス」）を使うときの決まりです。本サービスを使った方（以下「利用者」）は、この規約に同意したものとします。</p>
+
+      <h4>第1条　本サービスについて</h4>
+      <ol>
+        <li>本サービスは、個人（以下「運営者」）が作った、クトゥルフ神話TRPGのキャラクターシートを作るための<b>非公式</b>のツールです。</li>
+        <li>本サービスは、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。権利を持つ会社の公式のものではなく、これらの会社とは関係ありません。本サービスのことを、これらの会社に問い合わせないでください。</li>
+        <li>いあきゃら・ココフォリアは、それぞれの運営者のサービスです。本サービスはそのデータの読み込み・書き出しに対応しているだけで、これらのサービスとは関係ありません。</li>
+      </ol>
+
+      <h4>第2条　使うときの約束</h4>
+      <ol>
+        <li>本サービスは無料で使えます。</li>
+        <li>未成年の方は、保護者の方の同意を得てから使ってください。</li>
+        <li>アカウントのメールアドレスとパスワードは、自分で大切に管理してください。アカウントを他人に貸したり、ゆずったりすることはできません。</li>
+        <li>1ファイル版（ORBiS.html）は、運営者が配っている場所（BOOTH の ORBiS のページ：<a href="https://orbis-locus.booth.pm/items/9140354" target="_blank" rel="noopener">https://orbis-locus.booth.pm/items/9140354</a>）から手に入れてください。ほかの場所で手に入れたファイルは、書きかえられているおそれがあるので開かないでください。</li>
+      </ol>
+
+      <h4>第3条　禁止していること</h4>
+      <p>本サービスで、次のことをしてはいけません。</p>
+      <ol>
+        <li>法律や、公の秩序・風俗に反すること</li>
+        <li>他人の著作権・肖像権などの権利を侵すこと（例：使ってよいと許可されていないイラストを立ち絵にして、共有リンクで公開する）</li>
+        <li>他人やほかの団体になりすますこと。「運営」「公式」などと誤解される名前を使うこと</li>
+        <li>ユーザー名・アイコン画像・グループの名前・キャラシ・共有リンクで、悪口・いやがらせ・差別や、性的・暴力的など人を不快にさせる内容を公開すること</li>
+        <li>本名・住所・連絡先などの個人情報を、本人の許可なく書いて公開すること</li>
+        <li>サーバーに大きな負担をかけること、不正にアクセスすること、ほかの利用者のデータをのぞいたり書きかえたりしようとすること</li>
+        <li>本サービスのプログラムを書きかえて配ること、本サービスそのものを売ったり、運営者のふりをして配ったりすること</li>
+        <li>「クトゥルフ神話TRPG」の二次創作ガイドラインに反する使い方をすること</li>
+        <li>そのほか、運営者が不適切だと判断したこと</li>
+      </ol>
+
+      <h4>第4条　利用者が作ったデータ</h4>
+      <ol>
+        <li>キャラシ・画像・文章などの権利は、それを作った利用者（または、もともとの権利を持つ人）のものです。</li>
+        <li>運営者は、本サービスを動かすため（保存・ほかの端末との同期・表示・不具合の調査・通報への対応）に必要な範囲でだけ、そのデータを扱います。</li>
+        <li>立ち絵などの画像は、自分が権利を持っているもの、または使ってよいと許可されたものだけを使ってください。</li>
+      </ol>
+
+      <h4>第5条　ほかの人に見える情報</h4>
+      <ol>
+        <li>ユーザー名とアイコン画像は、フレンド・フレンドの申請を送った相手や受け取った相手・同じグループの人などに見えます。</li>
+        <li>キャラシは、非公開（ロック）にしていなければ、フレンドに見えます。グループのキーパーは、そのグループで使っているキャラの秘匿も読めます。秘匿を「公開する」にしたキャラは、そのキャラシを見られる人も秘匿を読めます。</li>
+        <li>共有リンクは、リンクを知っている人なら誰でも（ログインしなくても）見られます。SNS などに貼ったリンクは、「共有をやめる」を押すまで誰でも見られる状態になります。</li>
+        <li>見られる状態のキャラシは、見た人がコピーしたり、自分の探索者に取り込んだりできます。</li>
+      </ol>
+
+      <h4>第6条　運営者の対応</h4>
+      <p>利用者が規約に反している、またはそのおそれがあると運営者が判断したときは、前もって知らせずに、次のことをすることがあります。対応の理由はお答えできないことがあります。</p>
+      <ol>
+        <li>ユーザー名のリセット、アイコン画像やグループの名前の削除</li>
+        <li>共有リンクの停止、データの削除</li>
+        <li>アカウントを使えなくすること、アカウントの削除</li>
+      </ol>
+
+      <h4>第7条　本サービスの変更・停止</h4>
+      <ol>
+        <li>運営者は、本サービスの内容を変えたり、一時的に止めたり、終わらせたりすることがあります。</li>
+        <li>無料版で使える機能は、製品版を出すときなどに変わることがあります。</li>
+        <li>サーバーの点検や故障、本サービスが使っているほかのサービス（Supabase など）の都合で、使えなくなることがあります。</li>
+        <li>本サービスを終わらせるときは、できるだけ前もってアプリの中でお知らせし、データを書き出せる期間をとるようにします。</li>
+      </ol>
+
+      <h4>第8条　責任について</h4>
+      <ol>
+        <li>本サービスは個人が作っているもので、いつも正しく動くこと、不具合がないことを約束できません。</li>
+        <li>保存したデータが消えたり壊れたりしても、運営者は責任を負えません。大事なキャラシは「バックアップ」で書き出して、自分の端末にも残してください。</li>
+        <li>能力値や技能の計算が、ルールブックとちがうことがあります。セッションで使う前に、ルールブックで確かめてください。</li>
+        <li>いあきゃら・ココフォリアなどの仕様が変わると、読み込みや書き出しができなくなることがあります。</li>
+        <li>利用者どうし、または利用者とほかの人とのあいだで起きたトラブルは、その人たちのあいだで解決してください。</li>
+        <li>ただし、運営者にわざと（故意）または大きな不注意（重大な過失）があった場合は、この条の決まりは当てはまりません。</li>
+      </ol>
+
+      <h4>第9条　規約の変更</h4>
+      <p>運営者は、必要なときにこの規約を変えることがあります。大事な変更は、アプリの中でお知らせします。変更のあとに本サービスを使った場合は、変更後の規約に同意したものとします。</p>
+
+      <h4>第10条　決まりのもとになる法律</h4>
+      <p>この規約は、日本の法律にもとづいて解釈します。</p>
+
+      <h4>第11条　お問い合わせ</h4>
+      <p>本サービスについてのお問い合わせは、「お問い合わせ」のタブの入力欄からお願いします。</p>
+
+      <p class="legal-date">2026年11月12日　制定</p>
+    </section>
+
+    <section class="legal-doc" data-legal-doc="privacy" role="tabpanel" hidden>
+      <h3>ORBiS プライバシーポリシー</h3>
+      <p>ORBiS（以下「本サービス」）の運営者は、利用者の情報を、次のように扱います。</p>
+
+      <h4>1. 集める情報</h4>
+      <p><b>(1) アカウントを作るとき</b></p>
+      <ul>
+        <li>メールアドレス（ログインIDとして使います）</li>
+        <li>パスワード（サーバー（Supabase）が暗号化して保管します。運営者も中身を見ることはできません）</li>
+        <li>ユーザー名・アイコン画像</li>
+      </ul>
+      <p><b>(2) ログインして使うとき（サーバーに保存します）</b></p>
+      <ul>
+        <li>キャラシの内容と画像（立ち絵・差分・アイコン・背景・BGM のURL・秘匿・メモなど）</li>
+        <li>フレンドの申請とフレンドの関係、グループと招待、共有リンク</li>
+        <li>通報の内容（誰が・誰を・何について通報したか）</li>
+      </ul>
+      <p><b>(3) ログインしなくても送るもの</b></p>
+      <ul>
+        <li>「欲しい！」を押したとき：端末ごとに作るでたらめな番号と、押した機能の名前（名前やメールアドレスは入りません）</li>
+        <li>お問い合わせを送ったとき：書いた内容、お返事先のメールアドレス（書いた場合）、使っている端末・ブラウザの種類と画面の大きさ、端末ごとに作るでたらめな番号（ログイン中は、ユーザー名とアカウント）</li>
+      </ul>
+      <p><b>(4) 端末の中だけに保存するもの</b></p>
+      <ul>
+        <li>ログインしていないときのキャラシ、テーマ・音量などの設定、ログインした状態を保つための情報を、ブラウザの中（localStorage・IndexedDB）に保存します。ログインしていないときのキャラシは、サーバーには送りません。</li>
+      </ul>
+      <p><b>(5) 自動で残るもの</b></p>
+      <ul>
+        <li>本サービスや、本サービスが使っているサービスのサーバーには、安全のために、接続の記録（IPアドレス・ブラウザの種類・日時など）が残ることがあります。</li>
+        <li>本サービスは、広告や、使い方を分析するためのツール（アクセス解析）を使っていません。</li>
+      </ul>
+
+      <h4>2. 使う目的</h4>
+      <p>集めた情報は、次のことだけに使います。</p>
+      <ul>
+        <li>本サービスを提供するため（保存、ほかの端末との同期、フレンドやグループへの表示、共有リンク）</li>
+        <li>確認のメールや、パスワードを変えるためのメールを送るため</li>
+        <li>お問い合わせや通報に対応し、規約に反する使い方を止めるため（お問い合わせへのお返事をメールで送ることもふくみます）</li>
+        <li>不具合を調べて直すため</li>
+        <li>「欲しい！」の数を、製品版を作るかどうかの参考にするため</li>
+      </ul>
+
+      <h4>3. ほかの利用者に見える情報</h4>
+      <p>ユーザー名・アイコン画像、非公開（ロック）にしていないキャラシ、共有リンクのキャラシは、利用規約の第5条のとおり、ほかの人にも見えます。メールアドレスは、ほかの利用者には見えません。</p>
+
+      <h4>4. ほかの人や会社に渡すこと</h4>
+      <p>次のときをのぞいて、本人の同意なしに、情報をほかの人や会社に渡しません。</p>
+      <ul>
+        <li>法律にもとづいて求められたとき</li>
+        <li>人の命・体・財産を守るために必要で、本人の同意を得るのがむずかしいとき</li>
+      </ul>
+      <p>本サービスは、動かすために次のサービスを使っています。それぞれの会社のサーバー（日本以外の国のこともあります）に、情報が送られたり保存されたりします。くわしくは、各社のプライバシーポリシーをご覧ください。</p>
+      <ul>
+        <li>Supabase（Supabase, Inc.・アメリカ）：アカウント・キャラシ・画像などの保存、メールの送信</li>
+        <li>GitHub Pages（GitHub, Inc.・アメリカ）：アプリの配信</li>
+        <li>Cloudflare（Cloudflare, Inc.・アメリカ）：共有リンクを SNS などに貼ったときのカードの表示</li>
+        <li>Google Fonts（Google LLC・アメリカ）：文字の形（フォント）の読み込み</li>
+        <li>jsDelivr：サーバーとつなぐためのプログラムの読み込み</li>
+        <li>YouTube（Google LLC・アメリカ）：キャラの BGM に YouTube を選んだとき</li>
+      </ul>
+
+      <h4>5. 運営者が中身を見ること</h4>
+      <p>サーバーの管理画面からは、保存されたデータ（秘匿の欄もふくみます）を見られるしくみになっています。運営者は、不具合の調査・通報への対応・サーバーの管理に必要なときだけ、データを確認します。</p>
+
+      <h4>6. 安全のために</h4>
+      <p>通信は暗号化（https）しています。サーバーでは、データを見られる人・書きこめる人を、決まりにもとづいて制限しています。ただし、完全に安全であることは約束できません。</p>
+
+      <h4>7. 情報の削除・確認</h4>
+      <ul>
+        <li>キャラシは、アプリの中でいつでも削除できます（ログインしているときは、サーバーからも消えます）。</li>
+        <li>ユーザー名とアイコン画像は、アカウントの小窓で変えたり外したりできます。</li>
+        <li>アカウントは、アカウントの小窓の「アカウントを削除する」から、いつでも自分で消せます。アカウントを消すと、サーバーのキャラシ・画像・フレンド・グループの情報もいっしょに消えます（お問い合わせの内容は、だれが送ったかを消して残ります）。</li>
+        <li>自分の情報の確認・訂正・利用の停止を求めたいときや、自分でアカウントを消せないときは、ログインしてから「お問い合わせ」で送ってください。本人であることを確かめてから対応します。</li>
+        <li>消した情報は、サーバーのバックアップにしばらく残ることがあります。</li>
+      </ul>
+
+      <h4>8. 未成年の方へ</h4>
+      <p>未成年の方は、保護者の方の同意を得てから使ってください。</p>
+
+      <h4>9. このポリシーの変更</h4>
+      <p>このポリシーを変えるときは、アプリの中でお知らせします。</p>
+
+      <h4>10. お問い合わせ</h4>
+      <p>情報の扱いについてのお問い合わせは、「お問い合わせ」のタブの入力欄からお願いします。</p>
+
+      <p class="legal-date">2026年11月12日　制定<br>2026年11月13日　改定（アカウントを自分で消せるようにした）</p>
+    </section>
+
+    <section class="legal-doc" data-legal-doc="contact" role="tabpanel" hidden>
+      <h3>お問い合わせ</h3>
+      <p>ORBiS についてのお問い合わせ（不具合・アカウントの削除・個人情報・権利に関すること など）は、この入力欄から送ってください。運営者だけが読みます。</p>
+      <div class="legal-contact" id="legal-contact"></div>
+      <ul>
+        <li>個人で運営しているため、お返事に時間がかかることや、お返事できないことがあります。お返事は、運営者のメールアドレスから送ります。</li>
+        <li>ほかの利用者のユーザー名・アイコン・グループの名前を通報したいときは、フレンドの一覧やグループのカードにある「通報」を使ってください。</li>
+        <li>ORBiS のことを、『クトゥルフ神話TRPG』の権利を持つ会社（アークライト・KADOKAWA）や、いあきゃら・ココフォリアの運営者に問い合わせないでください。</li>
+      </ul>
+    </section>
+
+    <div class="modal-actions"><button class="btn ghost" type="button" data-legal-close>閉じる</button></div>
+  </div>
+</div>
+
+<!-- マスター：届いたお問い合わせ（36-legal.js） -->
+<div class="overlay" id="modal-contacts" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="contacts-title">
+    <h2 id="contacts-title">届いたお問い合わせ</h2>
+    <p>お返事先が書いてあれば「メールで返事を書く」でメールのアプリが開きます（送るのは、あなたのメールアドレスからです）。対応が終わったら「対応済みにする」を押してください。アカウントの削除は、ログイン中に送られたもの（登録メールが出ているもの）だけ受けつけ、Supabase の Authentication → Users から消します。</p>
+    <div id="contacts-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<!-- 荒らし対策：通報する小窓と、マスターが通報を見る小窓（35-report.js） -->
+<div class="overlay" id="modal-report" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="report-title">
+    <h2 id="report-title">通報</h2>
+    <div id="report-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>やめる</button><button class="btn primary" type="button" id="report-send">通報を送る</button></div>
+  </div>
+</div>
+<div class="overlay" id="modal-mod" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="mod-title">
+    <h2 id="mod-title">届いた通報</h2>
+    <p>不適切なら、名前のリセット・アイコンやグループの名前を消すことができます。問題がなければ「問題なし」で閉じます。同じ相手・同じ内容の通報は、まとめて閉じます。</p>
+    <div id="mod-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-lock" hidden>
+  <div class="modal modal-lock" role="dialog" aria-modal="true" aria-label="製品版で解放予定">
+    <div id="lock-body"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-share" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="share-title">
+    <h2 id="share-title">キャラシを共有</h2>
+    <div id="share-body"></div>
+    <div class="copy-status" id="share-status" role="status"></div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-group" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="grp-title">
+    <h2 id="grp-title">グループ</h2>
+    <p>あなたが代表者になってグループを作り、フレンドを招待します。招待された人は、参加するときにキーパーか探索者かを選びます。</p>
+    <div id="grp-body"></div>
+    <div class="modal-actions">
+      <button class="btn danger" type="button" id="grp-del">このグループを削除</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="grp-save">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-join" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="join-title">
+    <h2 id="join-title">グループに参加する</h2>
+    <div id="join-body"></div>
+    <div class="modal-actions">
+      <button class="btn danger" type="button" id="join-leave">グループから抜ける</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="join-ok">参加する</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-icon" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ico-title">
+    <h2 id="ico-title">アイコンを調整</h2>
+    <p>画像をドラッグして位置を、スライダー（またはマウスホイール）で大きさを調整できます。ここで決めたアイコンが、一覧やコマなどの丸いアイコンに使われます。</p>
+    <div class="ico-wrap">
+      <div class="ico-stage" id="ico-stage" tabindex="0" aria-label="アイコンの表示範囲。ドラッグか矢印キーで位置を動かせます"></div>
+      <div class="ico-side">
+        <label class="bg-slider" for="ico-zoom">大きさ<input type="range" id="ico-zoom" min="1" max="5" step="0.01"><output id="ico-zoom-v"></output></label>
+        <div class="ico-mini" id="ico-mini" aria-hidden="true"></div>
+        <div class="row"><label class="btn small" for="ico-file">アイコン用の画像を選ぶ</label><input type="file" id="ico-file" accept="image/*" hidden><button class="btn small" type="button" id="ico-own">立ち絵に戻す</button><button class="btn small ghost" type="button" id="ico-reset">位置をリセット</button></div>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>キャンセル</button><button class="btn primary" type="button" id="ico-save">保存する</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-new" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title">
+    <h2 id="new-title">新しい探索者</h2>
+    <p>ルールの版を選んでください。能力値・技能・武器の欄がその版のキャラクターシートどおりに用意されます。</p>
+    <div class="preset-list" id="preset-list"></div>
+    <p class="new-count" id="new-count"></p>
+    <div class="modal-actions"><button class="btn ghost" type="button" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-import" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+    <h2 id="import-title">読み込み</h2>
+    <p><b>いあきゃらから全部写す（おすすめ）</b>：いあきゃらのキャラクターページで「テキスト出力」を押してダウンロードした <b>.txt ファイル</b>を下の「ファイルを選択」から選ぶか、中身を貼り付けてください。技能の内訳（職業P・興味P・成長）、武器、所持品、財産、経歴、通過シナリオ、メモまで全部入ります。</p>
+    <p>いあきゃらの「ココフォリア駒出力」も読めますが、こちらには能力値・技能の合計・HP/MP/SANしか入っていません。ほかに、ココフォリアのコマ、チャットパレットなどのテキスト、このアプリのバックアップも読み込めます。</p>
+    <textarea class="inp" id="import-text" placeholder="ここに貼り付け（例：{&quot;kind&quot;:&quot;character&quot;,&quot;data&quot;:{…}} や チャットパレットのテキスト）"></textarea>
+    <input type="file" id="import-file" accept=".txt,.json,application/json,text/plain">
+    <div class="err" id="import-err" role="alert"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>キャンセル</button>
+      <button class="btn primary" type="button" id="import-run">読み込む</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-export" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+    <h2 id="export-title">バックアップ</h2>
+    <p>全探索者のデータです。コピーしてメモ帳などに保存しておくと、別の端末やブラウザで「読み込み」から復元できます。</p>
+    <textarea class="inp" id="export-text" readonly></textarea>
+    <div class="copy-status" id="export-status" role="status"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" type="button" data-close>閉じる</button>
+      <button class="btn primary" type="button" id="export-copy">コピー</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="app.js?v=79d0582ad6"></script>
+</body>
+</html>

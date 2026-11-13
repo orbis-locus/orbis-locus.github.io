@@ -1,0 +1,94 @@
+/* ORBiS 管理ページの見た目（ORBiS テーマに近い、うす青のすりガラス） */
+:root {
+  --bg: #e7ecfb; --solid: #f7f8ff; --ink: #2b3670; --muted: #6a74a3; --line: rgb(93 130 240 / .22);
+  --accent: #5d82f0; --accent2: #9b87f5; --danger: #d0443a; --ok: #2f9e57;
+  --font: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(1200px 600px at 10% -10%, #f6f2ff, transparent), linear-gradient(160deg, #e9eefc, #dfe4fb 60%, #e6defa); color: var(--ink); font: 14px/1.7 var(--font); }
+[hidden] { display: none !important; }
+button { font: inherit; }
+
+.ad-top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px; background: rgb(247 248 255 / .82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.ad-brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+.ad-brand img { height: 30px; width: auto; }
+.ad-brand span { white-space: nowrap; font-weight: 700; letter-spacing: .08em; font-size: 14px; color: var(--muted); }
+.ad-me { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.ad-me b { color: var(--ink); }
+
+.ad-main { max-width: 1400px; margin: 0 auto; padding: 18px 16px 40px; }
+.ad-card { max-width: 440px; margin: 40px auto; padding: 24px; border-radius: 20px; background: rgb(255 255 255 / .72); border: 1px solid var(--line); box-shadow: 0 14px 40px -18px rgb(60 80 170 / .35); }
+.ad-card h1 { margin: 0 0 8px; font-size: 20px; }
+.ad-card p { margin: 0 0 14px; color: var(--muted); }
+.ad-login form { display: flex; flex-direction: column; gap: 10px; }
+.ad-login label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+
+.ad-inp { width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 16px; }
+.ad-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgb(255 255 255 / .85); color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.ad-btn:hover { border-color: var(--accent); }
+.ad-btn.primary { background: linear-gradient(90deg, var(--accent), var(--accent2)); border-color: transparent; color: #fff; }
+.ad-btn.danger { color: var(--danger); border-color: rgb(208 68 58 / .4); }
+.ad-btn.small { padding: 4px 10px; font-size: 12px; }
+.ad-btn:disabled { opacity: .5; cursor: default; }
+.ad-err { margin: 0; color: var(--danger); font-size: 13px; }
+.ad-err:empty { display: none; }
+.ad-hint { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+
+.ad-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.ad-tabs button { position: relative; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: rgb(255 255 255 / .6); color: var(--muted); font-weight: 700; cursor: pointer; }
+.ad-tabs button.on { background: linear-gradient(90deg, var(--accent), var(--accent2)); border-color: transparent; color: #fff; box-shadow: 0 6px 16px -8px rgb(93 130 240 / .8); }
+.ad-badge { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: #e0457b; color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+
+.ad-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ad-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgb(255 255 255 / .6); border: 1px solid var(--line); }
+.ad-seg button { padding: 5px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer; }
+.ad-seg button.on { background: var(--accent); color: #fff; }
+.ad-notes { margin-bottom: 12px; padding: 10px 14px; border-radius: 14px; background: rgb(255 255 255 / .65); border: 1px solid var(--line); }
+.ad-notes summary { cursor: pointer; font-weight: 700; }
+.ad-notes pre { margin: 8px 0; white-space: pre-wrap; font: 13px/1.75 var(--font); color: var(--ink); max-height: 220px; overflow: auto; }
+.ad-notes .ad-hint { margin: 0; }
+
+.ad-frame-wrap { display: flex; justify-content: center; }
+.ad-frame-wrap iframe { display: block; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 18px 50px -24px rgb(40 60 160 / .45); }
+.ad-frame-wrap.pc iframe { width: min(1280px, 100%); height: calc(100vh - 230px); min-height: 560px; }
+.ad-frame-wrap.phone iframe { width: 390px; height: min(844px, calc(100vh - 200px)); min-height: 560px; border-radius: 28px; border-width: 6px; border-color: #2b3670; }
+.ad-frame-wrap.full iframe { width: 100%; height: calc(100vh - 200px); min-height: 560px; }
+
+.ad-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.ad-head h2 { margin: 0; font-size: 18px; }
+.ad-pane > div:last-child:empty::after { content: "読み込み中…"; color: var(--muted); }
+.ad-list-empty { color: var(--muted); padding: 18px; text-align: center; border-radius: 14px; background: rgb(255 255 255 / .5); border: 1px dashed var(--line); }
+
+.ad-item { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 12px 14px; border-radius: 16px; background: rgb(255 255 255 / .78); border: 1px solid var(--line); }
+.ad-item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ad-item-head small { color: var(--muted); }
+.ad-tag { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; color: #fff; background: #d0443a; }
+.ad-tag.blue { background: var(--accent); }
+.ad-who { display: flex; align-items: center; gap: 10px; }
+.ad-who small { display: block; color: var(--muted); }
+.ad-av { width: 34px; height: 34px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 700; }
+.ad-av img { width: 100%; height: 100%; object-fit: cover; }
+.ad-note { margin: 0; padding: 8px 10px; border-radius: 10px; background: rgb(93 130 240 / .08); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ad-meta { font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.ad-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ad-table { width: 100%; border-collapse: collapse; background: rgb(255 255 255 / .75); border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+.ad-table th, .ad-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+.ad-table th { font-size: 12px; color: var(--muted); background: rgb(93 130 240 / .06); }
+.ad-table tr:last-child td { border-bottom: 0; }
+.ad-table td.num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ad-bar-mini { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.ad-search { max-width: 320px; margin-bottom: 10px; }
+.ad-role { padding: 5px 8px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 14px; }
+.ad-count { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+
+@media (max-width: 640px) {
+  .ad-top { padding: 8px 12px; }
+  .ad-brand img { height: 24px; }
+  .ad-me span.ad-mail { display: none; }
+  .ad-me { font-size: 12px; gap: 6px; }
+  .ad-tabs button { padding: 7px 12px; font-size: 13px; }
+  .ad-frame-wrap.pc iframe { height: 70vh; }
+  .ad-frame-wrap.phone iframe { width: 100%; max-width: 390px; }
+}

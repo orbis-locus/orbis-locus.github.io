@@ -6,18 +6,25 @@ src/ にあるソース（index.html・css/・js/）を組み立てて、次の3
   dist/ORBiS.html                      ダブルクリックで開ける1ファイル版
   dist/claude-artifact.html             Claude の公開版（Artifact）用（git には入れない）
 
-使い方：  python3 build.py
+使い方：  python3 build.py           本番（上の3つ）を作る。オーナーが「本番に入れて」と言ったときだけ
+          python3 build.py staging   検証版（staging/）と管理ページ（admin/）だけを作る。本番のファイルは変えない
+
+  staging/index.html・app.css・app.js   検証版（https://orbis-locus.github.io/staging/）。オーナーが管理ページで確かめる
+  admin/index.html                      管理ページ（https://orbis-locus.github.io/admin/。マスターだけ使える）
 
 結合の順番は src/files.txt に書いてあります。JS は全体を1つの即時関数で包むので、
 ファイルをまたいで同じ変数・関数を使えます（順番は大事です）。
 """
 import base64
+import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent
 SRC = ROOT / 'src'
+STAGE = len(sys.argv) > 1 and sys.argv[1] == 'staging'
 
 order = [l.strip() for l in (SRC / 'files.txt').read_text(encoding='utf-8').splitlines() if l.strip() and not l.startswith('#')]
 css = '\n'.join((SRC / f).read_text(encoding='utf-8') for f in order if f.startswith('css/'))
@@ -63,6 +70,48 @@ def page(css_part, js_part, icons=ICONS_SITE):
 </html>
 """
 
+
+def build_admin():
+    """管理ページ（src/admin/）を admin/ に書き出す。サーバーの住所と鍵は 21-cloud.js から写す（2か所に書かないため）"""
+    cloud = (SRC / 'js' / '21-cloud.js').read_text(encoding='utf-8')
+    url = re.search(r"url: '([^']+)'", cloud).group(1)
+    key = re.search(r"key: '([^']+)'", cloud).group(1)
+    out = ROOT / 'admin'
+    out.mkdir(exist_ok=True)
+    a_css = (SRC / 'admin' / 'admin.css').read_text(encoding='utf-8')
+    a_js = (SRC / 'admin' / 'admin.js').read_text(encoding='utf-8').replace('__CLOUD_URL__', url).replace('__CLOUD_KEY__', key)
+    a_html = (SRC / 'admin' / 'admin.html').read_text(encoding='utf-8')
+    a_html = a_html.replace('<!-- build:css -->', f'<style>\n{a_css}</style>').replace('<!-- build:js -->', f'<script>\n{a_js}</script>')
+    (out / 'index.html').write_text(a_html, encoding='utf-8')
+
+
+def ver(s):   # ファイルの中身から作る短い名前（中身が変わったら、ブラウザに古いファイルを使わせない）
+    return hashlib.sha1(s.encode('utf-8')).hexdigest()[:10]
+
+
+if STAGE:
+    # ---- 検証版：staging/ に置く。本番とまざらないよう、この端末の保存場所とログインの保存場所を分ける ----
+    out = ROOT / 'staging'
+    out.mkdir(exist_ok=True)
+    if js.count('const STAGING = false;') != 1:
+        raise SystemExit('03-state.js の「const STAGING = false;」が見つかりません')
+    sjs = js.replace('const STAGING = false;', 'const STAGING = true;')
+    sjs = sjs.replace("'charasheet-kobo.", "'orbis-stg.").replace("'charasheet-kobo-data'", "'orbis-stg-data'")   # バックアップの名前 'charasheet-kobo' はそのまま
+    sjs = re.sub(r'(?<=[\'"])assets/(?=[\w./-]+[\'"])', '../assets/', sjs)   # 画像・音は本番と同じ assets/ を使う
+    badge = '<div class="stg-badge" aria-hidden="true">検証版</div>\n'
+    badge_css = '\n/* 検証版のしるし（build.py staging） */\n.stg-badge { position: fixed; left: 8px; bottom: 8px; z-index: 2147483000; padding: 3px 10px; border-radius: 999px; background: #e0457b; color: #fff; font: 700 11px/1.6 sans-serif; letter-spacing: .1em; pointer-events: none; box-shadow: 0 2px 8px rgb(0 0 0 / .25); opacity: .92; }\n'
+    scss = css + badge_css
+    (out / 'app.css').write_text(scss, encoding='utf-8')
+    (out / 'app.js').write_text(sjs, encoding='utf-8')
+    s_icons = ICONS_SITE.replace('href="assets/', 'href="../assets/').replace('<link rel="manifest" href="manifest.webmanifest">', '')
+    s_page = page(f'<link rel="stylesheet" href="app.css?v={ver(scss)}">', f'<script src="app.js?v={ver(sjs)}"></script>', s_icons)
+    s_page = s_page.replace('<head>', '<head>\n<meta name="robots" content="noindex, nofollow">', 1).replace('<title>', '<title>【検証版】', 1).replace('<body>\n', '<body>\n' + badge, 1)
+    (out / 'index.html').write_text(s_page, encoding='utf-8')
+    notes = SRC / 'staging-notes.md'
+    (out / 'notes.txt').write_text(notes.read_text(encoding='utf-8') if notes.is_file() else '（変更点のメモはまだありません）\n', encoding='utf-8')
+    build_admin()
+    print(f'built (staging): staging/index.html ({len(scss) // 1024}KB css, {len(sjs) // 1024}KB js), staging/notes.txt, admin/index.html')
+    raise SystemExit(0)
 
 # GitHub Pages: separate, cacheable files
 site = ROOT
@@ -115,4 +164,5 @@ with zipfile.ZipFile(dist / 'ORBiS.zip', 'w', zipfile.ZIP_DEFLATED, compressleve
         info.external_attr = 0o644 << 16
         z.writestr(info, (dist / name).read_bytes())
 
-print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/はじめにお読みください.txt, dist/ORBiS.zip, dist/claude-artifact.html')
+build_admin()   # 管理ページは、本番を作るときも作りなおす
+print(f'built: index.html ({len(css) // 1024}KB css, {len(js) // 1024}KB js), dist/ORBiS.html, dist/はじめにお読みください.txt, dist/ORBiS.zip, dist/claude-artifact.html, admin/index.html')

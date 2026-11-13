@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ORBiS 管理ページ</title>
+<link rel="icon" type="image/png" sizes="64x64" href="../assets/brand/favicon-64.png">
+<style>
+/* ORBiS 管理ページの見た目（ORBiS テーマに近い、うす青のすりガラス） */
+:root {
+  --bg: #e7ecfb; --solid: #f7f8ff; --ink: #2b3670; --muted: #6a74a3; --line: rgb(93 130 240 / .22);
+  --accent: #5d82f0; --accent2: #9b87f5; --danger: #d0443a; --ok: #2f9e57;
+  --font: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(1200px 600px at 10% -10%, #f6f2ff, transparent), linear-gradient(160deg, #e9eefc, #dfe4fb 60%, #e6defa); color: var(--ink); font: 14px/1.7 var(--font); }
+[hidden] { display: none !important; }
+button { font: inherit; }
+
+.ad-top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px; background: rgb(247 248 255 / .82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.ad-brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+.ad-brand img { height: 30px; width: auto; }
+.ad-brand span { white-space: nowrap; font-weight: 700; letter-spacing: .08em; font-size: 14px; color: var(--muted); }
+.ad-me { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.ad-me b { color: var(--ink); }
+
+.ad-main { max-width: 1400px; margin: 0 auto; padding: 18px 16px 40px; }
+.ad-card { max-width: 440px; margin: 40px auto; padding: 24px; border-radius: 20px; background: rgb(255 255 255 / .72); border: 1px solid var(--line); box-shadow: 0 14px 40px -18px rgb(60 80 170 / .35); }
+.ad-card h1 { margin: 0 0 8px; font-size: 20px; }
+.ad-card p { margin: 0 0 14px; color: var(--muted); }
+.ad-login form { display: flex; flex-direction: column; gap: 10px; }
+.ad-login label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+
+.ad-inp { width: 100%; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 16px; }
+.ad-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgb(255 255 255 / .85); color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.ad-btn:hover { border-color: var(--accent); }
+.ad-btn.primary { background: linear-gradient(90deg, var(--accent), var(--accent2)); border-color: transparent; color: #fff; }
+.ad-btn.danger { color: var(--danger); border-color: rgb(208 68 58 / .4); }
+.ad-btn.small { padding: 4px 10px; font-size: 12px; }
+.ad-btn:disabled { opacity: .5; cursor: default; }
+.ad-err { margin: 0; color: var(--danger); font-size: 13px; }
+.ad-err:empty { display: none; }
+.ad-hint { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+
+.ad-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.ad-tabs button { position: relative; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: rgb(255 255 255 / .6); color: var(--muted); font-weight: 700; cursor: pointer; }
+.ad-tabs button.on { background: linear-gradient(90deg, var(--accent), var(--accent2)); border-color: transparent; color: #fff; box-shadow: 0 6px 16px -8px rgb(93 130 240 / .8); }
+.ad-badge { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: #e0457b; color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+
+.ad-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ad-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgb(255 255 255 / .6); border: 1px solid var(--line); }
+.ad-seg button { padding: 5px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer; }
+.ad-seg button.on { background: var(--accent); color: #fff; }
+.ad-notes { margin-bottom: 12px; padding: 10px 14px; border-radius: 14px; background: rgb(255 255 255 / .65); border: 1px solid var(--line); }
+.ad-notes summary { cursor: pointer; font-weight: 700; }
+.ad-notes pre { margin: 8px 0; white-space: pre-wrap; font: 13px/1.75 var(--font); color: var(--ink); max-height: 220px; overflow: auto; }
+.ad-notes .ad-hint { margin: 0; }
+
+.ad-frame-wrap { display: flex; justify-content: center; }
+.ad-frame-wrap iframe { display: block; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 18px 50px -24px rgb(40 60 160 / .45); }
+.ad-frame-wrap.pc iframe { width: min(1280px, 100%); height: calc(100vh - 230px); min-height: 560px; }
+.ad-frame-wrap.phone iframe { width: 390px; height: min(844px, calc(100vh - 200px)); min-height: 560px; border-radius: 28px; border-width: 6px; border-color: #2b3670; }
+.ad-frame-wrap.full iframe { width: 100%; height: calc(100vh - 200px); min-height: 560px; }
+
+.ad-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.ad-head h2 { margin: 0; font-size: 18px; }
+.ad-pane > div:last-child:empty::after { content: "読み込み中…"; color: var(--muted); }
+.ad-list-empty { color: var(--muted); padding: 18px; text-align: center; border-radius: 14px; background: rgb(255 255 255 / .5); border: 1px dashed var(--line); }
+
+.ad-item { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 12px 14px; border-radius: 16px; background: rgb(255 255 255 / .78); border: 1px solid var(--line); }
+.ad-item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ad-item-head small { color: var(--muted); }
+.ad-tag { font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; color: #fff; background: #d0443a; }
+.ad-tag.blue { background: var(--accent); }
+.ad-who { display: flex; align-items: center; gap: 10px; }
+.ad-who small { display: block; color: var(--muted); }
+.ad-av { width: 34px; height: 34px; flex: none; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 700; }
+.ad-av img { width: 100%; height: 100%; object-fit: cover; }
+.ad-note { margin: 0; padding: 8px 10px; border-radius: 10px; background: rgb(93 130 240 / .08); white-space: pre-wrap; overflow-wrap: anywhere; }
+.ad-meta { font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.ad-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.ad-table { width: 100%; border-collapse: collapse; background: rgb(255 255 255 / .75); border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
+.ad-table th, .ad-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+.ad-table th { font-size: 12px; color: var(--muted); background: rgb(93 130 240 / .06); }
+.ad-table tr:last-child td { border-bottom: 0; }
+.ad-table td.num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ad-bar-mini { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.ad-search { max-width: 320px; margin-bottom: 10px; }
+.ad-role { padding: 5px 8px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 14px; }
+.ad-count { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+
+@media (max-width: 640px) {
+  .ad-top { padding: 8px 12px; }
+  .ad-brand img { height: 24px; }
+  .ad-me span.ad-mail { display: none; }
+  .ad-me { font-size: 12px; gap: 6px; }
+  .ad-tabs button { padding: 7px 12px; font-size: 13px; }
+  .ad-frame-wrap.pc iframe { height: 70vh; }
+  .ad-frame-wrap.phone iframe { width: 100%; max-width: 390px; }
+}
+</style>
+</head>
+<body>
+<!-- ORBiS の管理ページ（マスターだけ使える）。ソースは src/admin/、build.py が admin/index.html を作る。
+     タブ：検証版（staging/）・本番・通報・お問い合わせ・欲しい！・利用者と権限 -->
+<header class="ad-top">
+  <a class="ad-brand" href="../" title="本番のアプリを開く"><img src="../assets/brand/logo-dark.webp" alt="ORBiS"><span>管理ページ</span></a>
+  <div class="ad-me" id="ad-me"></div>
+</header>
+
+<main class="ad-main">
+  <section class="ad-card ad-login" id="ad-login" hidden>
+    <h1>ログイン</h1>
+    <p>管理ページは、マスターのアカウントだけが使えます。ORBiS と同じメールアドレスとパスワードでログインしてください。</p>
+    <form id="ad-login-form">
+      <label>メールアドレス<input class="ad-inp" type="email" id="ad-email" autocomplete="email" required></label>
+      <label>パスワード<input class="ad-inp" type="password" id="ad-pass" autocomplete="current-password" required></label>
+      <button class="ad-btn primary" type="submit">ログイン</button>
+      <p class="ad-err" id="ad-login-err" role="alert"></p>
+    </form>
+  </section>
+
+  <section class="ad-card" id="ad-deny" hidden>
+    <h1>マスターだけが使えます</h1>
+    <p id="ad-deny-msg">このアカウントには、管理ページを使う権限がありません。</p>
+  </section>
+
+  <section id="ad-app" hidden>
+    <nav class="ad-tabs" role="tablist" id="ad-tabs">
+      <button type="button" role="tab" data-tab="staging">検証版</button>
+      <button type="button" role="tab" data-tab="prod">本番</button>
+      <button type="button" role="tab" data-tab="reports">通報<b class="ad-badge" id="ad-badge-reports" hidden></b></button>
+      <button type="button" role="tab" data-tab="contacts">お問い合わせ<b class="ad-badge" id="ad-badge-contacts" hidden></b></button>
+      <button type="button" role="tab" data-tab="wants">欲しい！</button>
+      <button type="button" role="tab" data-tab="users">利用者と権限</button>
+    </nav>
+
+    <!-- 検証版：作っている途中のアプリ。本番とは、この端末の保存場所とログインが別 -->
+    <div class="ad-pane" data-pane="staging" hidden>
+      <div class="ad-bar">
+        <div class="ad-seg" data-size-for="staging">
+          <button type="button" data-size="pc" class="on">パソコン</button><button type="button" data-size="phone">スマホ</button><button type="button" data-size="full">いっぱい</button>
+        </div>
+        <button class="ad-btn" type="button" data-reload="staging">読み込み直す</button>
+        <a class="ad-btn" href="../staging/" target="_blank" rel="noopener">新しいタブで開く</a>
+      </div>
+      <details class="ad-notes" open>
+        <summary>検証版で変わったところ</summary>
+        <pre id="ad-notes">読み込み中…</pre>
+        <p class="ad-hint">検証版は、この端末の中の保存場所とログインが本番と別です（本番のキャラシとはまざりません）。ただしサーバーは本番と同じなので、ログインして試すときはテスト用のアカウントを使ってください。よければ Claude に「本番に入れて」と伝えます。</p>
+      </details>
+      <div class="ad-frame-wrap" data-frame-wrap="staging"><iframe title="検証版" data-frame="staging" data-src="../staging/"></iframe></div>
+    </div>
+
+    <!-- 本番：いま公開しているアプリ（くらべる用） -->
+    <div class="ad-pane" data-pane="prod" hidden>
+      <div class="ad-bar">
+        <div class="ad-seg" data-size-for="prod">
+          <button type="button" data-size="pc" class="on">パソコン</button><button type="button" data-size="phone">スマホ</button><button type="button" data-size="full">いっぱい</button>
+        </div>
+        <button class="ad-btn" type="button" data-reload="prod">読み込み直す</button>
+        <a class="ad-btn" href="../" target="_blank" rel="noopener">新しいタブで開く</a>
+      </div>
+      <div class="ad-frame-wrap" data-frame-wrap="prod"><iframe title="本番" data-frame="prod" data-src="../"></iframe></div>
+    </div>
+
+    <div class="ad-pane" data-pane="reports" hidden>
+      <div class="ad-head"><h2>届いた通報</h2><button class="ad-btn" type="button" data-refresh="reports">更新</button></div>
+      <p class="ad-hint">不適切なら、名前のリセット・アイコンやグループの名前を消すことができます。問題がなければ「問題なし」で閉じます。同じ相手・同じ内容の通報は、まとめて閉じます。</p>
+      <div id="ad-reports"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="contacts" hidden>
+      <div class="ad-head"><h2>届いたお問い合わせ</h2><button class="ad-btn" type="button" data-refresh="contacts">更新</button></div>
+      <p class="ad-hint">お返事先が書いてあれば「メールで返事を書く」でメールのアプリが開きます（送るのは、あなたのメールアドレスからです）。対応が終わったら「対応済みにする」を押してください。</p>
+      <div id="ad-contacts"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="wants" hidden>
+      <div class="ad-head"><h2>「欲しい！」の数</h2><button class="ad-btn" type="button" data-refresh="wants">更新</button></div>
+      <p class="ad-hint">無料版で鍵のかかった機能を、使ってみたいと押された数です（1人・1つの端末につき1機能1回）。製品版を作るかどうかの参考に。</p>
+      <div id="ad-wants"></div>
+    </div>
+
+    <div class="ad-pane" data-pane="users" hidden>
+      <div class="ad-head"><h2>利用者と権限</h2><button class="ad-btn" type="button" data-refresh="users">更新</button></div>
+      <p class="ad-hint">マスター＝管理ページ・画面の編集・権限の変更ができる。編集者＝画面の編集（仮保存）だけ。テスター＝無料版の鍵が外れるだけ。マスターが1人もいなくなる変更はできません。</p>
+      <input class="ad-inp ad-search" id="ad-user-q" type="search" placeholder="ユーザー名でさがす">
+      <div id="ad-users"></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script>
+/* ================= ORBiS 管理ページ（マスターだけ使える） =================
+   サーバーは本番と同じ Supabase（住所と鍵は build.py が 21-cloud.js から写す）。
+   ログインは本番の ORBiS と同じ保存場所なので、本番でログインしていれば、そのまま使える。
+   中身を読めるかどうかは、サーバーの関数がマスターかどうかで決めている（このページを開いただけでは何も見えない）。 */
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const okAvatar = u => typeof u === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(u) ? u : '';
+const day = t => { const d = new Date(t); return isNaN(d) ? '' : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* */ } } };
+const missing = e => /Could not find the function|does not exist/i.test(String(e && e.message));
+const errText = e => missing(e) ? 'サーバーの準備（SQL の実行）がまだのようです。' : 'うまくいきませんでした：' + String((e && e.message) || e);
+/* 押しまちがい防止：1回目は「もう一度押すと…」にして、3秒以内にもう一度押したら実行 */
+function arm(b, label) {
+  if (b.dataset.armed) { delete b.dataset.armed; return true; }
+  const old = b.textContent; b.dataset.armed = '1'; b.textContent = label;
+  setTimeout(() => { if (b.dataset.armed) { delete b.dataset.armed; b.textContent = old; } }, 3000);
+  return false;
+}
+
+const URL_ = 'https://umrouqvbmnttirdzixvc.supabase.co', KEY = 'sb_publishable_9GwpXgDVVrzCeWjihR6yzQ_uKQsxbia';
+const sb = window.supabase && window.supabase.createClient ? window.supabase.createClient(URL_, KEY, { auth: { persistSession: true, autoRefreshToken: true } }) : null;
+let me = null, tab = store.get('orbis-admin.tab') || 'staging';
+const loaded = {};
+
+/* ---- ログインと権限 ---- */
+function show(which) { ['ad-login', 'ad-deny', 'ad-app'].forEach(id => { $(id).hidden = id !== which; }); }
+function renderMe() {
+  $('ad-me').innerHTML = me ? `<span>ログイン中：<b>${esc(me.username || '')}</b></span> <span class="ad-mail">${esc(me.email || '')}</span><button class="ad-btn small" type="button" id="ad-logout">ログアウト</button>` : '';
+}
+async function onSession(session) {
+  const u = session && session.user;
+  if (!u) { me = null; renderMe(); show('ad-login'); return; }
+  if (me && me.id === u.id) return;
+  me = { id: u.id, email: u.email, username: (u.user_metadata || {}).username || '' };
+  const p = await sb.from('profiles').select('username').eq('id', u.id).maybeSingle();
+  if (p.data && p.data.username) me.username = p.data.username;
+  renderMe();
+  const r = await sb.rpc('my_app_role');
+  if (r.error || r.data !== 'master') {
+    $('ad-deny-msg').textContent = r.error ? errText(r.error) : 'このアカウントには、管理ページを使う権限がありません（マスターだけが使えます）。';
+    show('ad-deny'); return;
+  }
+  show('ad-app');
+  openTab(tab);
+  loadReports(true); loadContacts(true);   // 届いている数だけ、先にタブに出す
+}
+$('ad-login-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('ad-login-err'); err.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('ad-email').value.trim(), password: $('ad-pass').value });
+  if (error) err.textContent = /Invalid login/i.test(error.message) ? 'メールアドレスかパスワードがちがいます。' : errText(error);
+});
+document.addEventListener('click', async e => {
+  if (e.target.closest('#ad-logout')) { await sb.auth.signOut(); location.reload(); }
+});
+
+/* ---- タブ ---- */
+function openTab(t) {
+  tab = t; store.set('orbis-admin.tab', t);
+  document.querySelectorAll('[data-tab]').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  document.querySelectorAll('[data-pane]').forEach(p => { p.hidden = p.dataset.pane !== t; });
+  if (t === 'staging' || t === 'prod') startFrame(t);
+  if (t === 'staging') loadNotes();
+  if (!loaded[t] || t === 'reports' || t === 'contacts') ({ reports: loadReports, contacts: loadContacts, wants: loadWants, users: loadUsers }[t] || (() => {}))();
+  loaded[t] = true;
+}
+$('ad-tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) openTab(b.dataset.tab); });
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-refresh]');
+  if (r) ({ reports: loadReports, contacts: loadContacts, wants: loadWants, users: loadUsers }[r.dataset.refresh])();
+});
+
+/* ---- 検証版・本番：ページの中でアプリを動かす（開いたときに初めて読みこむ） ---- */
+function frameOf(t) { return document.querySelector(`[data-frame="${t}"]`); }
+function startFrame(t) {
+  const f = frameOf(t);
+  if (!f.src) f.src = f.dataset.src;
+  setSize(t, store.get('orbis-admin.size.' + t) || 'pc');
+}
+function setSize(t, size) {
+  store.set('orbis-admin.size.' + t, size);
+  const w = document.querySelector(`[data-frame-wrap="${t}"]`);
+  w.classList.remove('pc', 'phone', 'full'); w.classList.add(size);
+  document.querySelectorAll(`[data-size-for="${t}"] [data-size]`).forEach(b => b.classList.toggle('on', b.dataset.size === size));
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-size]');
+  if (s) { setSize(s.closest('[data-size-for]').dataset.sizeFor, s.dataset.size); return; }
+  const rl = e.target.closest('[data-reload]');
+  if (rl) { const f = frameOf(rl.dataset.reload); f.src = f.dataset.src + '?t=' + Date.now(); if (rl.dataset.reload === 'staging') loadNotes(); }
+});
+async function loadNotes() {
+  try {
+    const r = await fetch('../staging/notes.txt?t=' + Date.now(), { cache: 'no-store' });
+    $('ad-notes').textContent = r.ok ? await r.text() : '（検証版はまだありません）';
+  } catch (e) { $('ad-notes').textContent = '（変更点のメモを読めませんでした）'; }
+}
+
+/* ---- 通報（supabase/20-reports.sql） ---- */
+const RP_KIND = { username: 'ユーザー名', avatar: 'アイコン画像', group: 'グループの名前', other: 'そのほか' };
+function badge(id, n) { const b = $(id); b.hidden = !n; b.textContent = n || ''; }
+async function loadReports(countOnly) {
+  const el = $('ad-reports');
+  const { data, error } = await sb.rpc('report_list');
+  if (error) { if (!countOnly) el.innerHTML = `<p class="ad-err">${esc(errText(error))}</p>`; return; }
+  const list = data || [];
+  badge('ad-badge-reports', list.length);
+  if (countOnly && tab !== 'reports') return;
+  if (!list.length) { el.innerHTML = '<p class="ad-list-empty">まだ対応していない通報はありません。</p>'; return; }
+  el.innerHTML = list.map(r => {
+    const av = okAvatar(r.target_avatar), gone = r.target_name == null, acts = [];
+    if (!gone && (r.kind === 'username' || r.kind === 'other')) acts.push(['reset_name', '名前をリセット']);
+    if (!gone && av && (r.kind === 'avatar' || r.kind === 'other')) acts.push(['clear_avatar', 'アイコンを消す']);
+    if (r.kind === 'group' && r.group_name != null) acts.push(['rename_group', 'グループの名前を消す']);
+    return `<article class="ad-item">
+      <div class="ad-item-head"><span class="ad-tag">${esc(RP_KIND[r.kind] || r.kind)}</span><small>${esc(day(r.created_at))} ・ 通報した人：${esc(r.reporter_name || '（退会したユーザー）')}</small></div>
+      <div class="ad-who"><span class="ad-av">${av ? `<img src="${esc(av)}" alt="">` : esc((r.target_name || '？').charAt(0))}</span>
+        <div><b>${gone ? '（退会したユーザー）' : esc(r.target_name)}</b>
+        ${r.kind === 'group' ? `<small>グループの名前：「${esc(r.group_name != null ? r.group_name : '（もう削除されています）')}」</small>` : r.snap_name && r.snap_name !== r.target_name ? `<small>通報のときの名前：「${esc(r.snap_name)}」</small>` : ''}</div></div>
+      ${r.note ? `<p class="ad-note">${esc(r.note)}</p>` : ''}
+      <div class="ad-acts">${acts.map(([a, l]) => `<button class="ad-btn small danger" type="button" data-mod="${a}" data-rid="${esc(r.id)}">${l}</button>`).join('')}<button class="ad-btn small" type="button" data-mod="dismiss" data-rid="${esc(r.id)}">問題なし（閉じる）</button></div>
+    </article>`;
+  }).join('');
+}
+$('ad-reports').addEventListener('click', async e => {
+  const b = e.target.closest('[data-mod]'); if (!b) return;
+  if (b.dataset.mod !== 'dismiss' && !arm(b, 'もう一度押すと実行')) return;
+  b.disabled = true;
+  const { data, error } = await sb.rpc('mod_action', { report_id: b.dataset.rid, act: b.dataset.mod });
+  if (error || data !== 'ok') { alert(error ? errText(error) : String(data)); b.disabled = false; return; }
+  loadReports();
+});
+
+/* ---- お問い合わせ（supabase/21-contacts.sql） ---- */
+const CT_KIND = { bug: '不具合', delete: 'アカウントの削除', privacy: '個人情報について', rights: '権利について', idea: 'ご意見・ご要望', other: 'そのほか' };
+async function loadContacts(countOnly) {
+  const el = $('ad-contacts');
+  const { data, error } = await sb.rpc('contact_list');
+  if (error) { if (!countOnly) el.innerHTML = `<p class="ad-err">${esc(errText(error))}</p>`; return; }
+  const list = data || [];
+  badge('ad-badge-contacts', list.length);
+  if (countOnly && tab !== 'contacts') return;
+  if (!list.length) { el.innerHTML = '<p class="ad-list-empty">まだ対応していないお問い合わせはありません。</p>'; return; }
+  el.innerHTML = list.map(r => {
+    const who = r.user_id ? `ログイン中に送信：<b>${esc(r.now_name || r.user_name || '（退会したユーザー）')}</b>${r.user_email ? `（登録メール：${esc(r.user_email)}）` : ''}` : 'ログインなしで送信';
+    const mail = r.reply_to ? `mailto:${encodeURIComponent(r.reply_to).replace(/%40/g, '@')}?subject=${encodeURIComponent('ORBiS お問い合わせへのお返事')}` : '';
+    return `<article class="ad-item">
+      <div class="ad-item-head"><span class="ad-tag blue">${esc(CT_KIND[r.kind] || r.kind)}</span><small>${esc(day(r.created_at))}</small></div>
+      <small class="ad-meta">${who}</small>
+      <p class="ad-note">${esc(r.body)}</p>
+      <small class="ad-meta">お返事先：${r.reply_to ? esc(r.reply_to) : '（書かれていません）'}</small>
+      ${r.info ? `<small class="ad-meta">${esc(r.info)}</small>` : ''}
+      <div class="ad-acts">${mail ? `<a class="ad-btn small" href="${esc(mail)}">メールで返事を書く</a>` : ''}<button class="ad-btn small" type="button" data-ctclose="${esc(r.id)}">対応済みにする</button></div>
+    </article>`;
+  }).join('');
+}
+$('ad-contacts').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ctclose]'); if (!b) return;
+  if (!arm(b, 'もう一度押すと閉じる')) return;
+  b.disabled = true;
+  const { data, error } = await sb.rpc('contact_close', { contact_id: b.dataset.ctclose });
+  if (error || data !== 'ok') { alert(error ? errText(error) : String(data)); b.disabled = false; return; }
+  loadContacts();
+});
+
+/* ---- 「欲しい！」の数（supabase/15-feature-wants.sql） ---- */
+const WANT_NAME = { group: 'グループ', chars: '探索者を4人以上', friendview: 'フレンドのキャラシを見る', 'theme:sky': 'テーマ「近未来」', 'theme:sakura': 'テーマ「和風」', 'theme:book': 'テーマ「魔導書」', 'theme:aqua': 'テーマ「アクアリウム」', 'theme:dot': 'テーマ「ドット」' };
+async function loadWants() {
+  const el = $('ad-wants');
+  const { data, error } = await sb.rpc('want_counts');
+  if (error) { el.innerHTML = `<p class="ad-err">${esc(errText(error))}</p>`; return; }
+  const rows = (data || []).map(r => ({ f: r.feature, n: Number(r.n) || 0 })).sort((a, b) => b.n - a.n);
+  if (!rows.length) { el.innerHTML = '<p class="ad-list-empty">まだ「欲しい！」は押されていません。</p>'; return; }
+  const max = Math.max(...rows.map(r => r.n), 1);
+  el.innerHTML = `<table class="ad-table"><thead><tr><th>機能</th><th style="width:45%"></th><th>数</th></tr></thead><tbody>${rows.map(r =>
+    `<tr><td>${esc(WANT_NAME[r.f] || r.f)}</td><td><div class="ad-bar-mini" style="width:${Math.round(r.n / max * 100)}%"></div></td><td class="num">${r.n}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ---- 利用者と権限（supabase/05-app-roles.sql・16-testers.sql） ---- */
+const ROLE_NAME = { master: 'マスター', editor: '編集者', tester: 'テスター', none: 'なし' };
+let users = [];
+async function loadUsers() {
+  const el = $('ad-users');
+  const { data, error } = await sb.rpc('app_users_list');
+  if (error) { el.innerHTML = `<p class="ad-err">${esc(errText(error))}</p>`; return; }
+  users = data || [];
+  renderUsers();
+}
+function renderUsers() {
+  const q = ($('ad-user-q').value || '').trim().toLowerCase();
+  const list = users.filter(u => !q || String(u.username || '').toLowerCase().includes(q));
+  const cnt = r => users.filter(u => (u.role || 'none') === r).length;
+  $('ad-users').innerHTML = `<p class="ad-count">全部で ${users.length} 人（マスター ${cnt('master')}・編集者 ${cnt('editor')}・テスター ${cnt('tester')}）${q ? `／「${esc(q)}」で ${list.length} 人` : ''}</p>
+    <table class="ad-table"><thead><tr><th>ユーザー名</th><th>権限</th></tr></thead><tbody>${list.slice(0, 500).map(u =>
+      `<tr><td>${esc(u.username || '')}${me && u.user_id === me.id ? '（あなた）' : ''}</td><td><select class="ad-role" data-uid="${esc(u.user_id)}">${Object.entries(ROLE_NAME).map(([k, v]) => `<option value="${k}"${(u.role || 'none') === k ? ' selected' : ''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table>`;
+}
+$('ad-user-q').addEventListener('input', renderUsers);
+$('ad-users').addEventListener('change', async e => {
+  const s = e.target.closest('.ad-role'); if (!s) return;
+  const u = users.find(x => x.user_id === s.dataset.uid);
+  if (!confirm(`${u ? u.username : ''} さんの権限を「${ROLE_NAME[s.value]}」にしますか？`)) { renderUsers(); return; }
+  s.disabled = true;
+  const { data, error } = await sb.rpc('set_app_role', { target: s.dataset.uid, new_role: s.value });
+  if (error || (data && data !== 'ok')) alert(error ? errText(error) : String(data));
+  loadUsers();
+});
+
+/* ---- はじめに ---- */
+if (!sb) { show('ad-login'); $('ad-login-err').textContent = 'サーバーにつながりませんでした。ネットの接続を確かめてください。'; return; }
+sb.auth.onAuthStateChange((ev, session) => { setTimeout(() => onSession(session), 0); });
+sb.auth.getSession().then(({ data }) => onSession(data.session)).catch(() => show('ad-login'));
+})();
+</script>
+</body>
+</html>

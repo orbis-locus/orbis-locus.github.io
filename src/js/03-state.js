@@ -72,6 +72,9 @@ function migrateV1(o) {
    ・マスターと編集者（app_admins の人）は全部使える（28-ui-editor.js の ueCheckAdmin で unlockAll を立てる）
    有料版を出すときは FREE_EDITION を false にする（この制限は画面の側だけ） */
 const FREE_EDITION = true;
+/* 検証版（https://orbis-locus.github.io/staging/）のとき true。`python3 build.py staging` が書きかえる（ここは false のまま）。
+   検証版は、この端末の中の保存場所（orbis-stg.〜）とログインの保存場所を本番と分ける。サーバー（Supabase）は本番と同じ */
+const STAGING = false;
 const FREE_MAX_CHARS = 3;
 const FREE_THEMES = ['orbis'];
 let unlockAll = (() => { try { return localStorage.getItem('charasheet-kobo.unlock') === '1'; } catch (e) { return false; } })();
