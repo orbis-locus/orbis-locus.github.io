@@ -49,7 +49,7 @@ function renderContactForm() {
     <textarea class="inp" id="ct-body" rows="5" maxlength="2000" required placeholder="例：スマホで○○を押すと、××になります"></textarea>
     <label class="lbl" for="ct-mail">お返事先のメールアドレス（お返事がほしい方だけ）</label>
     <input class="inp" type="email" id="ct-mail" maxlength="200" autocomplete="email" value="${me && me.email ? esc(me.email) : ''}">
-    <p class="ct-note">${me ? `ログイン中のため、ユーザー名「${esc(me.username || '')}」もいっしょに送ります。` : 'アカウントの削除をご希望のときは、ご本人の確認のため、<b>ログインしてから</b>送ってください。'}不具合を調べるため、使っている端末・ブラウザの種類もいっしょに送ります。</p>
+    <p class="ct-note">${me ? `ログイン中のため、ユーザー名「${esc(me.username || '')}」もいっしょに送ります。` : 'アカウントは、ログインしてアカウントの小窓の「アカウントを削除する」から自分で消せます。'}不具合を調べるため、使っている端末・ブラウザの種類もいっしょに送ります。</p>
     <p class="err" id="ct-err" role="alert"></p>
     <button class="btn primary" type="submit" id="ct-send">送る</button>
   </form>`;

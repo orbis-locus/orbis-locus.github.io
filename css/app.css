@@ -1113,6 +1113,15 @@ label.btn { display: inline-block; }
 .sv-artcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .sv-faces { display: flex; flex-wrap: wrap; gap: 6px; }
 
+/* アカウントを削除（21-cloud.js の acctDeleteHtml） */
+.acct-del-link { margin: 6px 0 0 !important; text-align: right; font-size: 12px !important; }
+.acct-del-link .link-btn { color: var(--muted); }
+.acct-del { display: flex; flex-direction: column; gap: 10px; }
+.acct-del ul { margin: 0; padding-left: 1.4em; font-size: 13px; line-height: 1.75; color: var(--muted); }
+.acct-del .inp { width: 100%; box-sizing: border-box; }
+.acct-mode.del { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.acct-mode.del b { color: var(--danger); }
+
 /* ===== theme looks ===== */
 :root[data-look~="dark"] { color-scheme: dark; --shadow: 0 12px 34px -14px rgb(0 0 0 / .75), 0 2px 6px -2px rgb(0 0 0 / .45); --gloss: rgb(255 255 255 / .12); }
 :root[data-look~="mincho"] { --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif; }

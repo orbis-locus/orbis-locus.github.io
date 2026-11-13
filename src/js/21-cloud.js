@@ -4,6 +4,7 @@ const CLOUD = Object.assign({
   key: 'sb_publishable_9GwpXgDVVrzCeWjihR6yzQ_uKQsxbia',
 }, window.CHARASHEET_CLOUD || {});
 const cloudReady = () => /^https:\/\/[\w-]+\.supabase\.co\/?$/.test(CLOUD.url) && CLOUD.key.length > 20 && !!(window.supabase && window.supabase.createClient);
+let acctDeleting = false, acctDelErr = '';   // アカウントを削除しているあいだ（同期を止める）・削除の画面のお知らせ（deleteAccount）
 let sb = null, me = null, online = null, syncTimer = null, syncing = false, syncAgain = false, syncState = 'off', syncMsg = '', acctTab = 'login';
 const lastSynced = new Map();
 
@@ -245,7 +246,7 @@ async function cleanupImages() {
   } catch (e) { /* 片付けは次の機会に */ }
 }
 async function flushSync() {
-  if (!sb || !me) return;
+  if (!sb || !me || acctDeleting) return;   // アカウントを削除しているあいだは送らない
   clearTimeout(syncTimer); syncTimer = null;
   if (syncing) { syncAgain = true; return; }
   syncing = true;
@@ -327,7 +328,7 @@ async function pullAndMerge() {
 let refreshing = false;
 const editingNow = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('input, textarea, select') && a.closest('#sheet, #panel')); };
 async function refreshFromCloud() {
-  if (!sb || !me || refreshing || document.visibilityState === 'hidden') return false;
+  if (!sb || !me || refreshing || acctDeleting || document.visibilityState === 'hidden') return false;
   refreshing = true;
   try {
     if (syncTimer || syncing) { clearTimeout(syncTimer); syncTimer = null; await flushSync(); }   // まだ送っていない変更を先に送る
@@ -455,6 +456,110 @@ async function logout() {
   stopBgm();
   toast('ログアウトしました。この端末からアカウントのキャラシを片付けました（サーバーには残っています）。');
 }
+/* ---- アカウントを自分で消す（supabase/22-delete-account.sql） ----
+   ①（この端末のキャラを残すとき）サーバーに置いた画像を、この端末のキャラの中に写しておく
+   ② Storage の画像（char-images）と共有カード（share-og）を消す（SQL からは消せないため、先にアプリで消す）
+   ③ サーバーの delete_my_account を呼ぶ（アカウントと、つながっているデータがまとめて消える）
+   ④ この端末からログインの情報を消し、キャラは「ログインしていないキャラ」にするか、消す */
+function acctDeleteHtml() {
+  return `<div class="acct-del">
+    <div class="acct-mode del"><b>アカウントを削除</b><span>消したアカウントは、もとにもどせません</span></div>
+    <p>アカウントを削除すると、次のものがサーバーから消えます。</p>
+    <ul>
+      <li>ログイン（メールアドレスとパスワード）・ユーザー名・アイコン画像</li>
+      <li>サーバーに保存したキャラシと、その画像・秘匿・共有リンク</li>
+      <li>フレンド（相手の一覧からも消えます）</li>
+      <li>あなたが代表のグループ（参加している人からも消えます。残したいときは、先に「代表をゆずる」でほかの人にゆずってください）と、参加しているグループの記録</li>
+    </ul>
+    <label class="acct-agree"><input type="checkbox" id="ac-del-keep" checked><span>この端末のキャラシは残す（ログインしていないキャラとして、この端末だけで使えます。チェックを外すと、この端末からも消します）</span></label>
+    <p>ほかの端末では、次に開いたときにログアウトのあつかいになります。その端末にあるキャラシは、その端末に残ります。</p>
+    <label class="lbl" for="ac-del-name">念のため、ユーザー名「<b>${esc(me.username || '')}</b>」をそのまま入れてください</label>
+    <input class="inp" id="ac-del-name" autocomplete="off" maxlength="20">
+    <p class="err" id="ac-err" role="alert"></p><p class="ok-msg" id="ac-ok" role="status"></p>
+    <div class="acct-actions"><button class="btn ghost" type="button" data-acct="delete-cancel">やめる</button><button class="btn danger" type="button" data-acct="delete-run">アカウントを削除する</button></div>
+  </div>`;
+}
+/* サーバーに置いた自分の画像（URL）を、この端末のキャラの中に data URL として写す（アカウントを消すと画像も消えるため） */
+async function inlineOwnImages(uid) {
+  const base = imgBase() + uid + '/', cache = new Map();
+  const toData = async u => {
+    if (typeof u !== 'string' || !u.startsWith(base)) return u;
+    if (!cache.has(u)) {
+      const r = await fetch(u); if (!r.ok) throw new Error('image ' + r.status);
+      const b = await r.blob();
+      cache.set(u, await new Promise((ok, ng) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = ng; fr.readAsDataURL(b); }));
+    }
+    return cache.get(u);
+  };
+  for (const c of state.chars.filter(c => c.owner === uid)) {
+    c.portrait = await toData(c.portrait); c.icon = await toData(c.icon); c.bgImage = await toData(c.bgImage);
+    if (Array.isArray(c.faces)) for (const f of c.faces) if (f) f.src = await toData(f.src);
+  }
+}
+async function deleteAccount(btn) {
+  if (!sb || !me || acctDeleting) return;
+  // 途中で小窓が描き直されることがあるので、文を書くたびに場所をさがす
+  const say = (t, m) => { acctDelErr = t === 'err' ? m : ''; const e = $('ac-err'), o = $('ac-ok'); if (e) e.textContent = acctDelErr; if (o) o.textContent = t === 'ok' ? m : ''; };
+  say('ok', '');
+  if (($('ac-del-name').value || '').trim() !== me.username) { say('err', 'ユーザー名がちがいます。上に書いてあるユーザー名を、そのまま入れてください。'); return; }
+  if (!arm(btn, 'もう一度押すと、本当に削除します')) return;
+  const keep = $('ac-del-keep').checked, uid = me.id;
+  acctDeleting = true; btn.disabled = true;
+  clearTimeout(syncTimer); syncTimer = null;
+  const noFn = er => /delete_my_account|Could not find the function/i.test((er && er.message) || '') ? new Error('いまはアカウントを削除できません（サーバーの準備中です）。「お問い合わせ」から知らせてください。') : er;
+  const refused = d => d === 'last_master' ? new Error('あなたは最後のマスターなので、アカウントを削除できません。先にほかの人をマスターにしてください。') : new Error(String(d));
+  try {
+    // ⓪ 消してよいかを、先にサーバーに確かめる（ここで断られたら、何も消さない）
+    say('ok', '確かめています…');
+    const chk = await sb.rpc('delete_my_account', { check_only: true });
+    if (chk.error) throw noFn(chk.error);
+    if (chk.data !== 'ok') throw refused(chk.data);
+    // ① この端末に残すキャラの画像を写す（写せないときは、何も消さずにやめる）
+    if (keep) {
+      say('ok', 'この端末のキャラシに、画像を写しています…');
+      try { await inlineOwnImages(uid); saveNow(); }
+      catch (er) { throw new Error('画像をこの端末に写せませんでした。ネットの接続を確かめて、もう一度押してください。（まだ何も消していません）'); }
+    }
+    // ② Storage の画像と共有カードを消す
+    say('ok', 'サーバーの画像を消しています…');
+    if (!imgOff) {
+      for (let n = 0; n < 50; n++) {
+        const { data, error } = await sb.storage.from(IMG_BUCKET).list(uid, { limit: 1000 });
+        if (error || !data || !data.length) break;
+        const paths = data.filter(f => f.name).map(f => `${uid}/${f.name}`);
+        if (!paths.length) break;
+        for (let i = 0; i < paths.length; i += 100) await sb.storage.from(IMG_BUCKET).remove(paths.slice(i, i + 100));
+        if (data.length < 1000) break;
+      }
+    }
+    const { data: sh } = await sb.from('char_shares').select('token').eq('owner', uid);
+    const toks = (sh || []).map(s => s.token).filter(Boolean);
+    if (toks.length) await sb.storage.from('share-og').remove(toks.map(t => t + '.jpg')).catch(() => {});
+    toks.forEach(t => { try { localStorage.removeItem('charasheet-kobo.card.' + t); } catch (e) { /* */ } });
+    // ③ アカウントを消す
+    say('ok', 'アカウントを削除しています…');
+    const { data, error } = await sb.rpc('delete_my_account', { check_only: false });
+    if (error) throw noFn(error);
+    if (data !== 'ok') throw refused(data);
+    // ④ この端末を片付ける
+    await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    if (keep) state.chars.forEach(c => { if (c.owner === uid) { delete c.owner; c.secretOpen = false; } });
+    else state.chars = state.chars.filter(c => c.owner !== uid);
+    state.friends = friendsOf().filter(f => !f.uid);
+    state.delQueue = [];
+    if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
+    me = null; online = null; shares = null; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
+    saveNow(); setSync('off'); renderAll(); renderAccount(); renderOnline();
+    if (!$('select').hidden || !state.chars.length) { selTab = 'mine'; showSelect(); renderSelect(); }
+    stopBgm(); closeModals();
+    toast(keep ? 'アカウントを削除しました。この端末のキャラシは、ログインしていないキャラとして残しました。ご利用ありがとうございました。'
+      : 'アカウントを削除しました。この端末からもキャラシを消しました。ご利用ありがとうございました。');
+  } catch (er) {
+    say('err', (er && er.message && !/^[A-Za-z]/.test(er.message)) ? er.message : jaErr(er));
+    const b2 = document.querySelector('[data-acct="delete-run"]'); if (b2) b2.disabled = false;
+    if (me) scheduleSync();
+  } finally { acctDeleting = false; }
+}
 function renderAccountBtn() {
   const label = me ? (me.username || 'アカウント') : 'ログイン';
   const dot = me ? `<i class="sync-dot ${syncState}" title="${syncState === 'ok' ? '同期済み' : syncState === 'pending' ? '同期中' : syncState === 'error' ? '同期エラー' : ''}"></i>` : '';
@@ -470,8 +575,13 @@ function renderAccount() {
     el.innerHTML = `<p>アカウント機能はまだ準備中です。サーバー（Supabase）の設定が終わると、ここから登録・ログインできるようになります。</p><p class="empty">それまでは、これまでどおりこのブラウザの中にキャラシが保存されます。</p>`;
     return;
   }
+  if (me && acctTab === 'delete') {   // 削除の画面：入力中の名前やお知らせが消えないよう、すでに出ていれば描き直さない
+    if (!el.querySelector('.acct-del')) el.innerHTML = acctDeleteHtml();
+    const e = $('ac-err'); if (e) e.textContent = acctDelErr;
+    return;
+  }
   if (me && acctTab !== 'recover') {
-    const st = { ok: '同期済み', pending: '同期中…', error: '同期できませんでした', off: '—' }[syncState];
+    const st ={ ok: '同期済み', pending: '同期中…', error: '同期できませんでした', off: '—' }[syncState];
     el.innerHTML = `<div class="acct-card">
         <label class="fav acct-av ${AVATARS[me.id] ? 'has' : ''}" style="--fc:var(--sky)" title="アイコン画像を選ぶ">${avImg(me.id) || esc((me.username || '？').charAt(0))}<input type="file" id="ac-avatar" accept="image/*" hidden><i class="acct-av-cam" aria-hidden="true">✎</i></label>
         <div><b class="acct-name">${esc(me.username)}</b><span class="acct-mail">${esc(me.email || '')}</span>
@@ -485,7 +595,8 @@ function renderAccount() {
       </form>
       <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
       <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
-      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}`;
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}
+      <p class="acct-del-link"><button class="link-btn" type="button" data-acct="delete">アカウントを削除する…</button></p>`;
     return;
   }
 
@@ -537,6 +648,9 @@ $('acct-body').addEventListener('click', async e => {
   if (a.dataset.acct === 'reports') { closeModals(); openMod(); }
   if (a.dataset.acct === 'contacts') { closeModals(); openContacts(); }
   if (a.dataset.acct === 'logout') { if (!arm(a, 'もう一度押すとログアウト')) return; closeModals(); logout(); }
+  if (a.dataset.acct === 'delete') { acctTab = 'delete'; acctDelErr = ''; $('acct-body').innerHTML = ''; renderAccount(); $('ac-del-name')?.focus(); }
+  if (a.dataset.acct === 'delete-cancel') { acctTab = 'login'; renderAccount(); }
+  if (a.dataset.acct === 'delete-run') deleteAccount(a);
 });
 $('acct-body').addEventListener('change', async e => {
   if (e.target.id !== 'ac-avatar') return;
