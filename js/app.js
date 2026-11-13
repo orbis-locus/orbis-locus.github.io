@@ -153,6 +153,9 @@ function migrateV1(o) {
    ・マスターと編集者（app_admins の人）は全部使える（28-ui-editor.js の ueCheckAdmin で unlockAll を立てる）
    有料版を出すときは FREE_EDITION を false にする（この制限は画面の側だけ） */
 const FREE_EDITION = true;
+/* 検証版（https://orbis-locus.github.io/staging/）のとき true。`python3 build.py staging` が書きかえる（ここは false のまま）。
+   検証版は、この端末の中の保存場所（orbis-stg.〜）とログインの保存場所を本番と分ける。サーバー（Supabase）は本番と同じ */
+const STAGING = false;
 const FREE_MAX_CHARS = 3;
 const FREE_THEMES = ['orbis'];
 let unlockAll = (() => { try { return localStorage.getItem('charasheet-kobo.unlock') === '1'; } catch (e) { return false; } })();
@@ -3131,7 +3134,7 @@ async function saveAvatar(v) {
   toast(v ? 'アイコンを変えました。フレンドやグループの人にも見えます。' : 'アイコンを外しました。');
 }
 function sbClient() {
-  if (!sb && cloudReady()) sb = window.supabase.createClient(CLOUD.url.replace(/\/$/, ''), CLOUD.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  if (!sb && cloudReady()) sb = window.supabase.createClient(CLOUD.url.replace(/\/$/, ''), CLOUD.key, { auth: Object.assign({ persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }, STAGING ? { storageKey: 'orbis-stg-auth' } : {}) });   // 検証版はログインの保存場所を本番と分ける
   return sb;
 }
 const jaErr = e => {
@@ -3675,7 +3678,7 @@ function renderAccount() {
       </form>
       <div class="acct-sync ${syncState}"><i class="sync-dot ${syncState}"></i>${st}${syncMsg ? `<small>${esc(syncMsg)}</small>` : ''}</div>
       <p>キャラシは自動でサーバーに保存され、ほかの端末でログインしても同じキャラが使えます。フレンドには、<b>非公開（ロック）にしていないキャラシ</b>だけが見えます。ロックはシート上部の「フレンドに公開／非公開」ボタンで切り替えます。</p>
-      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}
+      <div class="acct-actions"><button class="btn" type="button" data-acct="sync">今すぐ同期</button><button class="btn" type="button" data-acct="friends">フレンド</button><button class="btn danger" type="button" data-acct="logout">ログアウト</button></div>${isMaster() ? '<div class="wants-box"><a class="btn small primary" href="https://orbis-locus.github.io/admin/" target="_blank" rel="noopener">管理ページを開く（マスター）</a></div>' : ''}${wantsBoxHtml()}${modBoxHtml()}${contactBoxHtml()}
       <p class="acct-del-link"><button class="link-btn" type="button" data-acct="delete">アカウントを削除する…</button></p>`;
     return;
   }

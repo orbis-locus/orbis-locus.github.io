@@ -22,7 +22,7 @@
 ## 1.5 検証版と管理ページ（2026-11-13〜）
 - 管理ページ：https://orbis-locus.github.io/admin/ （マスターだけ。タブ：検証版・本番・通報・お問い合わせ・欲しい！・利用者と権限）。ソースは src/admin/。
 - 検証版：https://orbis-locus.github.io/staging/ 。`python3 build.py staging` で作る（本番のファイルは変わらない）。変更点は src/staging-notes.md に書く。オーナーが確かめて「本番に入れて」と言ったら `python3 build.py` を実行する。くわしくは CLAUDE.md。
-- 2026-11-13 時点：本番には「管理ページへのリンク」と「STAGING のしくみ」はまだ入っていない（検証版だけ）。
+- 2026-11-13：オーナーが検証版を確かめて、本番にも入れた（管理ページへのリンク・STAGING のしくみ）。いま本番と検証版は同じ中身。
 
 ## 2. Supabase の SQL（オーナーが SQL Editor で手で実行する）
 
