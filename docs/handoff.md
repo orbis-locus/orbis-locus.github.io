@@ -21,7 +21,7 @@
 
 ## 2. Supabase の SQL（オーナーが SQL Editor で手で実行する）
 
-**01〜21 は実行済み、22 は未実行**（2026-11-13 時点）。
+**01〜22 はすべて実行済み**（2026-11-13 時点）。
 
 | ファイル | 内容 | 実行 |
 |---|---|---|
@@ -40,7 +40,7 @@
 | 18-char-images.sql | 画像の置き場所 char-images（1枚5MB・1人100MB） | 済み |
 | 19-limits.sql | 大きさの上限（キャラシ1MB・60人、グループ200KB、画面の編集2MB、ui-assets 5MB） | 済み |
 | 20-reports.sql | 通報（reports・report_user・report_list・mod_action） | 済み |
-| 22-delete-account.sql | アカウントを自分で消す（delete_my_account(check_only)。最後のマスターは消せない） | **未実行**（2026-11-13 に作成。手元の PostgreSQL で確認済み） |
+| 22-delete-account.sql | アカウントを自分で消す（delete_my_account(check_only)。最後のマスターは消せない） | 済み（2026-11-13 に確認：関数があり、ログインなしでは断られる） |
 | 21-contacts.sql | お問い合わせ（contacts・send_contact は anon も可・contact_list と contact_close はマスターだけ） | 済み（2026-11-12 に確認。オーナーがテストで送って一覧に出ることも確認） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。日本語のコメントを外した英数字だけの版を渡し、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。
