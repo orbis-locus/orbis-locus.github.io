@@ -36,3 +36,10 @@
 .peek-friends small { font-size: 10.5px; color: var(--muted); margin-right: 2px; }
 .peek-friends .fchip { font-size: 11px; padding: 1px 9px 1px 2px; }
 .peek-friends .fchip .fdot { width: 18px; height: 18px; font-size: 10px; }
+
+/* ブロック中の一覧（21-cloud.js の renderOnline。閉じたり開いたりできる） */
+.ol-blocks summary { cursor: pointer; list-style: none; }
+.ol-blocks summary::-webkit-details-marker { display: none; }
+.ol-blocks summary::before { content: "▸ "; }
+.ol-blocks[open] summary::before { content: "▾ "; }
+.ol-blocks .hint { display: block; margin: 4px 0 6px; font-size: 12px; color: var(--muted); }

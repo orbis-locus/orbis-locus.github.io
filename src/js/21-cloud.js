@@ -69,6 +69,7 @@ const jaErr = e => {
   if (/ORBIS_FRIEND_SAME/.test(m)) return '同じ人へのフレンド申請は、1日3回までです。相手の返事を待つか、明日またお願いします。';
   if (/ORBIS_INVITE_LIMIT/.test(m)) return 'グループに招待できるのは1日60人までです。明日またお願いします。';
   if (/ORBIS_INVITE_SAME/.test(m)) return '同じ人を同じグループに招待できるのは、1日3回までです。明日またお願いします。';
+  if (/ORBIS_YOU_BLOCKED/.test(m)) return 'その人はブロック中です。フレンド申請や招待をするときは、先にブロックを解除してください。';
   if (/ORBIS_DATA_TOO_LARGE/.test(m)) return 'データが大きすぎて保存できませんでした。メモなどを短くしてください。';
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
@@ -386,8 +387,17 @@ addEventListener('pagehide', () => { if (me && syncTimer) { clearTimeout(syncTim
 addEventListener('focus', () => refreshFromCloud());
 addEventListener('online', () => { if (me) { scheduleSync(); refreshFromCloud(); } });
 setInterval(() => refreshFromCloud(), 60000);
+/* ---- ブロック（supabase/24-blocks.sql）。BLOCKS：自分がブロックしている人 [{user_id, username}] ---- */
+let BLOCKS = [];
+const isBlockedUid = id => BLOCKS.some(b => b.user_id === id);
+async function loadBlocks() {
+  if (!sb || !me) { BLOCKS = []; return; }
+  const { data, error } = await sb.rpc('my_blocks');
+  BLOCKS = error ? [] : (data || []);   // SQL をまだ実行していないときは、ブロックなしのあつかい
+}
 async function loadFriendships() {
   if (!sb || !me) return;
+  await loadBlocks().catch(() => {});
   const { data, error } = await sb.from('friendships').select('requester,addressee,status');
   if (error) throw error;
   const ids = [...new Set((data || []).flatMap(r => [r.requester, r.addressee]).filter(id => id !== me.id))];
@@ -399,7 +409,7 @@ async function loadFriendships() {
     const other = r.requester === me.id ? r.addressee : r.requester;
     const u = { id: other, username: nm(other) };
     if (r.status === 'accepted') online.friends.push(u);
-    else if (r.addressee === me.id) online.incoming.push(u);
+    else if (r.addressee === me.id) { if (!isBlockedUid(other)) online.incoming.push(u); }   // ブロックしている人の申請は見せない
     else online.outgoing.push(u);
   });
   const FC = ['#1f6fe0', '#e0457a', '#2f9e57', '#7b52bd', '#e08a1f', '#12a6cf', '#c0392b', '#8e6e1f'];
@@ -420,7 +430,7 @@ async function loadFriendships() {
 async function handleSession(session) {
   const uid = session && session.user ? session.user.id : null;
   if ((me ? me.id : null) === uid) return;
-  if (!uid) { me = null; online = null; shares = null; lastSynced.clear(); setSync('off'); renderAccount(); renderOnline(); ueCheckAdmin(); if (!$('select').hidden && selTab === 'friends') renderSelect(); return; }
+  if (!uid) { me = null; online = null; shares = null; BLOCKS = []; lastSynced.clear(); setSync('off'); renderAccount(); renderOnline(); ueCheckAdmin(); if (!$('select').hidden && selTab === 'friends') renderSelect(); return; }
   me = { id: uid, email: session.user.email, username: (session.user.user_metadata || {}).username || '' };
   renderAccountBtn(); renderAccount();
   try {
@@ -455,7 +465,7 @@ async function logout() {
     state.friends = friendsOf().filter(f => !f.uid);
     state.activeId = state.chars.length ? state.chars[0].id : null;
   }
-  me = null; online = null; shares = null; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
+  me = null; online = null; shares = null; BLOCKS = []; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
   saveNow(); setSync('off'); renderAll(); renderAccount();
   if (!$('select').hidden) renderSelect();
   stopBgm();
@@ -553,7 +563,7 @@ async function deleteAccount(btn) {
     state.friends = friendsOf().filter(f => !f.uid);
     state.delQueue = [];
     if (!state.chars.some(c => c.id === state.activeId)) state.activeId = state.chars.length ? state.chars[0].id : null;
-    me = null; online = null; shares = null; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
+    me = null; online = null; shares = null; BLOCKS = []; lastSynced.clear(); G.list = []; G.err = ''; acctTab = 'login';
     saveNow(); setSync('off'); renderAll(); renderAccount(); renderOnline();
     if (!$('select').hidden || !state.chars.length) { selTab = 'mine'; showSelect(); renderSelect(); }
     stopBgm(); closeModals();
@@ -751,13 +761,15 @@ function renderOnline() {
   if (!me) { el.innerHTML = `<div class="ol-box">${head}<p>ログインすると、相手のユーザー名でフレンド申請を送れます。相手が承認すると、お互いのキャラシ一覧が見られるようになります。</p><button class="btn primary small" type="button" data-ol="login">ログイン・新規登録</button></div>`; return; }
   const o = online || { friends: [], incoming: [], outgoing: [] };
   const av = u => `<span class="fav sm" style="--fc:${esc((friendsOf().find(f => f.uid === u.id) || {}).color || 'var(--sky)')}">${avImg(u.id) || esc((u.username || '？').charAt(0))}</span>`;
+  const blk = u => `<button class="rp-btn" type="button" data-ol="block" data-uid="${esc(u.id)}" data-name="${esc(u.username || '')}" title="この人からの申請・招待が届かなくなります">ブロック</button>`;
   el.innerHTML = `<div class="ol-box">${head}
     <p class="ol-me">あなたのユーザー名：<b>${esc(me.username)}</b>（これを友達に教えると申請してもらえます）</p>
     <form class="ol-search" id="ol-search"><input class="inp" id="ol-name" placeholder="相手のユーザー名" autocomplete="off" aria-label="相手のユーザー名"><button class="btn primary" type="submit">フレンド申請</button></form>
     <p class="err" id="ol-err" role="alert"></p>
-    ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button>${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
-    ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button>${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
-    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">${isFree() ? `<i class="tab-lock">${LOCK_SVG}</i>` : ''}キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button>${reportBtn(u.id, u.username)}</div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
+    ${o.incoming.length ? `<div class="ol-sec"><span class="lbl">届いた申請</span>${o.incoming.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="accept" data-uid="${u.id}">承認</button><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">断る</button>${blk(u)}${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
+    ${o.outgoing.length ? `<div class="ol-sec"><span class="lbl">申請中</span>${o.outgoing.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="hint">承認待ち</span><span class="sp"></span><button class="btn small" type="button" data-ol="remove" data-uid="${u.id}">取り消す</button>${blk(u)}${reportBtn(u.id, u.username)}</div>`).join('')}</div>` : ''}
+    <div class="ol-sec"><span class="lbl">フレンド（${o.friends.length}人）</span>${o.friends.length ? o.friends.map(u => `<div class="ol-row">${av(u)}<b>${esc(u.username)}</b><span class="sp"></span><button class="btn small primary" type="button" data-ol="view" data-uid="${u.id}" data-name="${esc(u.username)}">${isFree() ? `<i class="tab-lock">${LOCK_SVG}</i>` : ''}キャラシを見る</button><button class="btn small danger" type="button" data-ol="unfriend" data-uid="${u.id}">解除</button>${blk(u)}${reportBtn(u.id, u.username)}</div>`).join('') : '<p class="empty">まだいません。相手のユーザー名で申請してみましょう。</p>'}</div>
+    ${BLOCKS.length ? `<details class="ol-sec ol-blocks"><summary class="lbl">ブロック中（${BLOCKS.length}人）</summary><p class="hint">ブロックしている人からのフレンド申請・グループの招待は届きません。ブロックしたことは相手に伝わりません。</p>${BLOCKS.map(b => `<div class="ol-row"><span class="fav sm" style="--fc:#8a90a8">${esc((b.username || '？').charAt(0))}</span><b>${esc(b.username || '（退会したユーザー）')}</b><span class="sp"></span><button class="btn small" type="button" data-ol="unblock" data-uid="${esc(b.user_id)}">ブロックを解除</button></div>`).join('')}</details>` : ''}
   </div>`;
 }
 const pairFilter = (a, b) => `and(requester.eq.${a},addressee.eq.${b}),and(requester.eq.${b},addressee.eq.${a})`;
@@ -771,6 +783,7 @@ $('online-friends').addEventListener('submit', async e => {
     if (error) throw error;
     if (!p) { err.textContent = `「${name}」というユーザーは見つかりませんでした。つづりを確かめてください。`; return; }
     if (p.id === me.id) { err.textContent = '自分自身はフレンドに追加できません。'; return; }
+    if (isBlockedUid(p.id)) { err.textContent = `${p.username}さんはブロック中です。申請するときは、下の「ブロック中」から解除してください。`; return; }
     const o = online || { friends: [], incoming: [], outgoing: [] };
     if (o.friends.some(u => u.id === p.id)) { err.textContent = `${p.username}さんはもうフレンドです。`; return; }
     if (o.outgoing.some(u => u.id === p.id)) { err.textContent = `${p.username}さんには申請済みです。承認を待ってください。`; return; }
@@ -793,6 +806,22 @@ $('online-friends').addEventListener('click', async e => {
   try {
     if (b.dataset.ol === 'login') { closeModals(); acctTab = 'login'; openAccount(); return; }
     if (b.dataset.ol === 'view') { viewFriend(uid, b.dataset.name); return; }
+    if (b.dataset.ol === 'block') {
+      if (!arm(b, 'もう一度押すとブロック')) return;
+      const { data, error } = await sb.rpc('block_user', { target: uid });
+      if (error) throw (/block_user|Could not find the function/i.test(error.message || '') ? new Error('いまはブロックできません（サーバーの準備中です）。') : error);
+      if (data !== 'ok') throw new Error({ self: '自分自身はブロックできません。', nouser: 'その人は見つかりませんでした。', toomany: 'ブロックできるのは500人までです。' }[data] || String(data));
+      await loadFriendships(); renderOnline(); renderFriends();
+      toast(`${b.dataset.name || 'その人'}さんをブロックしました。フレンドと申請を消しました（相手には伝わりません）。`);
+      return;
+    }
+    if (b.dataset.ol === 'unblock') {
+      const { error } = await sb.rpc('unblock_user', { target: uid });
+      if (error) throw error;
+      await loadFriendships(); renderOnline(); renderFriends();
+      toast('ブロックを解除しました。');
+      return;
+    }
     if (b.dataset.ol === 'accept') {
       const r = await sb.from('friendships').update({ status: 'accepted' }).eq('requester', uid).eq('addressee', me.id);
       if (r.error) throw r.error;
@@ -808,7 +837,7 @@ $('online-friends').addEventListener('click', async e => {
       }
     }
     await loadFriendships(); renderOnline(); renderFriends();
-  } catch (er) { toast(jaErr(er)); }
+  } catch (er) { toast(er && er.message && !/^[A-Za-z]/.test(er.message) ? er.message : jaErr(er)); }
 });
 
 /* ---- フレンドのキャラシを見る（読み取り専用） ---- */

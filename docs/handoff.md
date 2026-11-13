@@ -22,11 +22,11 @@
 ## 1.5 検証版と管理ページ（2026-11-13〜）
 - 管理ページ：https://orbis-locus.github.io/admin/ （マスターだけ。タブ：検証版・本番・通報・お問い合わせ・欲しい！・利用者と権限）。ソースは src/admin/。
 - 検証版：https://orbis-locus.github.io/staging/ 。`python3 build.py staging` で作る（本番のファイルは変わらない）。変更点は src/staging-notes.md に書く。オーナーが確かめて「本番に入れて」と言ったら `python3 build.py` を実行する。くわしくは CLAUDE.md。
-- 2026-11-13：オーナーが検証版を確かめて、本番にも入れた（管理ページへのリンク・STAGING のしくみ）。いま本番と検証版は同じ中身。
+- 2026-11-13：オーナーが検証版を確かめて、本番にも入れた（管理ページへのリンク・STAGING のしくみ）。そのあと検証版にだけ「ブロック」を入れた（本番はまだ）。
 
 ## 2. Supabase の SQL（オーナーが SQL Editor で手で実行する）
 
-**01〜23 はすべて実行済み**（2026-11-13 時点）。
+**01〜23 は実行済み、24 は未実行**（2026-11-13 時点）。
 
 | ファイル | 内容 | 実行 |
 |---|---|---|
@@ -47,6 +47,7 @@
 | 20-reports.sql | 通報（reports・report_user・report_list・mod_action） | 済み |
 | 22-delete-account.sql | アカウントを自分で消す（delete_my_account(check_only)。最後のマスターは消せない） | 済み（2026-11-13 に確認：関数があり、ログインなしでは断られる） |
 | 23-request-limits.sql | フレンド申請・グループ招待の上限（request_log とトリガー。申請は1日30件・同じ相手3回、招待は1日60人・同じ人3回） | 済み（2026-11-13 に確認：表があり、ログインなしでは読めない。トリガーはこちらから確かめられない） |
+| 24-blocks.sql | ブロック（user_blocks・block_user・unblock_user・my_blocks・blocked_by_me、フレンドの読み取りの決まりを作り直す、申請と招待のトリガー） | **未実行**（2026-11-13 に作成。手元の PostgreSQL で確認済み） |
 | 21-contacts.sql | お問い合わせ（contacts・send_contact は anon も可・contact_list と contact_close はマスターだけ） | 済み（2026-11-12 に確認。オーナーがテストで送って一覧に出ることも確認） |
 
 - SQL を渡すときの注意：オーナーがコピーで**途中で切れた**ことがある。日本語のコメントを外した英数字だけの版を渡し、「全部消してから貼る」「文字を選択していない状態で Run」と伝える。
