@@ -64,6 +64,11 @@ const jaErr = e => {
   // サーバーの大きさの上限（supabase/19-limits.sql）
   if (/ORBIS_CHAR_TOO_LARGE/.test(m)) return 'キャラシが大きすぎて保存できませんでした（1人分 1MB まで）。メモや経歴を短くするか、画像を減らしてください。';
   if (/ORBIS_TOO_MANY_CHARS/.test(m)) return 'サーバーに保存できる探索者の数（60人）を超えています。使っていない探索者を削除してください。';
+  // フレンド申請・グループ招待の上限（supabase/23-request-limits.sql）
+  if (/ORBIS_FRIEND_LIMIT/.test(m)) return 'フレンド申請を送れるのは1日30件までです。明日またお願いします。';
+  if (/ORBIS_FRIEND_SAME/.test(m)) return '同じ人へのフレンド申請は、1日3回までです。相手の返事を待つか、明日またお願いします。';
+  if (/ORBIS_INVITE_LIMIT/.test(m)) return 'グループに招待できるのは1日60人までです。明日またお願いします。';
+  if (/ORBIS_INVITE_SAME/.test(m)) return '同じ人を同じグループに招待できるのは、1日3回までです。明日またお願いします。';
   if (/ORBIS_DATA_TOO_LARGE/.test(m)) return 'データが大きすぎて保存できませんでした。メモなどを短くしてください。';
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
