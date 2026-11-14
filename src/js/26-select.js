@@ -1,6 +1,7 @@
 /* ================= 探索者をえらぶ画面 ================= */
 let selPress = null, selLong = false, selResizeT = null;
 function renderSelect() {
+  renderBackupNote();   // 探索者の数が変わったときも、バックアップの一言を出す・隠す
   const stage = $('sel-stage');
   stage.classList.remove('themev');
   $('sel-rest')?.remove();

@@ -85,9 +85,50 @@ $('import-run').addEventListener('click', () => {
   else toast(`${list.length}人の探索者を読み込みました。`);
 });
 
-$('btn-export').addEventListener('click', () => {
+/* ---- バックアップ（書き出し）。最後に書き出した日はこの端末だけに覚える（localStorage の charasheet-kobo.lastBackup）。
+   探索者をえらぶ画面の一言（renderBackupNote）は、ログインしているかどうかで文を変える（me は 21-cloud.js。起動が終わってから呼ぶ） ---- */
+const LS_BACKUP = 'charasheet-kobo.lastBackup';
+const lastBackupAt = () => { try { return Number(localStorage.getItem(LS_BACKUP)) || 0; } catch (e) { return 0; } };
+const markBackup = () => { try { localStorage.setItem(LS_BACKUP, String(Date.now())); } catch (e) { /* 保存できなくてもバックアップ自体は済んでいる */ } renderBackupNote(); };
+const backupDateText = () => {
+  const t = lastBackupAt();
+  if (!t) return 'まだバックアップしていません。';
+  const d = new Date(t);
+  return `最後のバックアップ：${d.getMonth() + 1}月${d.getDate()}日。`;
+};
+function backupWhy() {
+  return me
+    ? 'ログイン中のデータはサーバーにも保存されています。それでも、ファイルにも残しておくと安心です。'
+    : 'ログインしていないと、探索者のデータは<b>このブラウザの中だけ</b>に保存されます。端末を変えたり、ブラウザのデータを消したりすると失われます。';
+}
+function renderBackupNote() {
+  const el = $('sel-backup-note'); if (!el) return;
+  const real = state.chars.some(c => !c.sample);
+  const old = !lastBackupAt() || Date.now() - lastBackupAt() > 30 * 86400000;
+  el.hidden = !real;
+  el.classList.toggle('warn', real && old && !me);
+  el.innerHTML = `${backupWhy()}${esc(backupDateText())} <button type="button" class="link-btn" id="sel-backup-link">バックアップする</button>`;
+}
+function openExport() {
   $('export-text').value = JSON.stringify({ app: 'charasheet-kobo', version: 2, chars: state.chars, friends: state.friends || [] }, null, 2);
   $('export-status').textContent = '';
+  $('export-why').innerHTML = `${backupWhy()}${esc(backupDateText())}`;
   openModal('modal-export');
+}
+$('btn-export').addEventListener('click', openExport);
+$('sel-backup').addEventListener('click', openExport);
+$('sel-backup-note').addEventListener('click', e => { if (e.target.id === 'sel-backup-link') openExport(); });
+$('export-copy').addEventListener('click', () => copyText($('export-text').value, $('export-status'), $('export-text'), 'コピーしました。メモ帳などに保存してください。').then(ok => { if (ok) { markBackup(); $('export-why').innerHTML = `${backupWhy()}${esc(backupDateText())}`; fxAt($('export-copy'), true); } }));
+$('export-file').addEventListener('click', () => {
+  const d = new Date(), z = n => String(n).padStart(2, '0');
+  const name = `ORBiS-backup-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}.json`;
+  try {
+    const url = URL.createObjectURL(new Blob([$('export-text').value], { type: 'application/json' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    markBackup();
+    $('export-status').textContent = `「${name}」を保存しました。ダウンロードの場所を確かめてください。`;
+    $('export-why').innerHTML = `${backupWhy()}${esc(backupDateText())}`;
+    fxAt($('export-file'), true);
+  } catch (e) { $('export-status').textContent = 'ファイルに保存できませんでした。「コピー」して、メモ帳などに貼り付けて残してください。'; }
 });
-$('export-copy').addEventListener('click', () => copyText($('export-text').value, $('export-status'), $('export-text'), 'コピーしました。メモ帳などに保存してください。').then(ok => { if (ok) fxAt($('export-copy'), true); }));

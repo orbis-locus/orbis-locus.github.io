@@ -585,6 +585,7 @@ function renderAccountBtn() {
   $('btn-friends').innerHTML = `フレンド${req}`;
   $('sel-friends').innerHTML = `フレンド管理${req}`;
   $('sel-req').innerHTML = req;
+  renderBackupNote();
 }
 function renderAccount() {
   const el = $('acct-body'); if (!el) return;
