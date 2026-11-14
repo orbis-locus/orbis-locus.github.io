@@ -79,6 +79,14 @@ function rollDetail(expr) {
   return { total: calc(replaced), groups, expr: String(expr).toUpperCase().replace(/\*/g, '×') };
 }
 
+/* ---- 使えないユーザー名（運営になりすます名前・ひどい言葉）。サーバーの決まりは supabase/25-banned-names.sql（言葉を足すときは両方に） ----
+   くらべる前に、全角→半角・大文字→小文字・カタカナ→ひらがなにそろえ、あいだの記号を消す（nameKey）。言葉はそろえた後の形で書く */
+const NAME_NG = ['運営', '公式', '管理者', '管理人', '事務局', 'うんえい', 'こうしき', 'かんりしゃ', 'かんりにん', 'さぽーと', 'すたっふ', 'もでれーたー', 'admin', 'official', 'staff', 'support', 'moderator', 'operator', '死ね', '氏ね', '殺す', 'ころすぞ', '自殺', 'くたばれ', 'れいぷ', 'せっくす', 'ちんこ', 'ちんぽ', 'まんこ', 'きちがい', '基地外', 'がいじ', '支那', '土人', 'にがー', 'fuck', 'nigger', 'nigga', 'porn'];
+const NAME_NG_EXACT = ['orbis', 'おるびす'];   // これだけは「ぴったり同じ」のときだけ使えない
+const nameKey = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[ _\-.*\u30fb\u3000]/g, '');
+const nameBanned = s => { const k = nameKey(s); return NAME_NG_EXACT.includes(k) || NAME_NG.some(w => k.includes(w)); };
+const NAME_NG_MSG = 'この名前は使えません。別のユーザー名にしてください。';
+
 /* ================= データ ================= */
 let state = { chars: [], activeId: null, paletteAll: false };
 
@@ -3152,6 +3160,8 @@ const jaErr = e => {
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';
   if (/already registered|already been registered/i.test(m)) return 'このメールアドレスはすでに登録されています。ログインしてください。';
+  // 使えないユーザー名（supabase/25-banned-names.sql）
+  if (/ORBIS_NAME_BANNED/.test(m)) return NAME_NG_MSG;
   if (/duplicate key|profiles_username_lower|23505/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
   if (/Database error saving new user/i.test(m)) return 'そのユーザー名はすでに使われています。別のユーザー名にしてください。';
   // メールを送れなかった（Supabase の標準のメールは運営チームにしか送れない・送る設定のまちがい など）
@@ -3762,6 +3772,7 @@ $('acct-body').addEventListener('submit', async e => {
     if (!me) return;
     if (!/^[^\s]{2,20}$/.test(name)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
     if (name === me.username) { err.textContent = '今のユーザー名と同じです。'; return; }
+    if (nameBanned(name) && !isMaster()) { err.textContent = NAME_NG_MSG; return; }
     btn.disabled = true;
     try {
       if (name.toLowerCase() !== (me.username || '').toLowerCase()) {
@@ -3793,6 +3804,7 @@ $('acct-body').addEventListener('submit', async e => {
     } else if (kind === 'signup') {
       const username = ($('ac-user').value || '').trim();
       if (!/^[^\s]{2,20}$/.test(username)) { err.textContent = 'ユーザー名は空白なしの2〜20文字にしてください。'; return; }
+      if (nameBanned(username)) { err.textContent = NAME_NG_MSG; return; }
       if (pass.length < 8) { err.textContent = 'パスワードは8文字以上にしてください。'; return; }
       if (pass !== ($('ac-pass2').value || '')) { err.textContent = '確認用のパスワードが一致しません。同じパスワードを2回入れてください。'; return; }
       if (!$('ac-agree').checked) { err.textContent = '利用規約とプライバシーポリシーを読んで、「同意します」にチェックを入れてください。'; return; }

@@ -21,3 +21,11 @@ function rollDetail(expr) {
   });
   return { total: calc(replaced), groups, expr: String(expr).toUpperCase().replace(/\*/g, '×') };
 }
+
+/* ---- 使えないユーザー名（運営になりすます名前・ひどい言葉）。サーバーの決まりは supabase/25-banned-names.sql（言葉を足すときは両方に） ----
+   くらべる前に、全角→半角・大文字→小文字・カタカナ→ひらがなにそろえ、あいだの記号を消す（nameKey）。言葉はそろえた後の形で書く */
+const NAME_NG = ['運営', '公式', '管理者', '管理人', '事務局', 'うんえい', 'こうしき', 'かんりしゃ', 'かんりにん', 'さぽーと', 'すたっふ', 'もでれーたー', 'admin', 'official', 'staff', 'support', 'moderator', 'operator', '死ね', '氏ね', '殺す', 'ころすぞ', '自殺', 'くたばれ', 'れいぷ', 'せっくす', 'ちんこ', 'ちんぽ', 'まんこ', 'きちがい', '基地外', 'がいじ', '支那', '土人', 'にがー', 'fuck', 'nigger', 'nigga', 'porn'];
+const NAME_NG_EXACT = ['orbis', 'おるびす'];   // これだけは「ぴったり同じ」のときだけ使えない
+const nameKey = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[ _\-.*\u30fb\u3000]/g, '');
+const nameBanned = s => { const k = nameKey(s); return NAME_NG_EXACT.includes(k) || NAME_NG.some(w => k.includes(w)); };
+const NAME_NG_MSG = 'この名前は使えません。別のユーザー名にしてください。';
