@@ -2175,16 +2175,16 @@ $('sel-backup-note').addEventListener('click', e => { if (e.target.id === 'sel-b
 $('export-copy').addEventListener('click', () => copyText($('export-text').value, $('export-status'), $('export-text'), 'コピーしました。メモ帳などに保存してください。').then(ok => { if (ok) { markBackup(); $('export-why').innerHTML = `${backupWhy()}${esc(backupDateText())}`; fxAt($('export-copy'), true); } }));
 $('export-file').addEventListener('click', () => {
   const d = new Date(), z = n => String(n).padStart(2, '0');
-  const name = `ORBiS-backup-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}.json`;
+  const name = `ORBiS-backup-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}.txt`;
   try {
-    const url = URL.createObjectURL(new Blob([$('export-text').value], { type: 'application/json' }));
+    const url = URL.createObjectURL(new Blob([$('export-text').value], { type: 'text/plain;charset=utf-8' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     markBackup();
-    $('export-status').textContent = `「${name}」を保存しました。ダウンロードの場所を確かめてください。`;
+    $('export-status').textContent = `テキストファイル「${name}」を保存しました。ダウンロードの場所を確かめてください。`;
     $('export-why').innerHTML = `${backupWhy()}${esc(backupDateText())}`;
     fxAt($('export-file'), true);
-  } catch (e) { $('export-status').textContent = 'ファイルに保存できませんでした。「コピー」して、メモ帳などに貼り付けて残してください。'; }
+  } catch (e) { $('export-status').textContent = 'テキストファイルに保存できませんでした。「コピー」して、メモ帳などに貼り付けて残してください。'; }
 });
 
 /* ================= トースト ================= */

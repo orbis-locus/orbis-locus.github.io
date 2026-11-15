@@ -667,19 +667,19 @@ img { max-width: 100%; }
 <div class="overlay" id="modal-export" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
     <h2 id="export-title">バックアップ</h2>
-    <p>全探索者のデータです。<b>「ファイルに保存」</b>で、自分の端末にファイルとして残せます（スマホは「ファイル」アプリなどに保存されます）。</p>
+    <p>全探索者のデータです。<b>「テキストファイルに保存」</b>で、自分の端末にテキストファイル（.txt）として残せます（スマホは「ファイル」アプリなどに保存されます）。</p>
     <p class="export-why" id="export-why"></p>
-    <p>復元するときは、新しい端末やブラウザで「読み込み」を開き、「ファイルを選択」からこのファイルを選んでください（コピーしたものは、貼り付けでも戻せます）。</p>
+    <p>復元するときは、新しい端末やブラウザで「読み込み」を開き、「ファイルを選択」からこのテキストファイルを選んでください（コピーしたものは、貼り付けでも戻せます。前の .json のバックアップもそのまま読み込めます）。</p>
     <textarea class="inp" id="export-text" readonly></textarea>
     <div class="copy-status" id="export-status" role="status"></div>
     <div class="modal-actions">
       <button class="btn ghost" type="button" data-close>閉じる</button>
       <button class="btn" type="button" id="export-copy">コピー</button>
-      <button class="btn primary" type="button" id="export-file">ファイルに保存</button>
+      <button class="btn primary" type="button" id="export-file">テキストファイルに保存</button>
     </div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="app.js?v=b14d574c7a"></script>
+<script src="app.js?v=36aca440a2"></script>
 </body>
 </html>
