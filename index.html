@@ -77,10 +77,12 @@ img { max-width: 100%; }
     <div class="sel-stage" id="sel-stage"></div>
     <div class="sel-foot">
       <button class="btn" type="button" id="sel-import">読み込み（いあきゃら など）</button>
+      <button class="btn" type="button" id="sel-backup">バックアップ</button>
       <button class="btn" type="button" id="sel-friends">フレンド管理</button>
       <button class="btn" type="button" id="sel-theme">テーマ・背景</button>
       <button class="btn acct-btn" type="button" id="sel-account">ログイン</button>
     </div>
+    <p class="sel-backup-note" id="sel-backup-note" role="note"></p>
     <p class="sel-credit">本作は、「株式会社アークライト」及び「株式会社KADOKAWA」が権利を有する『クトゥルフ神話TRPG』シリーズの二次創作物です。<span class="sel-links"><button type="button" class="link-btn" data-about>権利表記・このアプリについて</button><button type="button" class="link-btn" data-legal="terms">利用規約</button><button type="button" class="link-btn" data-legal="privacy">プライバシーポリシー</button><button type="button" class="link-btn" data-legal="contact">お問い合わせ</button></span></p>
   </div>
 </div>
@@ -663,12 +665,15 @@ img { max-width: 100%; }
 <div class="overlay" id="modal-export" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
     <h2 id="export-title">バックアップ</h2>
-    <p>全探索者のデータです。コピーしてメモ帳などに保存しておくと、別の端末やブラウザで「読み込み」から復元できます。</p>
+    <p>全探索者のデータです。<b>「テキストファイルに保存」</b>で、自分の端末にテキストファイル（.txt）として残せます（スマホは「ファイル」アプリなどに保存されます）。</p>
+    <p class="export-why" id="export-why"></p>
+    <p>復元するときは、新しい端末やブラウザで「読み込み」を開き、「ファイルを選択」からこのテキストファイルを選んでください（コピーしたものは、貼り付けでも戻せます。前の .json のバックアップもそのまま読み込めます）。</p>
     <textarea class="inp" id="export-text" readonly></textarea>
     <div class="copy-status" id="export-status" role="status"></div>
     <div class="modal-actions">
       <button class="btn ghost" type="button" data-close>閉じる</button>
-      <button class="btn primary" type="button" id="export-copy">コピー</button>
+      <button class="btn" type="button" id="export-copy">コピー</button>
+      <button class="btn primary" type="button" id="export-file">テキストファイルに保存</button>
     </div>
   </div>
 </div>
