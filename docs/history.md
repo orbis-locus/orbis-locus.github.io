@@ -3,6 +3,9 @@
 新しい順。作業が終わるたびに、決まったこと・追加した機能を1〜2行で追記する。
 （細かい変更はコミット履歴 `git log` を見る）
 
+## 2026-11-16
+- ボット対策（Cloudflare Turnstile）の画面側を検証版に入れた（**検証版まで。本番はまだ**。21-cloud.js の CAPTCHA_SITEKEY・mountCaptcha・captchaOpts、css/08-account.css の .captcha-box）：ログイン・新規登録・パスワード再設定に確認の枠を出し、確認の結果（captchaToken）を Supabase に渡す。CAPTCHA_SITEKEY が空のあいだは何も出ず前のまま。file:// で開いた1ファイル版では出さない（Turnstile が使えないため）。サーバー側（Supabase の Attack Protection）はオンにするのが最後（本番にこの版が出てから）。**注意**：Supabase の CAPTCHA は全員のログインに効くので、オンにすると BOOTH の1ファイル版（ダブルクリックで開く版）からはログイン・登録ができなくなる。決めること：1ファイル版の扱い。
+
 ## 2026-11-15
 - **本番に入れた**（オーナーの「本番入れて」）：ユーザー名の禁止語・バックアップの案内・バックアップのテキストファイル保存。supabase/25-banned-names.sql は実行済み（admin と tanaka で判定を確認）。dist/ORBiS.zip も変わった（BOOTH の差しかえはまとめて後で）。
 - バックアップのファイルを .json から .txt に（オーナーの希望：「.json は開発者っぽくて普通の人は戸惑う」。検証版まで。13-modals.js の export-file）：ボタンは「テキストファイルに保存」、名前は ORBiS-backup-日付.txt、中身は前と同じ JSON（読み込みは JSON.parse が通ればバックアップとして読むので、.txt も前の .json もそのまま戻せる）。小窓・説明書・商品ページの言い方も「テキストファイル」に。中身を人が読める形にする案は、読み込み側も作り直す大きめの変更になるので見送り。
