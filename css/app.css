@@ -1132,6 +1132,9 @@ label.btn { display: inline-block; }
 .acct-del .inp { width: 100%; box-sizing: border-box; }
 .acct-mode.del { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
 .acct-mode.del b { color: var(--danger); }
+/* bot対策の確認の枠（Turnstile） */
+.captcha-box { display: flex; justify-content: center; min-height: 0; }
+.captcha-box:empty { display: none; }
 
 /* ===== theme looks ===== */
 :root[data-look~="dark"] { color-scheme: dark; --shadow: 0 12px 34px -14px rgb(0 0 0 / .75), 0 2px 6px -2px rgb(0 0 0 / .45); --gloss: rgb(255 255 255 / .12); }
