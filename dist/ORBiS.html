@@ -8102,6 +8102,10 @@ function renderAccount() {
         <button class="btn primary" type="submit">パスワードを変える</button>
       </form>`,
   };
+  if (CAPTCHA_SITEKEY && location.protocol === 'file:' && ['login', 'signup', 'reset'].includes(acctTab)) {
+    el.innerHTML = '<div class="acct-mode"><b>アカウント</b><span>ログイン・新規登録は Web 版で</span></div><p>このファイル（ダブルクリックで開く版）では、不正な登録を防ぐ確認が動かないため、アカウントの作成・ログインはできません。</p><p><a class="btn primary" href="https://orbis-locus.github.io/" target="_blank" rel="noopener">Web 版を開く</a></p><p class="empty">ここで作った探索者は、「バックアップ」の「テキストファイルに保存」で書き出して、Web 版の「読み込み」から取り込めます。</p>';
+    return;
+  }
   el.innerHTML = f[acctTab] + (/id="ac-err"/.test(f[acctTab]) ? '' : '<p class="err" id="ac-err" role="alert"></p>') + '<p class="ok-msg" id="ac-ok" role="status"></p>';
   mountCaptcha();
 }

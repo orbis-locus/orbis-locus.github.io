@@ -4,6 +4,7 @@
 （細かい変更はコミット履歴 `git log` を見る）
 
 ## 2026-11-16
+- **本番に入れた**（オーナーの「本番に入れて」）：1ファイル版の「ログイン・登録は Web 版で」の案内と、説明書・商品ページの文。dist/ORBiS.zip も変わった（BOOTH の差しかえは、Supabase の CAPTCHA をオンにしたあとで）。
 - 1ファイル版の扱いを「案A」に決定（オーナー）：ダブルクリックで開く版は、アカウントの作成・ログインを諦め、Web 版へ案内する。アカウントの小窓に案内（21-cloud.js、file: のとき）、説明書・商品ページの文を直した（検証版まで。本番・BOOTH はまだ）。
 - **本番に入れた**（オーナーの「本番に入れて」）：ボット対策の確認の枠（Turnstile）。サーバー側（Supabase の Attack Protection）はまだオフ。オンにする前に、1ファイル版の扱い（ログイン・登録を諦めてウェブ版へ案内する案）を決めて、説明書・商品ページを直す。
 - ボット対策（Cloudflare Turnstile）の画面側を検証版に入れた（**検証版まで。本番はまだ**。21-cloud.js の CAPTCHA_SITEKEY・mountCaptcha・captchaOpts、css/08-account.css の .captcha-box）：ログイン・新規登録・パスワード再設定に確認の枠を出し、確認の結果（captchaToken）を Supabase に渡す。CAPTCHA_SITEKEY が空のあいだは何も出ず前のまま（11/16 夜にオーナーが Cloudflare で Turnstile を作り、サイトキーを入れた。ホスト名 orbis-locus.github.io。Cloudflare は kanno-925 の GitHub でログインするアカウント）。file:// で開いた1ファイル版では出さない（Turnstile が使えないため）。サーバー側（Supabase の Attack Protection）はオンにするのが最後（本番にこの版が出てから）。**注意**：Supabase の CAPTCHA は全員のログインに効くので、オンにすると BOOTH の1ファイル版（ダブルクリックで開く版）からはログイン・登録ができなくなる。決めること：1ファイル版の扱い。
