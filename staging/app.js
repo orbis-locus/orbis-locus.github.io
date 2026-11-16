@@ -3138,7 +3138,7 @@ let sb = null, me = null, online = null, syncTimer = null, syncing = false, sync
    CAPTCHA_SITEKEY が空のあいだは何も出ず、いままでどおり動く。
    Cloudflare で作った「サイトキー」（公開してよい）をここに書くと、ログイン・新規登録・パスワード再設定の画面に確認が出る。
    サーバー側（Supabase の Attack Protection）をオンにするのは、この入った版を本番に出してから。 */
-const CAPTCHA_SITEKEY = '';
+const CAPTCHA_SITEKEY = '0x4AAAAAAGDbQCQjS4_9WEKC';
 let captchaToken = '', captchaWid = null, captchaLoading = null;
 function captchaOn() { return !!CAPTCHA_SITEKEY && location.protocol !== 'file:'; }
 function loadCaptcha() {
