@@ -3,6 +3,9 @@
 新しい順。作業が終わるたびに、決まったこと・追加した機能を1〜2行で追記する。
 （細かい変更はコミット履歴 `git log` を見る）
 
+## 2026-11-19
+- 管理ページのログインに「ロボットではありません」の確認を足した（admin.html・admin.js。Supabase の CAPTCHA をオンにしたあと、管理ページのログインが「captcha protection: request disallowed」で失敗したため）。管理ページは本番と同じログイン（storageKey）なので、アプリで先にログインしていれば入れる。
+
 ## 2026-11-16
 - **ボット対策が完成**：オーナーが Supabase の Attack Protection で CAPTCHA（Turnstile）をオンにし、Secret Key を入れた。本番で確認の枠が出て問題なく動く。残り：BOOTH の zip と商品ページの文の差しかえ（オーナー）。Turnstile のキーは Cloudflare（kanno-925 の GitHub でログインするアカウント）。
 - **本番に入れた**（オーナーの「本番に入れて」）：1ファイル版の「ログイン・登録は Web 版で」の案内と、説明書・商品ページの文。dist/ORBiS.zip も変わった（BOOTH の差しかえは、Supabase の CAPTCHA をオンにしたあとで）。

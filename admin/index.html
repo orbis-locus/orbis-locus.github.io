@@ -118,6 +118,7 @@ button { font: inherit; }
     <form id="ad-login-form">
       <label>メールアドレス<input class="ad-inp" type="email" id="ad-email" autocomplete="email" required></label>
       <label>パスワード<input class="ad-inp" type="password" id="ad-pass" autocomplete="current-password" required></label>
+      <div id="ad-captcha" style="display:flex;justify-content:center"></div>
       <button class="ad-btn primary" type="submit">ログイン</button>
       <p class="ad-err" id="ad-login-err" role="alert"></p>
     </form>
@@ -244,10 +245,28 @@ async function onSession(session) {
   openTab(tab);
   loadReports(true); loadContacts(true);   // 届いている数だけ、先にタブに出す
 }
+/* ロボットではない確認（Cloudflare Turnstile。ORBiS 本体と同じサイトキー） */
+const CAPTCHA_SITEKEY = '0x4AAAAAAGDbQCQjS4_9WEKC';
+let capToken = '', capWid = null;
+function mountCaptcha() {
+  if (capWid !== null) return;
+  const sc = document.createElement('script');
+  sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  sc.async = true;
+  sc.onload = () => {
+    capWid = window.turnstile.render($('ad-captcha'), { sitekey: CAPTCHA_SITEKEY, language: 'ja', theme: 'auto',
+      callback: t => { capToken = t; }, 'expired-callback': () => { capToken = ''; }, 'error-callback': () => { capToken = ''; } });
+  };
+  sc.onerror = () => { $('ad-login-err').textContent = '確認の部品を読み込めませんでした。通信を確かめて、開き直してください。'; };
+  document.head.appendChild(sc);
+}
+mountCaptcha();
 $('ad-login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const err = $('ad-login-err'); err.textContent = '';
-  const { error } = await sb.auth.signInWithPassword({ email: $('ad-email').value.trim(), password: $('ad-pass').value });
+  if (!capToken) { err.textContent = '「ロボットではありません」の確認が終わるまで、少し待ってからもう一度押してください。'; return; }
+  const { error } = await sb.auth.signInWithPassword({ email: $('ad-email').value.trim(), password: $('ad-pass').value, options: { captchaToken: capToken } });
+  capToken = ''; try { window.turnstile.reset(capWid); } catch (x) {}
   if (error) err.textContent = /Invalid login/i.test(error.message) ? 'メールアドレスかパスワードがちがいます。' : errText(error);
 });
 document.addEventListener('click', async e => {
