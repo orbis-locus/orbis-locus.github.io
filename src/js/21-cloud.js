@@ -108,6 +108,7 @@ const jaErr = e => {
   if (/ORBIS_INVITE_LIMIT/.test(m)) return 'グループに招待できるのは1日60人までです。明日またお願いします。';
   if (/ORBIS_INVITE_SAME/.test(m)) return '同じ人を同じグループに招待できるのは、1日3回までです。明日またお願いします。';
   if (/ORBIS_YOU_BLOCKED/.test(m)) return 'その人はブロック中です。フレンド申請や招待をするときは、先にブロックを解除してください。';
+  if (/ORBIS_HANDOUT_LIMIT/.test(m)) return 'このグループで送れる手紙は、1人100通までです。いらない手紙を取り消してください。';
   if (/ORBIS_DATA_TOO_LARGE/.test(m)) return 'データが大きすぎて保存できませんでした。メモなどを短くしてください。';
   if (/Invalid login credentials/i.test(m)) return 'ログインできませんでした。このメールアドレスのアカウントがないか、パスワードが違います。アカウントがない場合は、下の「新規アカウント作成へ」から作ってください。';
   if (/Email not confirmed/i.test(m)) return 'メールアドレスの確認がまだです。届いたメールのリンクを押してからログインしてください。';

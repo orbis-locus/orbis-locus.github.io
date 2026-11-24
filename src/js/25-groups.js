@@ -30,6 +30,7 @@ async function loadGroups() {
     if (uids.length) { const r = await selectProfiles(c => sb.from('profiles').select(c).in('id', uids)); (r.data || []).forEach(x => { G.names[x.id] = x.username; }); }
     G.list = (data || []).map(r => ({ id: r.id, owner: r.owner, locked: !!r.locked, data: r.data || {}, updated: r.updated_at, members: mem.filter(m => m.group_id === r.id) }));
     G.loaded = true; G.err = '';
+    await loadHandouts(ids);
     if (await migrateLegacyGroups()) return loadGroups();
   } catch (e) { G.err = groupMissing(e) ? 'setup' : jaErr(e); }
   renderGroupBadge();
@@ -102,6 +103,7 @@ function groupCardHtml(g, kind) {
     ${pending.length ? `<div class="gc-row"><span class="gc-role wait">招待中</span><div class="gc-pls">${pending.map(n => `<span class="gc-wait">${esc(n)}</span>`).join('')}</div></div>` : ''}
     ${roomRow(g, owner || (mine && mine.status === 'joined'))}
     ${diceRowHtml(g, mine)}
+    ${handoutRowHtml(g, mine)}
     ${d.note ? `<p class="gc-note">${esc(d.note)}</p>` : ''}
   </article>`;
 }
@@ -345,4 +347,138 @@ $('select').addEventListener('click', e => {
   }
   const r = e.target.closest('[data-gdice-reset]');
   if (r) { if (!arm(r, 'もう一度押すとリセット')) return; saveGroupDice(r.dataset.gdiceReset, { dice_reset: new Date().toISOString() }, 'みんなのダイスの回数をリセットしました。'); }
+});
+
+/* ================= ハンドアウト（KPと探索者の、1通ずつの手紙。supabase/26-handouts.sql） =================
+   KP → 探索者（ひとり宛て／みんな宛て）、探索者 → KP（ひとり宛て）。読めるのは送った人と受け取った人だけ。 */
+const HO = { list: [], missing: false };
+let hoCtx = null;   // { gid, editId }
+const LS_HO_SEEN = 'charasheet-kobo.hoSeen';
+const hoSeenSet = () => { try { return new Set(JSON.parse(localStorage.getItem(LS_HO_SEEN) || '[]')); } catch (e) { return new Set(); } };
+function hoSaveSeen(set) { try { localStorage.setItem(LS_HO_SEEN, JSON.stringify([...set].slice(-1000))); } catch (e) { /* 保存できなくても動く */ } }
+const hoIsRecv = h => !!me && h.from_user !== me.id && (h.to_user === me.id || h.to_user == null);
+const hoUnread = gid => { const seen = hoSeenSet(); return HO.list.filter(h => h.group_id === gid && hoIsRecv(h) && !seen.has(h.id + '@' + h.updated_at)).length; };
+async function loadHandouts(gids) {
+  if (!sb || !me || !gids || !gids.length) { HO.list = []; return; }
+  try {
+    const { data, error } = await sb.from('group_handouts').select('id,group_id,from_user,to_user,title,body,created_at,updated_at,read_at').in('group_id', gids).order('created_at', { ascending: false }).limit(500);
+    if (error) throw error;
+    HO.list = data || []; HO.missing = false;
+    const uids = [...new Set(HO.list.flatMap(h => [h.from_user, h.to_user]).filter(u => u && u !== me.id && !G.names[u]))];
+    if (uids.length) { const r = await selectProfiles(c => sb.from('profiles').select(c).in('id', uids)); (r.data || []).forEach(x => { G.names[x.id] = x.username; }); }
+  } catch (e) {
+    HO.list = [];
+    if (groupMissing(e) || /group_handouts/.test(String((e && e.message) || ''))) HO.missing = true;   // SQL 26 を実行していないときは、ボタンを出さない
+  }
+  if (hoCtx && !$('modal-handout').hidden) hoRenderList();
+}
+function handoutRowHtml(g, mine) {
+  if (HO.missing || !mine || mine.status !== 'joined') return '';
+  const n = hoUnread(g.id);
+  return `<div class="gc-row gc-ho"><span class="gc-role ho">手紙</span><div class="gc-pls"><button class="btn small" type="button" data-gho="${esc(g.id)}">ハンドアウトを開く${n ? `<b class="req-badge">${n}</b>` : ''}</button><span class="gc-ho-n">${mine.role === 'kp' ? 'KPから探索者へ、探索者からKPへ、手紙を送れます' : 'KPからの手紙を読み、KPへ手紙を送れます'}</span></div></div>`;
+}
+const hoFmt = t => { try { return new Date(t).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+function hoTargets(g, mine) {
+  const joined = (g.members || []).filter(m => m.status === 'joined' && m.user_id !== me.id);
+  if (mine.role === 'kp') {
+    const pls = joined.filter(m => m.role === 'pl');
+    return [{ v: '*', t: '探索者みんなへ' }, ...pls.map(m => ({ v: m.user_id, t: `${gUser(m.user_id)}${m.char_name ? '（' + m.char_name + '）' : ''}さんへ` }))];
+  }
+  return joined.filter(m => m.role === 'kp').map(m => ({ v: m.user_id, t: `KPの${gUser(m.user_id)}さんへ` }));
+}
+function hoRenderForm() {
+  const g = G.list.find(x => x.id === hoCtx.gid), mine = g && myRow(g);
+  if (!g || !mine) return;
+  const cur = hoCtx.editId && HO.list.find(h => h.id === hoCtx.editId);
+  const opts = hoTargets(g, mine);
+  $('ho-form').innerHTML = opts.length
+    ? `<div class="gm-sec"><b>${cur ? '手紙を書き直す' : '新しく送る'}</b>
+      <label class="ho-l" for="ho-to">宛先</label>
+      <select class="inp" id="ho-to" ${cur ? 'disabled' : ''}>${opts.map(o => `<option value="${esc(o.v)}" ${cur && String(cur.to_user == null ? '*' : cur.to_user) === o.v ? 'selected' : ''}>${esc(o.t)}</option>`).join('')}</select>
+      <label class="ho-l" for="ho-title">題名（なくてもOK）</label>
+      <input class="inp" id="ho-title" maxlength="100" value="${esc(cur ? cur.title : '')}" placeholder="例：HO1 あなただけの情報">
+      <label class="ho-l" for="ho-body">本文</label>
+      <textarea class="inp" id="ho-body" rows="6" maxlength="5000" placeholder="ここに書いた内容は、宛先の人だけが読めます。">${esc(cur ? cur.body : '')}</textarea>
+      <div class="row"><button class="btn primary" type="button" id="ho-send">${cur ? '書き直して保存' : '送る'}</button>${cur ? '<button class="btn ghost" type="button" id="ho-cancel">書き直しをやめる</button>' : ''}</div>
+      <span class="hint">${cur ? '書き直すと、相手には「新着」にもどります。' : mine.role === 'kp' ? '「探索者みんなへ」は、グループに参加している探索者全員に見えます。' : 'KPにだけ届きます。同じ卓のほかの探索者には見えません。'}</span></div>`
+    : `<div class="gm-sec"><span class="empty">${mine.role === 'kp' ? 'まだ参加している探索者がいないので、送れません。探索者が参加すると送れるようになります。' : 'まだ参加しているKPがいないので、送れません。'}</span></div>`;
+}
+function hoRenderList() {
+  const g = G.list.find(x => x.id === hoCtx.gid);
+  if (!g) { $('ho-list').innerHTML = ''; return; }
+  const seen = hoSeenSet(), mine = HO.list.filter(h => h.group_id === g.id);
+  const recv = mine.filter(hoIsRecv), sent = mine.filter(h => h.from_user === me.id);
+  const nameTo = h => h.to_user == null ? '探索者みんな' : gUser(h.to_user);
+  $('ho-list').innerHTML = `
+    <div class="gm-sec"><b>届いた手紙</b>${recv.length ? recv.map(h => `<article class="ho-item ${seen.has(h.id + '@' + h.updated_at) ? '' : 'new'}">
+        <div class="ho-top"><b>${esc(h.title || '（題名なし）')}</b>${seen.has(h.id + '@' + h.updated_at) ? '' : '<span class="ho-new">新着</span>'}<span class="ho-meta">${esc(gUser(h.from_user))}さんから${h.to_user == null ? '（みんな宛て）' : ''} ・ ${esc(hoFmt(h.updated_at))}</span></div>
+        <p class="ho-body">${esc(h.body)}</p></article>`).join('') : '<span class="empty">まだ届いていません。</span>'}</div>
+    <div class="gm-sec"><b>送った手紙</b>${sent.length ? sent.map(h => `<article class="ho-item">
+        <div class="ho-top"><b>${esc(h.title || '（題名なし）')}</b><span class="ho-meta">${esc(nameTo(h))}へ ・ ${esc(hoFmt(h.updated_at))}${h.to_user == null ? '' : h.read_at ? ' ・ <span class="ho-read">既読</span>' : ' ・ <span class="ho-unread">未読</span>'}</span></div>
+        <p class="ho-body">${esc(h.body)}</p>
+        <div class="row"><button class="btn small" type="button" data-ho-edit="${esc(h.id)}">書き直す</button><button class="btn small danger" type="button" data-ho-del="${esc(h.id)}">取り消す</button></div></article>`).join('') : '<span class="empty">まだ送っていません。</span>'}</div>`;
+}
+function hoMarkSeen() {
+  const seen = hoSeenSet(), mineRecv = HO.list.filter(h => h.group_id === hoCtx.gid && hoIsRecv(h));
+  mineRecv.forEach(h => seen.add(h.id + '@' + h.updated_at));
+  hoSaveSeen(seen);
+  mineRecv.filter(h => h.to_user === me.id && !h.read_at).forEach(h => { sb.rpc('mark_handout_read', { hid: h.id }).then(() => { h.read_at = new Date().toISOString(); }, () => {}); });
+}
+async function openHandouts(gid) {
+  hoCtx = { gid, editId: '' };
+  const g = G.list.find(x => x.id === gid);
+  $('ho-title-h').textContent = `ハンドアウト：${(g && g.data.name) || '無題のシナリオ'}`;
+  $('ho-err').textContent = '';
+  hoRenderForm(); hoRenderList(); openModal('modal-handout');
+  await loadHandouts(G.list.map(x => x.id));   // 開いた時点で最新にする
+  hoRenderList(); hoMarkSeen();
+  setTimeout(() => { hoRenderList(); renderSelect(); }, 600);   // 「新着」を見せてから、カードのバッジを消す
+}
+async function hoSend() {
+  const g = G.list.find(x => x.id === hoCtx.gid), err = $('ho-err');
+  const title = ($('ho-title').value || '').trim(), body = ($('ho-body').value || '').trim();
+  err.textContent = '';
+  if (!body) { err.textContent = '本文を書いてください。'; return; }
+  const btn = $('ho-send'); btn.disabled = true;
+  try {
+    if (hoCtx.editId) {
+      const { error } = await sb.from('group_handouts').update({ title, body, updated_at: new Date().toISOString() }).eq('id', hoCtx.editId);
+      if (error) throw error;
+      toast('手紙を書き直しました。');
+    } else {
+      const to = $('ho-to').value;
+      const { error } = await sb.from('group_handouts').insert({ group_id: g.id, to_user: to === '*' ? null : to, title, body });
+      if (error) throw error;
+      toast('手紙を送りました。');
+    }
+    hoCtx.editId = '';
+    await loadHandouts(G.list.map(x => x.id));
+    hoRenderForm(); hoRenderList(); renderSelect();
+  } catch (e) {
+    const m = String((e && e.message) || '');
+    err.textContent = /ORBIS_HANDOUT_LIMIT/.test(m) ? 'このグループで送れる手紙は、1人100通までです。いらない手紙を取り消してください。'
+      : /row-level security/i.test(m) ? 'この人には送れませんでした。参加の状態や役割が変わったのかもしれません。グループの画面を開き直してください。'
+      : /group_handouts|Could not find the (table|function)/i.test(m) ? 'サーバーの追加設定（supabase/26-handouts.sql）がまだのようです。Supabase の SQL Editor で実行してください。'
+      : jaErr(e);
+  } finally { btn.disabled = false; }
+}
+async function hoDelete(btn) {
+  if (!arm(btn, 'もう一度押すと取り消し')) return;
+  btn.disabled = true;
+  try {
+    const { error } = await sb.from('group_handouts').delete().eq('id', btn.dataset.hoDel);
+    if (error) throw error;
+    if (hoCtx.editId === btn.dataset.hoDel) hoCtx.editId = '';
+    await loadHandouts(G.list.map(x => x.id));
+    hoRenderForm(); hoRenderList(); renderSelect(); toast('手紙を取り消しました。');
+  } catch (e) { $('ho-err').textContent = jaErr(e); btn.disabled = false; }
+}
+$('select').addEventListener('click', e => { const b = e.target.closest('[data-gho]'); if (b) openHandouts(b.dataset.gho); });
+$('modal-handout').addEventListener('click', e => {
+  if (e.target.closest('#ho-send')) { hoSend(); return; }
+  if (e.target.closest('#ho-cancel')) { hoCtx.editId = ''; hoRenderForm(); return; }
+  const ed = e.target.closest('[data-ho-edit]');
+  if (ed) { hoCtx.editId = ed.dataset.hoEdit; hoRenderForm(); $('ho-form').scrollIntoView({ block: 'nearest' }); $('ho-body').focus(); return; }
+  const dl = e.target.closest('[data-ho-del]');
+  if (dl) hoDelete(dl);
 });

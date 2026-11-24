@@ -441,7 +441,7 @@
       <p><b>(2) ログインして使うとき（サーバーに保存します）</b></p>
       <ul>
         <li>キャラシの内容と画像（立ち絵・差分・アイコン・背景・BGM のURL・秘匿・メモなど）</li>
-        <li>フレンドの申請とフレンドの関係、グループと招待、共有リンク</li>
+        <li>フレンドの申請とフレンドの関係、グループと招待、グループの中でやり取りしたハンドアウト（手紙）、共有リンク</li>
         <li>通報の内容（誰が・誰を・何について通報したか）</li>
       </ul>
       <p><b>(3) ログインしなくても送るもの</b></p>
@@ -584,6 +584,17 @@
       <button class="btn ghost" type="button" data-close>キャンセル</button>
       <button class="btn primary" type="button" id="grp-save">保存する</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-handout" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="ho-title-h">
+    <h2 id="ho-title-h">ハンドアウト</h2>
+    <p>KPと探索者のあいだで送る、1通ずつの手紙です。読めるのは、送った人と受け取った人だけです（ココフォリアには出ません）。</p>
+    <div id="ho-form"></div>
+    <p class="err" id="ho-err" role="alert"></p>
+    <div id="ho-list"></div>
+    <div class="modal-actions"><span style="flex:1"></span><button class="btn primary" type="button" data-close>閉じる</button></div>
   </div>
 </div>
 
